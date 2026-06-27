@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Central Italy · House Hunt 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<style>
+:root{
+  --bg:#FAF7F2;--bg2:#F2EDE4;--bg3:#E8E0D2;
+  --border:#D4C9B5;--border2:#C0B09A;
+  --text:#2E2A25;--text2:#5A5248;--text3:#9A9088;
+  --terra:#C0603A;--terra-dk:#9A4328;--terra-lt:#E07050;
+  --olive:#5B7232;--olive-lt:#7A9548;--olive-bg:#EAF2DD;
+  --adriat:#2C5F7A;--adriat-lt:#4A7F9A;--adriat-bg:#E3EFF5;
+  --amber:#F5A623;--amber-bg:#FFF8E1;--amber-bdr:#FFD54F;
+  --red:#C0392B;--red-bg:#FDECEA;--red-bdr:#EF9A9A;
+  --green:#2E7D32;--green-bg:#E8F5E9;--green-bdr:#81C784;
+  --purple:#7B1FA2;--purple-bg:#F3E5F5;
+  --radius:6px;--shadow:0 1px 3px rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:13px;line-height:1.4;overflow-x:hidden;min-height:100vh}
+a{color:var(--adriat);text-decoration:none}a:hover{text-decoration:underline}
+button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
+input,select,textarea{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:2px 6px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-lt);box-shadow:0 0 0 2px rgba(44,95,122,.15)}
+#app{display:flex;flex-direction:column;height:100vh}
+#header{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px}
+#header h1{font-size:15px;font-weight:700;color:var(--terra-dk)}
+#header .sub{font-size:11px;color:var(--text3);margin-top:1px}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
+.badge-g1{background:var(--olive-bg);color:var(--olive)}
+.badge-g2{background:var(--amber-bg);color:var(--terra)}
+#tabs{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;flex-shrink:0;overflow-x:auto}
+.tab{padding:9px 14px;font-size:12px;font-weight:500;color:var(--text3);border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab.active{color:var(--terra);border-bottom-color:var(--terra);font-weight:600}
+.tab:hover:not(.active){color:var(--text2);border-bottom-color:var(--border2)}
+#content{flex:1;overflow:hidden;position:relative}
+.tab-panel{position:absolute;inset:0;overflow-y:auto;display:none;padding:12px}
+.tab-panel.active{display:block}
+/* IO bar */
+.io-bar{display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap}
+.io-btn{padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);font-size:11px;font-weight:500}
+.io-btn:hover{border-color:var(--adriat);color:var(--adriat)}
+.io-btn.active-filter{border-color:var(--terra);color:var(--terra);background:#FFF0E8}
+.io-btn.danger:hover{border-color:var(--red);color:var(--red)}
+.io-saved{font-size:11px;color:var(--olive);opacity:0;transition:opacity .3s}
+/* Filter/sort row */
+.filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}
+.filter-row label{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:3px}
+.filter-row select,.filter-row input[type=text]{font-size:11px;padding:3px 6px;height:26px}
+.filter-row input[type=text]{width:140px}
+.sort-btn{padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);font-size:11px}
+.sort-btn:hover,.sort-btn.active{border-color:var(--terra);color:var(--terra)}
+.arr{opacity:.5;font-size:9px;margin-left:2px}
+.sort-btn.asc .arr::after{content:"▲"}
+.sort-btn.desc .arr::after{content:"▼"}
+.sort-btn:not(.asc):not(.desc) .arr::after{content:"⇅"}
+.result-count{font-size:11px;color:var(--text3);margin-bottom:6px}
+/* Tiles */
+.tiles-grid{display:grid;grid-template-columns:1fr;gap:8px}
+@media(min-width:640px){.tiles-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:1024px){.tiles-grid{grid-template-columns:1fr 1fr 1fr}}
+.tile{border-radius:var(--radius);border:1px solid var(--border);background:#fff;box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .15s}
+.tile:hover{box-shadow:0 3px 10px rgba(0,0,0,.14)}
+.tile.g1{border-left:3px solid var(--olive)}
+.tile.g2{border-left:3px solid var(--amber)}
+.tile.st-reached{background:#EDF5FF}
+.tile.st-replied{background:#EDFAEF}
+.tile.st-info{background:#FFFBEE}
+.tile.st-tbs{background:#F3E5F5;border-left-color:var(--purple)}
+.tile.st-proposed{background:#FFF8E1}
+.tile.st-scheduled{background:var(--green-bg);border-left-color:var(--green)}
+.tile.st-unavailable{background:#F5F5F5;opacity:.7}
+.tile.st-unresponsive{background:#FFF8F0;opacity:.75}
+.tile.st-rejected{background:#FEE;opacity:.65}
+.tile.st-deleted{background:#ECEFF1;border-left-color:#90A4AE;opacity:.8}
+.tile-top{display:flex;align-items:flex-start;gap:8px;padding:10px 12px 6px}
+.tile-expand-btn{flex-shrink:0;margin-left:auto;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;color:var(--text3);background:var(--bg2)}
+.tile-expand-btn:hover{border-color:var(--adriat);color:var(--adriat)}
+.tile-body{padding:0 12px 8px;display:flex;flex-direction:column;gap:4px}
+.tile-name{font-weight:600;font-size:13px}
+.tile-name a{color:var(--text)}
+.tile-name a:hover{color:var(--adriat)}
+.tile-sub{font-size:11px;color:var(--text3)}
+.tile-status-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tile-date-chip{font-size:10px;padding:1px 7px;border-radius:8px;font-weight:500}
+.sched-chip{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bdr)}
+.planned-chip{background:var(--adriat-bg);color:var(--adriat);border:1px solid #90CAF9}
+.tile-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:2px}
+.t-btn{font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid;white-space:nowrap;cursor:pointer}
+.t-btn-olive{background:var(--olive-bg);color:var(--olive);border-color:var(--olive-lt)}
+.t-btn-olive:hover{background:var(--olive);color:#fff}
+.t-btn-blue{background:var(--adriat-bg);color:var(--adriat);border-color:var(--adriat-lt)}
+.t-btn-blue:hover{background:var(--adriat);color:#fff}
+.t-btn-terra{background:#FFF0E8;color:var(--terra);border-color:var(--terra-lt)}
+.t-btn-terra:hover{background:var(--terra);color:#fff}
+.t-btn-red{background:#FFF0F0;color:var(--red);border-color:#EF9A9A}
+.t-btn-red:hover{background:var(--red);color:#fff}
+.t-btn-restore{background:#E8F5E9;color:var(--green);border-color:var(--green-bdr)}
+.t-btn-restore:hover{background:var(--green);color:#fff}
+.tile-detail{padding:8px 12px 10px;border-top:1px solid var(--border);display:none;flex-direction:column;gap:6px}
+.tile-detail.open{display:flex}
+.tile-field{display:flex;flex-direction:column;gap:2px}
+.tile-field label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+.tile-field input,.tile-field select,.tile-field textarea{font-size:12px;width:100%;padding:4px 7px}
+.tile-field-row{display:flex;gap:8px}
+.tile-field-row .tile-field{flex:1}
+.sect-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin:4px 0 2px;padding-top:4px;border-top:1px solid var(--border)}
+.fco-hot{color:var(--terra);font-weight:600}
+.status-sel{font-size:11px;padding:2px 4px;border-radius:4px;width:auto}
+/* Section headers in tiles */
+.tiles-section-header{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 4px;padding:4px 0;border-bottom:1px solid var(--border2)}
+/* Add property modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.25);width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:14px;font-weight:600;color:var(--adriat)}
+.modal-close{font-size:18px;color:var(--text3);padding:0 4px}
+.modal-close:hover{color:var(--red)}
+.modal-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.modal-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.btn-primary{padding:7px 16px;background:var(--adriat);color:#fff;border-radius:4px;font-size:12px;font-weight:500}
+.btn-primary:hover{background:var(--adriat-lt)}
+.btn-secondary{padding:7px 16px;border:1px solid var(--border);border-radius:4px;font-size:12px}
+.fetch-status{font-size:11px;padding:4px 8px;border-radius:4px;margin-top:2px}
+.fetch-ok{background:var(--olive-bg);color:var(--olive)}
+.fetch-err{background:var(--red-bg);color:var(--red)}
+.fetch-info{background:var(--adriat-bg);color:var(--adriat)}
+/* Schedule */
+.top-legend{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)}
+.legend-dot{width:12px;height:12px;border-radius:3px}
+.sched-filter{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.sched-filter label{font-size:11px;display:flex;align-items:center;gap:4px}
+.days-container{display:flex;flex-direction:column;gap:8px}
+.day-card{border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow)}
+.day-card.has-conflict{border-color:var(--red-bdr)}
+.day-card.has-warning{border-color:var(--amber-bdr)}
+.day-card.collapsed .drop-zone,.day-card.collapsed .return-row,.day-card.collapsed .conflict-msg,.day-card.collapsed .warning-msg{display:none}
+.day-header{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg2);border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.day-label{font-weight:600;font-size:12px}
+.day-base{font-size:11px;color:var(--text3);margin-left:6px}
+.day-note{font-size:10px;color:var(--text3);font-style:italic;margin-left:4px}
+.day-meta{display:flex;align-items:center;gap:8px;font-size:11px}
+.day-drive-total{font-weight:600;padding:1px 6px;border-radius:10px;font-size:10px}
+.drive-ok{background:var(--olive-bg);color:var(--olive)}
+.drive-warn{background:var(--amber-bg);color:var(--amber)}
+.drive-over{background:var(--red-bg);color:var(--red)}
+.drop-zone{min-height:28px;background:#fff}
+.stop-row{display:flex;align-items:center;gap:5px;padding:6px 8px;border-bottom:1px solid rgba(0,0,0,.04);font-size:12px;user-select:none}
+.stop-row.sched-locked{background:var(--green-bg)}
+.stop-row.row-conflict{background:var(--red-bg)}
+.stop-row.row-warn{background:var(--amber-bg)}
+.stop-row.sortable-chosen{opacity:.5;background:var(--adriat-bg)!important}
+.stop-row.sortable-ghost{opacity:.3}
+.drag-handle{color:var(--text3);font-size:16px;cursor:grab;flex-shrink:0;touch-action:none;line-height:1}
+.drag-handle:active{cursor:grabbing}
+.stop-time{font-family:monospace;font-size:11px;color:var(--text3);width:50px;flex-shrink:0}
+.stop-name{flex:1;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sched-badge{font-size:10px;padding:1px 5px;border-radius:8px;background:var(--olive);color:#fff;flex-shrink:0}
+.drive-chip{font-size:10px;padding:2px 5px;border-radius:10px;background:var(--adriat-bg);color:var(--adriat);flex-shrink:0;font-family:monospace;white-space:nowrap}
+.drive-chip-warn{background:var(--amber-bg);color:#C07000}
+.drive-chip-over{background:var(--red-bg);color:var(--red)}
+.mapit-btn{font-size:10px;padding:2px 6px;border-radius:4px;background:#FFF0E8;color:var(--terra);border:1px solid var(--terra-lt);white-space:nowrap;flex-shrink:0;text-decoration:none;display:inline-block}
+.mapit-btn:hover{background:var(--terra);color:#fff}
+.mapit-btn.disabled{opacity:.4;cursor:not-allowed;pointer-events:none;background:var(--bg3);color:var(--text3);border-color:var(--border)}
+.return-row{display:flex;align-items:center;gap:6px;padding:4px 10px 5px;background:var(--bg2);border-top:1px dashed var(--border);font-size:11px;color:var(--text3)}
+.empty-day{padding:8px 12px;font-size:11px;color:var(--text3);font-style:italic}
+.conflict-msg{font-size:10px;padding:3px 8px;background:var(--red-bg);border-top:1px solid var(--red-bdr);color:var(--red)}
+.warning-msg{font-size:10px;padding:3px 8px;background:var(--amber-bg);border-top:1px solid var(--amber-bdr);color:#C07000}
+/* Unscheduled & eliminated zones */
+.zone-card{border-radius:var(--radius);border:2px dashed var(--border2);overflow:hidden;margin-top:4px}
+.zone-card.elim-zone{border-color:var(--red-bdr);opacity:.8}
+.zone-header{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg3);cursor:pointer;user-select:none}
+.zone-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+.zone-drop{min-height:36px;background:#FAFAF8}
+.zone-row{display:flex;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid rgba(0,0,0,.04);font-size:12px;color:var(--text2)}
+.zone-row .stop-name{flex:1}
+/* Map */
+#map{height:340px;border-radius:var(--radius);box-shadow:var(--shadow)}
+.map-controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:12px;align-items:center}
+.map-controls select{font-size:11px;padding:2px 5px;height:24px}
+.map-legend{margin-top:8px;display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text3)}
+/* Gemini */
+#gemini-panel{border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);background:#fff;overflow:hidden}
+.gem-header{padding:10px 14px;background:var(--adriat-bg);border-bottom:1px solid #90CAF9;display:flex;align-items:center;gap:6px}
+.gem-header h2{font-size:13px;font-weight:600;color:var(--adriat)}
+.gem-history{padding:10px 14px;min-height:80px;max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.gem-user{align-self:flex-end;background:var(--adriat);color:#fff;padding:7px 11px;border-radius:12px 12px 3px 12px;max-width:80%;font-size:12px}
+.gem-ai{align-self:flex-start;background:var(--bg2);padding:7px 11px;border-radius:12px 12px 12px 3px;max-width:85%;font-size:12px;white-space:pre-wrap;word-wrap:break-word}
+.gem-input-row{display:flex;gap:6px;padding:8px 12px;border-top:1px solid var(--border)}
+.gem-input-row input{flex:1;padding:6px 10px}
+.gem-send{padding:6px 14px;background:var(--adriat);color:#fff;border-radius:4px;font-size:12px;font-weight:500}
+.gem-send:hover{background:var(--adriat-lt)}
+.quick-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.quick-btn{padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;text-align:left;font-size:11px}
+.quick-btn:hover{border-color:var(--terra)}
+.quick-btn .qb-title{font-weight:600;color:var(--terra);margin-bottom:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+@media(max-width:640px){.quick-btns{grid-template-columns:1fr}#map{height:220px}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="header">
+  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v2.2</span></div></div>
+  <div style="display:flex;gap:5px;flex-shrink:0"><span class="badge badge-g1">Grp 1 &lt;135m</span><span class="badge badge-g2">Grp 2 &lt;165m</span></div>
+</div>
+
+<div id="tabs">
+  <button class="tab active" onclick="showTab('props')">Properties</button>
+  <button class="tab" onclick="showTab('schedule')">Schedule</button>
+  <button class="tab" onclick="showTab('map')">Map</button>
+  <button class="tab" onclick="showTab('gemini')">AI Copilot</button>
+</div>
+
+<div id="content">
+
+<!-- PROPERTIES TAB -->
+<div id="tab-props" class="tab-panel active">
+  <div class="io-bar">
+    <span style="font-size:11px;font-weight:500;color:var(--text2)">Data:</span>
+    <button class="io-btn" onclick="exportJSON()">⬇ Export</button>
+    <button class="io-btn" onclick="document.getElementById('import-file').click()">⬆ Import</button>
+    <button class="io-btn danger" onclick="resetStorage()">↺ Reset</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button class="io-btn" onclick="openAddModal()" style="margin-left:auto;background:var(--adriat);color:#fff;border-color:var(--adriat)">＋ Add Property</button>
+    <span class="io-saved" id="save-notice">Saved ✓</span>
+  </div>
+  <div class="filter-row">
+    <span style="font-size:11px;font-weight:500;color:var(--text2)">Sort:</span>
+    <button class="sort-btn" id="sb-fco" onclick="setSort('fco')">FCO <span class="arr"></span></button>
+    <button class="sort-btn" id="sb-price" onclick="setSort('price')">Price <span class="arr"></span></button>
+    <button class="sort-btn" id="sb-base" onclick="setSort('base')">Base <span class="arr"></span></button>
+    <button class="sort-btn" id="sb-planned" onclick="setSort('planned')">Planned <span class="arr"></span></button>
+    <button class="sort-btn" id="sb-sched" onclick="setSort('sched')">Sched <span class="arr"></span></button>
+    <button class="sort-btn" id="sb-status" onclick="setSort('status')">Status <span class="arr"></span></button>
+  </div>
+  <div class="filter-row">
+    <span style="font-size:11px;font-weight:500;color:var(--text2)">Filter:</span>
+    <label>Status <select id="f-status" onchange="renderProps()"><option value="">Active</option><option value="ALL">All</option><option>-</option><option>Reached Out</option><option>Replied</option><option>Info Supplied</option><option>To Be Scheduled</option><option>Proposed</option><option>Scheduled</option><option value="ELIM">Eliminated</option><option value="DELETED">Deleted</option></select></label>
+    <label>Base <select id="f-base" onchange="renderProps()"><option value="">All</option><option>CdP</option><option>CaF</option><option>Spo</option><option>Man</option></select></label>
+    <label>Search <input type="text" id="f-search" placeholder="name / ID / price" oninput="renderProps()"></label>
+  </div>
+  <div class="result-count" id="result-count"></div>
+  <div class="tiles-grid" id="tiles-container"></div>
+</div>
+
+<!-- SCHEDULE TAB -->
+<div id="tab-schedule" class="tab-panel">
+  <div class="top-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--olive-bg);border:1px solid var(--olive)"></div>OK</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--amber-bg);border:1px solid var(--amber-bdr)"></div>Warning</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--red-bg);border:1px solid var(--red-bdr)"></div>Conflict</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green-bg);border:1px solid var(--green-bdr)"></div>Scheduled (locked)</div>
+  </div>
+  <div class="sched-filter">
+    <label style="font-size:11px;font-weight:500;color:var(--text2)">Show:</label>
+    <select id="sched-view" onchange="renderSchedule()" style="font-size:11px;padding:3px 6px;height:26px">
+      <option value="all">All</option>
+      <option value="scheduled">Scheduled only</option>
+      <option value="planned">Planned only</option>
+    </select>
+  </div>
+  <div id="days-container" class="days-container"></div>
+</div>
+
+<!-- MAP TAB -->
+<div id="tab-map" class="tab-panel">
+  <div class="map-controls">
+    <label><input type="checkbox" id="map-g1" checked onchange="refreshMap()"> <span style="color:var(--olive);font-weight:600">Grp 1</span></label>
+    <label><input type="checkbox" id="map-g2" checked onchange="refreshMap()"> <span style="color:var(--terra);font-weight:600">Grp 2</span></label>
+    <label><input type="checkbox" id="map-sched" onchange="refreshMap()"> Scheduled only</label>
+    <label>Base <select id="map-base" onchange="refreshMap()"><option value="">All</option><option value="CdP">CdP</option><option value="CaF">CaF</option><option value="Spo">Spoleto</option><option value="Man">Manciano</option></select></label>
+    <label>Day <select id="map-day" onchange="refreshMap()"><option value="">All days</option><option value="2026-06-24">Jun 24</option><option value="2026-06-25">Jun 25</option><option value="2026-06-26">Jun 26</option><option value="2026-06-27">Jun 27</option><option value="2026-06-28">Jun 28</option><option value="2026-06-29">Jun 29</option><option value="2026-06-30">Jun 30</option><option value="2026-07-01">Jul 1</option><option value="2026-07-02">Jul 2</option><option value="2026-07-03">Jul 3</option><option value="2026-07-04">Jul 4</option><option value="2026-07-05">Jul 5</option><option value="2026-07-06">Jul 6</option><option value="2026-07-07">Jul 7</option><option value="2026-07-08">Jul 8</option><option value="2026-07-09">Jul 9</option><option value="2026-07-10">Jul 10</option></select></label>
+  </div>
+  <div id="map"></div>
+  <div class="map-legend"><span>★ Bases</span><span style="color:var(--olive)">● Grp 1</span><span style="color:var(--terra)">● Grp 2</span><span style="color:var(--adriat)">── Day route</span></div>
+</div>
+
+<!-- GEMINI TAB -->
+<div id="tab-gemini" class="tab-panel">
+  <div id="gemini-panel">
+    <div class="gem-header">
+      <div style="width:22px;height:22px;border-radius:50%;background:var(--adriat);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">AI</div>
+      <h2>Gemini 2.5 Flash · AI Copilot</h2>
+      <span style="font-size:10px;color:var(--text3);margin-left:auto">Full itinerary loaded</span>
+    </div>
+    <div class="gem-history" id="gem-history"><div class="gem-ai">47 properties loaded. Ask about drive times, scheduling, comparisons, or logistics.</div></div>
+    <div class="gem-input-row">
+      <input id="gem-input" type="text" placeholder="Ask about the itinerary…" onkeydown="if(event.key==='Enter')sendGemini()">
+      <button class="gem-send" onclick="sendGemini()">Send</button>
+    </div>
+  </div>
+  <div class="quick-btns" style="margin-top:10px">
+    <button class="quick-btn" onclick="geminiQuick('What are the 5 properties closest to FCO under €800k?')"><div class="qb-title">FCO Priority</div>Best value near FCO</button>
+    <button class="quick-btn" onclick="geminiQuick('Review scheduled days and flag conflicts or cap violations.')"><div class="qb-title">Schedule Review</div>Check for conflicts</button>
+    <button class="quick-btn" onclick="geminiQuick('Which properties near Manciano have 10+ rooms under €850k?')"><div class="qb-title">Manciano</div>Large rooms near Manciano</button>
+  </div>
+</div>
+
+</div></div>
+
+<!-- ADD PROPERTY MODAL -->
+<div id="add-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add Property</h3>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tile-field">
+        <label>Listing URL (Idealista or other)</label>
+        <input type="url" id="add-url" placeholder="https://www.idealista.it/immobile/12345678/" oninput="onAddUrlChange()" autocomplete="off">
+        <div id="add-fetch-status" class="fetch-status fetch-info" style="display:none"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Property Name *</label><input type="text" id="add-name" placeholder="e.g. Tuscania Villa" autocomplete="off"></div>
+        <div class="tile-field"><label>Idealista ID</label><input type="text" id="add-id" placeholder="8-digit number" readonly style="background:var(--bg3)" autocomplete="off"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Town *</label><input type="text" id="add-town" placeholder="Town name" autocomplete="off"></div>
+        <div class="tile-field"><label>Province</label><input type="text" id="add-prov" placeholder="VT" maxlength="2" style="text-transform:uppercase" autocomplete="off"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Price (€k) *</label><input type="number" id="add-price" placeholder="780" autocomplete="off"></div>
+        <div class="tile-field"><label>Rooms</label><input type="number" id="add-rooms" placeholder="10" autocomplete="off"></div>
+        <div class="tile-field"><label>Size (m²)</label><input type="number" id="add-size" placeholder="300" autocomplete="off"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>FCO Drive (min)</label><input type="number" id="add-fco" placeholder="90" autocomplete="off"></div>
+        <div class="tile-field"><label>Group (1 or 2)</label><input type="number" id="add-grp" placeholder="1" min="1" max="2" autocomplete="off"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Location (lat,lng)</label><input type="text" id="add-loc" placeholder="42.418,11.875" autocomplete="off"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Broker / Firm</label><input type="text" id="add-broker" placeholder="Agent or firm name" autocomplete="off"></div>
+        <div class="tile-field"><label>Phone</label><input type="tel" id="add-phone" placeholder="+39 …" autocomplete="off"></div>
+      </div>
+      <div id="add-note" style="font-size:11px;color:var(--text3)"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmAddProperty()">Add Property</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ DATA ════════════════════════════════════════════
+const PROPS_RAW=[{"id":30278342,"name":"Tuscania Villa","town":"Tuscania","prov":"VT","price":780,"rooms":10,"size":300,"grp":1,"fco":72,"cdp":80,"caf":140,"spo":105,"man":45,"url":"https://www.idealista.it/immobile/30278342/","lat":42.418,"lng":11.875,"plannedDate":"2026-07-09","plannedTime":"10:30 AM"},{"id":34998463,"name":"Vetralla Villa","town":"Vetralla","prov":"VT","price":670,"rooms":12,"size":509,"grp":1,"fco":75,"cdp":95,"caf":155,"spo":95,"man":70,"url":"https://www.idealista.it/immobile/34998463/","lat":42.32,"lng":12.05,"plannedDate":"2026-07-09","plannedTime":"11:30 AM"},{"id":35809714,"name":"Canino Villa","town":"Canino","prov":"VT","price":870,"rooms":7,"size":380,"grp":1,"fco":78,"cdp":80,"caf":130,"spo":115,"man":30,"url":"https://www.idealista.it/immobile/35809714/","lat":42.468,"lng":11.744,"plannedDate":"2026-07-09","plannedTime":"9:30 AM"},{"id":26448701,"name":"Montecastrilli Villa","town":"Montecastrilli","prov":"TR","price":820,"rooms":19,"size":480,"grp":1,"fco":85,"cdp":70,"caf":120,"spo":30,"man":105,"url":"https://www.idealista.it/immobile/26448701/","lat":42.649,"lng":12.487,"plannedDate":"2026-07-06","plannedTime":"11:00 AM"},{"id":21658129,"name":"Manciano SP159","town":"Manciano","prov":"GR","price":850,"rooms":18,"size":379,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":0,"url":"https://www.idealista.it/immobile/21658129/","lat":42.595,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"8:45 AM"},{"id":18085022,"name":"Manciano Scansanese","town":"Manciano","prov":"GR","price":870,"rooms":10,"size":520,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/18085022/","lat":42.605,"lng":11.52,"plannedDate":"2026-07-10","plannedTime":"9:30 AM"},{"id":33646557,"name":"Manciano Montemerano","town":"Manciano","prov":"GR","price":698,"rooms":8,"size":430,"grp":1,"fco":95,"cdp":75,"caf":125,"spo":130,"man":10,"url":"https://www.idealista.it/immobile/33646557/","lat":42.544,"lng":11.57,"plannedDate":"2026-07-10","plannedTime":"10:20 AM"},{"id":32530331,"name":"Manciano Saturnia","town":"Manciano","prov":"GR","price":720,"rooms":10,"size":395,"grp":1,"fco":95,"cdp":80,"caf":125,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/32530331/","lat":42.555,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"11:10 AM"},{"id":27864548,"name":"Baschi Villa","town":"Baschi","prov":"TR","price":780,"rooms":10,"size":580,"grp":1,"fco":99,"cdp":45,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/27864548/","lat":42.675,"lng":12.212,"plannedDate":"2026-06-26","plannedTime":"12:15 PM"},{"id":34980477,"name":"Baschi Civitella","town":"Baschi","prov":"TR","price":990,"rooms":15,"size":450,"grp":1,"fco":99,"cdp":50,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/34980477/","lat":42.67,"lng":12.205,"plannedDate":"2026-06-26","plannedTime":"1:05 PM"},{"id":35860173,"name":"Todi Piagge Casale","town":"Todi","prov":"PG","price":825,"rooms":10,"size":300,"grp":1,"fco":102,"cdp":50,"caf":100,"spo":35,"man":100,"url":"https://www.idealista.it/immobile/35860173/","lat":42.775,"lng":12.412,"plannedDate":"2026-07-07","plannedTime":"9:00 AM"},{"id":35822412,"name":"Todi Collarezzo","town":"Todi","prov":"PG","price":850,"rooms":10,"size":351,"grp":1,"fco":102,"cdp":55,"caf":100,"spo":35,"man":105,"url":"https://www.idealista.it/immobile/35822412/","lat":42.782,"lng":12.43,"plannedDate":"2026-07-07","plannedTime":"10:00 AM"},{"id":34024712,"name":"San Venanzo Civitella","town":"San Venanzo","prov":"TR","price":845,"rooms":18,"size":815,"grp":1,"fco":105,"cdp":30,"caf":80,"spo":55,"man":90,"url":"https://www.idealista.it/immobile/34024712/","lat":42.87,"lng":12.265,"plannedDate":"","plannedTime":""},{"id":33903982,"name":"Scansano Fonte Guerra","town":"Scansano","prov":"GR","price":790,"rooms":12,"size":475,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/33903982/","lat":42.683,"lng":11.34,"plannedDate":"2026-07-10","plannedTime":"12:30 PM"},{"id":35951463,"name":"Scansano Montorgiali","town":"Scansano","prov":"GR","price":960,"rooms":8,"size":390,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35951463/","lat":42.69,"lng":11.332,"plannedDate":"2026-07-09","plannedTime":"3:00 PM"},{"id":35048730,"name":"Scansano Agriturismo","town":"Scansano","prov":"GR","price":630,"rooms":7,"size":390,"grp":1,"fco":105,"cdp":85,"caf":120,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35048730/","lat":42.676,"lng":11.321,"plannedDate":"2026-07-09","plannedTime":"3:50 PM"},{"id":35397327,"name":"Sorano Piancasale","town":"Sorano","prov":"GR","price":700,"rooms":24,"size":480,"grp":1,"fco":108,"cdp":50,"caf":100,"spo":110,"man":25,"url":"https://www.idealista.it/immobile/35397327/","lat":42.685,"lng":11.713,"plannedDate":"","plannedTime":""},{"id":21287742,"name":"Ferentillo Rustico","town":"Ferentillo","prov":"TR","price":645,"rooms":12,"size":650,"grp":1,"fco":110,"cdp":100,"caf":145,"spo":20,"man":140,"url":"https://www.idealista.it/immobile/21287742/","lat":42.623,"lng":12.798,"plannedDate":"2026-07-06","plannedTime":"9:00 AM"},{"id":10679967,"name":"Semproniano Rustico","town":"Semproniano","prov":"GR","price":720,"rooms":11,"size":355,"grp":1,"fco":110,"cdp":70,"caf":115,"spo":130,"man":5,"url":"https://www.idealista.it/immobile/10679967/","lat":42.623,"lng":11.537,"plannedDate":"","plannedTime":""},{"id":34882496,"name":"Spoleto Baiano","town":"Spoleto","prov":"PG","price":980,"rooms":17,"size":451,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":135,"url":"https://www.idealista.it/immobile/34882496/","lat":42.722,"lng":12.718,"plannedDate":"2026-07-05","plannedTime":"8:45 AM"},{"id":30865904,"name":"Spoleto Terzo La Pieve","town":"Spoleto","prov":"PG","price":900,"rooms":11,"size":350,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":130,"url":"https://www.idealista.it/immobile/30865904/","lat":42.715,"lng":12.708,"plannedDate":"2026-07-05","plannedTime":"9:45 AM"},{"id":35103506,"name":"Montefalco Fabbri","town":"Montefalco","prov":"PG","price":910,"rooms":16,"size":450,"grp":1,"fco":121,"cdp":70,"caf":105,"spo":25,"man":130,"url":"https://www.idealista.it/immobile/35103506/","lat":42.89,"lng":12.652,"plannedDate":"2026-07-04","plannedTime":"12:30 PM"},{"id":35432103,"name":"Deruta Tiberina","town":"Deruta","prov":"PG","price":790,"rooms":12,"size":320,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/35432103/","lat":42.982,"lng":12.419,"plannedDate":"2026-07-04","plannedTime":"10:00 AM"},{"id":33533240,"name":"Deruta Tiberina 203","town":"Deruta","prov":"PG","price":685,"rooms":22,"size":611,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/33533240/","lat":42.981,"lng":12.421,"plannedDate":"2026-07-04","plannedTime":"10:50 AM"},{"id":27988041,"name":"Deruta Centro Casale","town":"Deruta","prov":"PG","price":650,"rooms":12,"size":400,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/27988041/","lat":42.982,"lng":12.416,"plannedDate":"","plannedTime":""},{"id":29370809,"name":"Deruta Castelleone","town":"Deruta","prov":"PG","price":890,"rooms":12,"size":316,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/29370809/","lat":42.984,"lng":12.413,"plannedDate":"","plannedTime":""},{"id":34783987,"name":"Bettona Villa","town":"Bettona","prov":"PG","price":850,"rooms":20,"size":484,"grp":1,"fco":129,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/34783987/","lat":42.992,"lng":12.43,"plannedDate":"2026-06-27","plannedTime":"11:00 AM"},{"id":34843857,"name":"Santa Fiora Monte Amiata","town":"Santa Fiora","prov":"GR","price":978,"rooms":12,"size":520,"grp":1,"fco":130,"cdp":50,"caf":85,"spo":125,"man":40,"url":"https://www.idealista.it/immobile/34843857/","lat":42.834,"lng":11.587,"plannedDate":"","plannedTime":""},{"id":34979131,"name":"Corciano Migiana","town":"Corciano","prov":"PG","price":830,"rooms":13,"size":700,"grp":1,"fco":133,"cdp":40,"caf":55,"spo":75,"man":115,"url":"https://www.idealista.it/immobile/34979131/","lat":43.11,"lng":12.289,"plannedDate":"","plannedTime":""},{"id":35300665,"name":"Perugia Olmo","town":"Perugia","prov":"PG","price":675,"rooms":5,"size":425,"grp":2,"fco":138,"cdp":50,"caf":70,"spo":60,"man":125,"url":"https://www.idealista.it/immobile/35300665/","lat":43.085,"lng":12.442,"plannedDate":"2026-06-25","plannedTime":"12:30 PM"},{"id":35456752,"name":"Perugia Eugubina","town":"Perugia","prov":"PG","price":650,"rooms":21,"size":953,"grp":2,"fco":138,"cdp":50,"caf":60,"spo":70,"man":125,"url":"https://www.idealista.it/immobile/35456752/","lat":43.138,"lng":12.408,"plannedDate":"2026-06-25","plannedTime":"1:15 PM"},{"id":32456550,"name":"Perugia Colli Albani","town":"Perugia","prov":"PG","price":650,"rooms":10,"size":530,"grp":2,"fco":138,"cdp":50,"caf":65,"spo":65,"man":125,"url":"https://www.idealista.it/immobile/32456550/","lat":43.093,"lng":12.415,"plannedDate":"2026-06-25","plannedTime":"2:15 PM"},{"id":16393910,"name":"Perugia Solfagnano","town":"Perugia","prov":"PG","price":1100,"rooms":16,"size":725,"grp":2,"fco":138,"cdp":45,"caf":50,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/16393910/","lat":43.155,"lng":12.33,"plannedDate":"2026-06-26","plannedTime":"2:30 PM"},{"id":34105542,"name":"Perugia Monte Tezio","town":"Perugia","prov":"PG","price":890,"rooms":10,"size":500,"grp":2,"fco":138,"cdp":45,"caf":55,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/34105542/","lat":43.148,"lng":12.34,"plannedDate":"2026-06-26","plannedTime":"3:15 PM"},{"id":33928859,"name":"Assisi Porziano","town":"Assisi","prov":"PG","price":580,"rooms":12,"size":485,"grp":2,"fco":148,"cdp":70,"caf":85,"spo":50,"man":140,"url":"https://www.idealista.it/immobile/33928859/","lat":43.07,"lng":12.612,"plannedDate":"2026-07-03","plannedTime":"11:30 AM"},{"id":35247592,"name":"Lisciano Niccone Villa","town":"Lisciano Niccone","prov":"PG","price":1050,"rooms":12,"size":520,"grp":2,"fco":148,"cdp":50,"caf":25,"spo":105,"man":120,"url":"https://www.idealista.it/immobile/35247592/","lat":43.265,"lng":12.125,"plannedDate":"2026-06-27","plannedTime":"9:30 AM"},{"id":35456269,"name":"Umbertide Casale","town":"Umbertide","prov":"PG","price":1150,"rooms":15,"size":700,"grp":2,"fco":148,"cdp":60,"caf":45,"spo":95,"man":140,"url":"https://www.idealista.it/immobile/35456269/","lat":43.297,"lng":12.332,"plannedDate":"2026-07-03","plannedTime":"8:45 AM"},{"id":34939305,"name":"Umbertide Preggio","town":"Umbertide","prov":"PG","price":895,"rooms":16,"size":320,"grp":2,"fco":148,"cdp":60,"caf":40,"spo":100,"man":135,"url":"https://www.idealista.it/immobile/34939305/","lat":43.312,"lng":12.29,"plannedDate":"2026-07-03","plannedTime":"9:30 AM"},{"id":23044407,"name":"Foiano della Chiana","town":"Foiano","prov":"AR","price":750,"rooms":12,"size":500,"grp":2,"fco":150,"cdp":50,"caf":20,"spo":125,"man":105,"url":"https://www.idealista.it/immobile/23044407/","lat":43.251,"lng":11.819,"plannedDate":"2026-06-30","plannedTime":"11:30 AM"},{"id":33291507,"name":"Cortona Fratticciola","town":"Cortona","prov":"AR","price":870,"rooms":10,"size":311,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":110,"man":115,"url":"https://www.idealista.it/immobile/33291507/","lat":43.264,"lng":12.002,"plannedDate":"2026-06-28","plannedTime":"11:00 AM"},{"id":33311877,"name":"Cortona Cegliolo Villa","town":"Cortona","prov":"AR","price":980,"rooms":11,"size":400,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/33311877/","lat":43.27,"lng":12.0,"plannedDate":"2026-06-30","plannedTime":"10:30 AM"},{"id":35710302,"name":"Cortona Cegliolo Casale","town":"Cortona","prov":"AR","price":590,"rooms":7,"size":460,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/35710302/","lat":43.272,"lng":11.992,"plannedDate":"","plannedTime":""},{"id":24846822,"name":"CaF Val di Chio","town":"Castiglion Fiorentino","prov":"AR","price":1000,"rooms":12,"size":760,"grp":2,"fco":155,"cdp":55,"caf":0,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/24846822/","lat":43.335,"lng":11.942,"plannedDate":"2026-06-28","plannedTime":"8:45 AM"},{"id":34980495,"name":"CaF Santa Cristina","town":"Castiglion Fiorentino","prov":"AR","price":900,"rooms":12,"size":800,"grp":2,"fco":155,"cdp":55,"caf":5,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/34980495/","lat":43.325,"lng":11.938,"plannedDate":"2026-06-28","plannedTime":"9:30 AM"},{"id":31961655,"name":"Monteroni d'Arbia","town":"Monteroni d'Arbia","prov":"SI","price":980,"rooms":12,"size":480,"grp":2,"fco":155,"cdp":75,"caf":60,"spo":160,"man":95,"url":"https://www.idealista.it/immobile/31961655/","lat":43.227,"lng":11.415,"plannedDate":"2026-07-01","plannedTime":"12:00 PM"},{"id":26833080,"name":"Capolona Pieve SG","town":"Capolona","prov":"AR","price":890,"rooms":9,"size":420,"grp":2,"fco":158,"cdp":90,"caf":35,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/26833080/","lat":43.559,"lng":11.86,"plannedDate":"2026-07-01","plannedTime":"9:45 AM"},{"id":35651252,"name":"Capolona Caliano","town":"Capolona","prov":"AR","price":595,"rooms":10,"size":350,"grp":2,"fco":158,"cdp":90,"caf":30,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/35651252/","lat":43.554,"lng":11.856,"plannedDate":"2026-07-01","plannedTime":"9:00 AM"}];
+const DRIVE_MATRIX={"CdP_CaF":[67,61],"CdP_Spo":[99,91],"CdP_Man":[87,80],"CdP_30278342":[92,85],"CdP_34998463":[108,99],"CdP_35809714":[89,81],"CdP_26448701":[80,73],"CdP_21658129":[87,79],"CdP_18085022":[84,77],"CdP_33646557":[88,81],"CdP_32530331":[92,84],"CdP_27864548":[54,50],"CdP_34980477":[54,50],"CdP_35860173":[59,54],"CdP_35822412":[61,56],"CdP_34024712":[36,33],"CdP_33903982":[94,87],"CdP_35951463":[95,87],"CdP_35048730":[97,89],"CdP_35397327":[58,53],"CdP_21287742":[114,104],"CdP_10679967":[81,74],"CdP_34882496":[97,89],"CdP_30865904":[97,89],"CdP_35103506":[82,75],"CdP_35432103":[52,48],"CdP_33533240":[52,48],"CdP_27988041":[52,47],"CdP_29370809":[51,47],"CdP_34783987":[54,49],"CdP_34843857":[56,51],"CdP_34979131":[44,41],"CdP_35300665":[59,54],"CdP_35456752":[59,54],"CdP_32456550":[56,52],"CdP_16393910":[53,49],"CdP_34105542":[53,49],"CdP_33928859":[78,72],"CdP_35247592":[55,50],"CdP_35456269":[71,65],"CdP_34939305":[71,65],"CdP_23044407":[55,51],"CdP_33291507":[53,48],"CdP_33311877":[54,49],"CdP_35710302":[54,50],"CdP_24846822":[65,60],"CdP_34980495":[64,58],"CdP_31961655":[86,79],"CdP_26833080":[104,96],"CdP_35651252":[104,95],"CaF_CdP":[67,61],"CaF_Spo":[144,132],"CaF_Man":[138,126],"CaF_30278342":[157,144],"CaF_34998463":[174,160],"CaF_35809714":[150,138],"CaF_26448701":[137,126],"CaF_21658129":[137,126],"CaF_18085022":[135,124],"CaF_33646557":[143,131],"CaF_32530331":[143,132],"CaF_27864548":[119,109],"CaF_34980477":[119,110],"CaF_35860173":[114,104],"CaF_35822412":[114,105],"CaF_34024712":[91,83],"CaF_33903982":[134,122],"CaF_35951463":[133,122],"CaF_35048730":[136,124],"CaF_35397327":[115,105],"CaF_21287742":[163,150],"CaF_10679967":[131,120],"CaF_34882496":[144,132],"CaF_30865904":[144,132],"CaF_35103506":[119,109],"CaF_35432103":[87,79],"CaF_33533240":[87,80],"CaF_27988041":[86,79],"CaF_29370809":[86,79],"CaF_34783987":[86,79],"CaF_34843857":[96,88],"CaF_34979131":[60,55],"CaF_35300665":[78,71],"CaF_35456752":[69,63],"CaF_32456550":[74,68],"CaF_16393910":[59,54],"CaF_34105542":[61,56],"CaF_33928859":[97,89],"CaF_35247592":[28,26],"CaF_35456269":[51,47],"CaF_34939305":[45,42],"CaF_23044407":[20,19],"CaF_33291507":[16,15],"CaF_33311877":[15,14],"CaF_35710302":[15,13],"CaF_24846822":[3,2],"CaF_34980495":[3,3],"CaF_31961655":[66,61],"CaF_26833080":[38,34],"CaF_35651252":[37,34],"Spo_CdP":[99,91],"Spo_CaF":[144,132],"Spo_Man":[155,142],"Spo_30278342":[120,110],"Spo_34998463":[111,102],"Spo_35809714":[132,121],"Spo_26448701":[34,32],"Spo_21658129":[155,142],"Spo_18085022":[154,141],"Spo_33646557":[149,137],"Spo_32530331":[157,144],"Spo_27864548":[66,61],"Spo_34980477":[67,62],"Spo_35860173":[41,38],"Spo_35822412":[39,36],"Spo_34024712":[63,58],"Spo_33903982":[175,160],"Spo_35951463":[176,161],"Spo_35048730":[177,162],"Spo_35397327":[128,117],"Spo_21287742":[20,19],"Spo_10679967":[151,138],"Spo_34882496":[3,3],"Spo_30865904":[5,5],"Spo_35103506":[29,26],"Spo_35432103":[58,53],"Spo_33533240":[58,53],"Spo_27988041":[58,53],"Spo_29370809":[59,54],"Spo_34783987":[58,53],"Spo_34843857":[144,132],"Spo_34979131":[85,78],"Spo_35300665":[70,64],"Spo_35456752":[80,73],"Spo_32456550":[73,67],"Spo_16393910":[88,80],"Spo_34105542":[86,79],"Spo_33928859":[59,54],"Spo_35247592":[118,108],"Spo_35456269":[108,99],"Spo_34939305":[113,103],"Spo_23044407":[144,132],"Spo_33291507":[128,118],"Spo_33311877":[129,118],"Spo_35710302":[130,119],"Spo_24846822":[142,130],"Spo_34980495":[141,129],"Spo_31961655":[184,169],"Spo_26833080":[177,163],"Spo_35651252":[177,162],"Man_CdP":[87,80],"Man_CaF":[138,126],"Man_Spo":[155,142],"Man_30278342":[53,49],"Man_34998463":[81,74],"Man_35809714":[35,32],"Man_26448701":[122,112],"Man_21658129":[2,1],"Man_18085022":[3,3],"Man_33646557":[10,9],"Man_32530331":[6,5],"Man_27864548":[88,81],"Man_34980477":[87,80],"Man_35860173":[116,107],"Man_35822412":[119,109],"Man_34024712":[105,96],"Man_33903982":[27,25],"Man_35951463":[29,26],"Man_35048730":[29,26],"Man_35397327":[30,27],"Man_21287742":[160,147],"Man_10679967":[7,6],"Man_34882496":[152,139],"Man_30865904":[151,138],"Man_35103506":[151,138],"Man_35432103":[131,120],"Man_33533240":[131,120],"Man_27988041":[131,120],"Man_29370809":[131,120],"Man_34783987":[133,122],"Man_34843857":[43,39],"Man_34979131":[131,120],"Man_35300665":[143,131],"Man_35456752":[145,133],"Man_32456550":[141,129],"Man_16393910":[140,128],"Man_34105542":[140,128],"Man_33928859":[159,146],"Man_35247592":[138,126],"Man_35456269":[158,144],"Man_34939305":[156,143],"Man_23044407":[119,109],"Man_33291507":[130,119],"Man_33311877":[131,120],"Man_35710302":[130,120],"Man_24846822":[138,126],"Man_34980495":[136,124],"Man_31961655":[109,100],"Man_26833080":[170,156],"Man_35651252":[169,155],"30278342_34998463":[28,25],"30278342_35809714":[18,17],"34998463_35809714":[46,42],"35809714_30278342":[18,17],"35809714_34998463":[46,42],"27864548_34980477":[1,1],"34980477_27864548":[1,1],"35860173_35822412":[3,2],"35822412_35860173":[3,2],"33903982_35951463":[2,1],"33903982_35048730":[3,2],"35951463_35048730":[3,3],"35048730_35951463":[3,3],"35432103_33533240":[0,0],"35432103_27988041":[0,0],"33533240_35432103":[0,0],"27988041_35432103":[0,0],"33291507_33311877":[1,1],"33311877_33291507":[1,1],"33311877_35710302":[1,1],"35710302_33311877":[1,1],"24846822_34980495":[2,2],"34980495_24846822":[2,2],"26833080_35651252":[1,1],"35651252_26833080":[1,1]};
+const FULL_MATRIX_SUPPLEMENT={"35300665_35456752":[10,9],"35300665_32456550":[4,3],"35456752_35300665":[10,9],"35456752_32456550":[8,7],"32456550_35300665":[4,3],"32456550_35456752":[8,7],"16393910_34105542":[2,2],"34105542_16393910":[2,2],"34882496_30865904":[2,2],"30865904_34882496":[2,2],"35860173_35822412":[3,2],"35456269_34939305":[6,5],"34939305_35456269":[6,5]};
+Object.assign(DRIVE_MATRIX,FULL_MATRIX_SUPPLEMENT);
+
+const BASES={CdP:{name:"Città della Pieve",lat:42.9535,lng:12.0022,dates:"Jun 24–26"},CaF:{name:"Castiglion Fiorentino",lat:43.3429,lng:11.9246,dates:"Jun 28–Jul 3"},Spo:{name:"Spoleto",lat:42.7341,lng:12.7376,dates:"Jul 5–7"},Man:{name:"Manciano",lat:42.5876,lng:11.5152,dates:"Jul 7–10"}};
+// Statuses — eliminated group: Unavailable, Unresponsive, Rejected
+// Deleted is separate (soft-delete)
+const STATUS_OPTS=["-","Reached Out","Replied","Info Supplied","To Be Scheduled","Proposed","Scheduled","Unavailable","Unresponsive","Rejected"];
+const ELIM_STATUSES=new Set(["Unavailable","Unresponsive","Rejected"]);
+const STATUS_CLASS={"-":"","Reached Out":"st-reached","Replied":"st-replied","Info Supplied":"st-info","To Be Scheduled":"st-tbs","Proposed":"st-proposed","Scheduled":"st-scheduled","Unavailable":"st-unavailable","Unresponsive":"st-unresponsive","Rejected":"st-rejected"};
+const DRIVE_CAP=120,VIEWING_MIN=45,DAY_END=19.0;
+const TRIP_DAYS=[
+  {date:"2026-06-24",label:"Wed Jun 24",base:"CdP",startH:8.5,note:"Other appts"},
+  {date:"2026-06-25",label:"Thu Jun 25",base:"CdP",startH:12.0,note:"From noon"},
+  {date:"2026-06-26",label:"Fri Jun 26",base:"CdP",startH:11.5,note:"From 11:30 AM"},
+  {date:"2026-06-27",label:"Sat Jun 27",base:"CdP",startH:9.0,note:"Transit → CaF"},
+  {date:"2026-06-28",label:"Sun Jun 28",base:"CaF",startH:8.5},
+  {date:"2026-06-29",label:"Mon Jun 29",base:"CaF",startH:8.5},
+  {date:"2026-06-30",label:"Tue Jun 30",base:"CaF",startH:10.0,note:"Light day"},
+  {date:"2026-07-01",label:"Wed Jul 1",base:"CaF",startH:8.5},
+  {date:"2026-07-02",label:"Thu Jul 2",base:"CaF",startH:8.5,note:"Rest day"},
+  {date:"2026-07-03",label:"Fri Jul 3",base:"CaF",startH:8.5},
+  {date:"2026-07-04",label:"Sat Jul 4",base:"CaF",startH:9.0,note:"Transit → Spoleto"},
+  {date:"2026-07-05",label:"Sun Jul 5",base:"Spo",startH:8.5},
+  {date:"2026-07-06",label:"Mon Jul 6",base:"Spo",startH:8.5},
+  {date:"2026-07-07",label:"Tue Jul 7",base:"Spo",startH:8.5},
+  {date:"2026-07-08",label:"Wed Jul 8",base:"Spo",startH:9.0,note:"Transit → Manciano"},
+  {date:"2026-07-09",label:"Thu Jul 9",base:"Man",startH:8.5},
+  {date:"2026-07-10",label:"Fri Jul 10",base:"Man",startH:8.5},
+];
+
+// ═══ STATE ════════════════════════════════════════════
+const PERSIST_FIELDS=["status","deleted","schedDate","schedTime","proposedDate","lastContacted","broker","brokerPhone","location","userPlannedDate","userPlannedTime"];
+function initProp(p){return{...p,status:"-",deleted:false,schedDate:"",schedTime:"",proposedDate:"",lastContacted:"",broker:"",brokerPhone:"",location:"",userPlannedDate:p.plannedDate||"",userPlannedTime:p.plannedTime||""};}
+let state={props:PROPS_RAW.map(initProp),sort:{field:"fco",dir:"asc"},expanded:new Set(),mapInited:false,leafletMap:null,mapMarkers:[],mapRoutes:[],collapsedDays:new Set(),schedCollapsed:{unscheduled:false,eliminated:false}};
+
+// ═══ STORAGE ══════════════════════════════════════════
+const LS_KEY="italy_hunt_2026_v3";
+function saveToStorage(){
+  const data={props:state.props.map(p=>{const o={id:p.id,_custom:!!p._custom};PERSIST_FIELDS.forEach(f=>o[f]=p[f]);if(p._custom)Object.assign(o,{name:p.name,town:p.town,prov:p.prov,price:p.price,rooms:p.rooms,size:p.size,grp:p.grp,fco:p.fco,cdp:p.cdp,caf:p.caf,spo:p.spo,man:p.man,url:p.url,lat:p.lat,lng:p.lng});return o;})};
+  localStorage.setItem(LS_KEY,JSON.stringify(data));
+  const n=document.getElementById("save-notice");if(n){n.style.opacity="1";setTimeout(()=>n.style.opacity="0",2000);}
+}
+function loadFromStorage(){
+  const raw=localStorage.getItem(LS_KEY);if(!raw)return;
+  try{
+    const data=JSON.parse(raw);
+    data.props.forEach(d=>{
+      let p=state.props.find(x=>x.id===d.id);
+      if(!p&&d._custom){p=initProp({id:d.id,name:d.name||"",town:d.town||"",prov:d.prov||"",price:d.price||0,rooms:d.rooms||0,size:d.size||0,grp:d.grp||1,fco:d.fco||120,cdp:d.cdp||60,caf:d.caf||60,spo:d.spo||60,man:d.man||60,url:d.url||"",lat:d.lat||null,lng:d.lng||null,plannedDate:"",plannedTime:""});p._custom=true;state.props.push(p);}
+      if(p){PERSIST_FIELDS.forEach(f=>{if(d[f]!==undefined)p[f]=d[f];});if(d._custom)p._custom=true;}
+    });
+  }catch(e){console.error("Load error",e);}
+}
+function exportJSON(){saveToStorage();const blob=new Blob([localStorage.getItem(LS_KEY)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="househunt_2026.json";a.click();}
+function importJSON(evt){
+  const file=evt.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{try{const data=JSON.parse(e.target.result);data.props.forEach(d=>{let p=state.props.find(x=>x.id===d.id);if(!p&&d._custom){p=initProp({id:d.id,name:d.name||"",town:d.town||"",prov:d.prov||"",price:d.price||0,rooms:d.rooms||0,size:d.size||0,grp:d.grp||1,fco:d.fco||120,cdp:d.cdp||60,caf:d.caf||60,spo:d.spo||60,man:d.man||60,url:d.url||"",lat:d.lat||null,lng:d.lng||null,plannedDate:"",plannedTime:""});p._custom=true;state.props.push(p);}if(p){PERSIST_FIELDS.forEach(f=>{if(d[f]!==undefined)p[f]=d[f];});if(d._custom)p._custom=true;}});renderProps();renderSchedule();alert("Imported.");}catch(e){alert("Failed: "+e.message);}};
+  reader.readAsText(file);evt.target.value="";
+}
+function resetStorage(){if(!confirm("Reset all data?"))return;localStorage.removeItem(LS_KEY);state.props=PROPS_RAW.map(initProp);state.expanded=new Set();renderProps();renderSchedule();}
+// Autosave every 90 seconds
+setInterval(saveToStorage,90000);
+// Also save on page hide (mobile background/close)
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")saveToStorage();});
+
+// ═══ HELPERS ══════════════════════════════════════════
+function getProp(id){return state.props.find(p=>p.id===id);}
+function nearestBase(p){return[["CdP",p.cdp],["CaF",p.caf],["Spo",p.spo],["Man",p.man]].sort((a,b)=>a[1]-b[1])[0];}
+function showTimePicker(s){return["To Be Scheduled","Proposed","Scheduled"].includes(s);}
+function showProposedDate(s){return s==="Proposed";}
+function parse12h(t){if(!t)return null;const m=t.match(/(\d+):(\d+)\s*(AM|PM)/i);if(!m)return null;let h=parseInt(m[1]),mn=parseInt(m[2]);if(m[3].toUpperCase()==="PM"&&h!==12)h+=12;if(m[3].toUpperCase()==="AM"&&h===12)h=0;return h+mn/60;}
+function fmt12h(hDec){const h=Math.floor(hDec),m=Math.round((hDec-h)*60);const ampm=h>=12?"PM":"AM";const h12=h>12?h-12:(h===0?12:h);return `${h12}:${String(m).padStart(2,"0")} ${ampm}`;}
+function driveFromTo(a,b){const k=a+"_"+b;if(DRIVE_MATRIX[k])return DRIVE_MATRIX[k];const r=b+"_"+a;if(DRIVE_MATRIX[r])return DRIVE_MATRIX[r];return null;}
+function locationCoords(p){const loc=p.location&&p.location.trim();if(!loc)return null;const gps=loc.match(/^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/);if(gps)return{lat:parseFloat(gps[1]),lng:parseFloat(gps[2])};return{address:loc};}
+function mapsUrl(f,t){const enc=l=>l.lat!==undefined?`${l.lat},${l.lng}`:encodeURIComponent(l.address);return`https://www.google.com/maps/dir/${enc(f)}/${enc(t)}/`;}
+
+// ═══ TABS ═════════════════════════════════════════════
+function showTab(name){
+  document.querySelectorAll(".tab-panel").forEach(el=>el.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
+  document.getElementById("tab-"+name)?.classList.add("active");
+  document.querySelectorAll(".tab").forEach(el=>{if(el.getAttribute("onclick")===`showTab('${name}')`)el.classList.add("active");});
+  if(name==="map"){initMap();setTimeout(()=>state.leafletMap?.invalidateSize(),100);}
+  if(name==="schedule")renderSchedule();
+}
+
+// ═══ PROPERTIES — TILES ═══════════════════════════════
+function setSort(f){if(state.sort.field===f)state.sort.dir=state.sort.dir==="asc"?"desc":"asc";else{state.sort.field=f;state.sort.dir="asc";}renderProps();}
+
+const ACTIVE_STATUSES=new Set(["-","Reached Out","Replied","Info Supplied","To Be Scheduled","Proposed","Scheduled"]);
+
+function filteredSortedProps(){
+  const fS=document.getElementById("f-status")?.value||"";
+  const fB=document.getElementById("f-base")?.value||"";
+  const fQ=(document.getElementById("f-search")?.value||"").toLowerCase().trim();
+  let arr=[...state.props];
+
+  // Apply status/deleted filter
+  if(fS==="DELETED"){arr=arr.filter(p=>p.deleted);}
+  else if(fS==="ELIM"){arr=arr.filter(p=>!p.deleted&&ELIM_STATUSES.has(p.status));}
+  else if(fS==="ALL"){arr=arr.filter(p=>!p.deleted);}
+  else if(fS===""){arr=arr.filter(p=>!p.deleted&&ACTIVE_STATUSES.has(p.status));}  // default: active only
+  else{arr=arr.filter(p=>!p.deleted&&p.status===fS);}
+
+  if(fB)arr=arr.filter(p=>nearestBase(p)[0]===fB);
+  if(fQ)arr=arr.filter(p=>p.name.toLowerCase().includes(fQ)||String(p.id).includes(fQ)||String(p.price).includes(fQ));
+  const{field,dir}=state.sort;const mul=dir==="asc"?1:-1;
+  arr.sort((a,b)=>{
+    if(field==="fco")return mul*(a.fco-b.fco);
+    if(field==="price")return mul*(a.price-b.price);
+    if(field==="base")return mul*(nearestBase(a)[1]-nearestBase(b)[1]);
+    if(field==="planned")return mul*((a.userPlannedDate||"zzz").localeCompare(b.userPlannedDate||"zzz"));
+    if(field==="sched")return mul*((a.schedDate||"zzz").localeCompare(b.schedDate||"zzz"));
+    if(field==="status")return mul*(STATUS_OPTS.indexOf(a.status)-STATUS_OPTS.indexOf(b.status));
+    return 0;
+  });
+  return arr;
+}
+
+function renderProps(){
+  ["fco","price","base","planned","sched","status"].forEach(f=>{
+    const btn=document.getElementById("sb-"+f);if(!btn)return;
+    btn.classList.remove("active","asc","desc");const arr=btn.querySelector(".arr");if(arr)arr.className="arr";
+    if(state.sort.field===f){btn.classList.add("active",state.sort.dir);if(arr)arr.className="arr "+state.sort.dir;}
+  });
+  const props=filteredSortedProps();
+  const fS=document.getElementById("f-status")?.value||"";
+  var _tot=state.props.filter(function(p){return !p.deleted;}).length;var _elim=state.props.filter(function(p){return !p.deleted&&ELIM_STATUSES.has(p.status);}).length;var _del=state.props.filter(function(p){return p.deleted;}).length;document.getElementById("result-count").textContent="Showing "+props.length+" of "+_tot+" active"+(_elim>0?" · "+_elim+" eliminated":"")+(_del>0?" · "+_del+" deleted":"");
+  document.getElementById("tiles-container").innerHTML=props.map(p=>renderTile(p,fS==="DELETED")).join("");
+  saveToStorage();
+}
+
+function renderTile(p,isDeletedView=false){
+  const nb=nearestBase(p);
+  const stCls=p.deleted?"st-deleted":(STATUS_CLASS[p.status]||"");
+  const grpCls=p.grp===1?"g1":"g2";
+  const isExp=state.expanded.has(p.id);
+  const showTime=showTimePicker(p.status);
+  const showPD=showProposedDate(p.status);
+  const hasCalBtn=p.schedDate&&showTimePicker(p.status);
+  const hasLoc=!!(p.location&&p.location.trim());
+  const locC=locationCoords(p)||(p.lat&&p.lng?{lat:p.lat,lng:p.lng}:null);
+  const brokerShort=p.broker?(p.broker.length>24?p.broker.slice(0,22)+"…":p.broker):"";
+
+  let dateChip="";
+  if(p.schedDate&&showTime){dateChip=`<span class="tile-date-chip sched-chip">${p.schedDate.replace("2026-","")}${p.schedTime?" "+p.schedTime:""}</span>`;}
+  else if(p.userPlannedDate){dateChip=`<span class="tile-date-chip planned-chip">${p.userPlannedDate.replace("2026-","")}${p.userPlannedTime?" "+p.userPlannedTime:""}</span>`;}
+
+  // Map button: opens current location → property
+  const mapUrl=locC?(locC.lat!==undefined?`https://www.google.com/maps/dir/My+Location/${locC.lat},${locC.lng}/`:`https://www.google.com/maps/dir/My+Location/${encodeURIComponent(locC.address)}/`):null;
+
+  const top=`<div class="tile-top">
+    <div style="flex:1;min-width:0">
+      <div class="tile-status-row">
+        ${isDeletedView
+          ?`<span style="font-size:11px;font-weight:600;color:var(--text3)">DELETED</span>`
+          :`<select class="status-sel" onchange="updateStatus(${p.id},this.value)">${STATUS_OPTS.map(s=>`<option${p.status===s?" selected":""}>${s}</option>`).join("")}</select>`
+        }
+        ${dateChip}
+      </div>
+    </div>
+    <button class="tile-expand-btn" onclick="toggleTile(${p.id})">${isExp?"▲":"▼"}</button>
+  </div>
+  <div class="tile-body">
+    <div class="tile-name"><a href="${p.url||"#"}" target="${p.url?"_blank":"_self"}">${p.name}</a>${p.fco<=120?' <span style="color:var(--terra);font-size:10px">⭐</span>':''}</div>
+    <div class="tile-sub">${p.town}, ${p.prov} · €${p.price}k · ${p.rooms}rms · <span class="${p.fco<=120?"fco-hot":""}">${p.fco}m FCO</span> · ${nb[0]}=${nb[1]}m${brokerShort?" · "+brokerShort:""}</div>
+    <div class="tile-actions">
+      ${isDeletedView
+        ?`<button class="t-btn t-btn-restore" onclick="restoreProp(${p.id})">↩ Restore</button>`
+        :`<button class="t-btn t-btn-olive" onclick="copyMessage(${p.id})">📋 Copy Msg</button>
+          ${hasCalBtn?`<button class="t-btn t-btn-blue" onclick="addToCalendar(${p.id})">📅 +Cal</button>`:""}
+          ${mapUrl?`<a class="t-btn t-btn-terra" href="${mapUrl}" target="_blank">🗺 Map</a>`:`<button class="t-btn" style="opacity:.4;cursor:not-allowed;border:1px solid var(--border);color:var(--text3)" disabled title="Enter location to enable">🗺 Map</button>`}
+          <button class="t-btn t-btn-red" onclick="deleteProp(${p.id})">🗑 Delete</button>`
+      }
+    </div>
+  </div>`;
+
+  const detail=`<div class="tile-detail${isExp?" open":""}">
+    <div class="sect-label">Property</div>
+    <div class="tile-field-row">
+      <div class="tile-field"><label>Price</label><span style="font-size:12px">€${p.price}k</span></div>
+      <div class="tile-field"><label>Rooms</label><span style="font-size:12px">${p.rooms}</span></div>
+      <div class="tile-field"><label>Size</label><span style="font-size:12px">${p.size}m²</span></div>
+      <div class="tile-field"><label>Group</label><span style="font-size:12px">Grp ${p.grp} (${p.fco}m FCO)</span></div>
+    </div>
+    <div class="tile-field"><label>Base drive times</label><span style="font-size:11px;color:var(--text3)">CdP=${p.cdp}m · CaF=${p.caf}m · Spo=${p.spo}m · Man=${p.man}m</span></div>
+    <div class="tile-field"><label>Idealista ID</label><span style="font-size:12px">${p.id}</span></div>
+    ${!isDeletedView?`
+    <div class="sect-label">Scheduling</div>
+    <div class="tile-field-row">
+      <div class="tile-field"><label>Status</label><select class="status-sel" style="width:100%" onchange="updateStatus(${p.id},this.value)">${STATUS_OPTS.map(s=>`<option${p.status===s?" selected":""}>${s}</option>`).join("")}</select></div>
+      <div class="tile-field"><label>Last Contacted</label><input type="date" value="${p.lastContacted}" onchange="updateLastContacted(${p.id},this.value)"></div>
+    </div>
+    ${showPD?`<div class="tile-field"><label>Proposed Date</label><input type="date" value="${p.proposedDate}" onchange="updateProposed(${p.id},this.value)" min="2026-06-24" max="2026-07-10"></div>`:""}
+    ${showTime?`<div class="tile-field-row"><div class="tile-field"><label>Sched Date</label><input type="date" value="${p.schedDate}" onchange="updateSchedDate(${p.id},this.value)" min="2026-06-24" max="2026-07-10"></div><div class="tile-field"><label>Sched Time</label><input type="time" value="${p.schedTime}" onchange="updateSchedTime(${p.id},this.value)"></div></div>`:""}
+    <div class="tile-field"><label>Planned (from schedule)</label><span style="font-size:12px;color:var(--text3)">${p.userPlannedDate?p.userPlannedDate.replace("2026-","")+" "+(p.userPlannedTime||""):"—"}</span></div>
+    <div class="sect-label">Agent &amp; Location</div>
+    <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap">
+      <div class="tile-field" style="flex:2;min-width:140px"><label>Broker / Firm</label><input type="text" value="${p.broker}" placeholder="Name" onchange="updateField(${p.id},'broker',this.value)"></div>
+      <div class="tile-field" style="flex:1;min-width:100px"><label>Phone</label><input type="tel" value="${p.brokerPhone}" placeholder="+39 …" onchange="updateField(${p.id},'brokerPhone',this.value)"></div>
+      <button class="t-btn t-btn-blue" style="margin-top:14px;flex-shrink:0" onclick="fetchBroker(${p.id})" title="Try to fetch broker from Idealista listing">⟳ Fetch</button>
+    </div>
+    <div id="broker-status-${p.id}" style="font-size:10px;color:var(--text3)"></div>
+    <div class="tile-field"><label>Location (GPS lat,lng — or address)</label>
+      <input type="text" value="${p.location}" placeholder="42.418,11.875 or full address" onchange="updateField(${p.id},'location',this.value)">
+      <span style="font-size:10px;color:var(--text3);margin-top:1px">Enables the Map button above.</span>
+    </div>
+    `:""}
+  </div>`;
+
+  return `<div class="tile ${grpCls} ${stCls}" id="tile-${p.id}">${top}${detail}</div>`;
+}
+
+function toggleTile(id){
+  if(state.expanded.has(id))state.expanded.delete(id);else state.expanded.add(id);
+  renderProps();
+  setTimeout(()=>document.getElementById("tile-"+id)?.scrollIntoView({block:"nearest",behavior:"smooth"}),50);
+}
+
+// ═══ STATUS UPDATES ═══════════════════════════════════
+function updateStatus(id,val){
+  const p=getProp(id);const prev=p.status;
+  p.status=val;
+  if(!showTimePicker(val)){p.schedDate="";p.schedTime="";}
+  if(!showProposedDate(val))p.proposedDate="";
+  if(val!=="-"&&val!==prev)p.lastContacted=new Date().toISOString().slice(0,10);
+  renderProps();renderSchedule();
+}
+function updateLastContacted(id,val){getProp(id).lastContacted=val;renderProps();}
+function updateSchedDate(id,val){getProp(id).schedDate=val;renderProps();renderSchedule();}
+function updateSchedTime(id,val){getProp(id).schedTime=val;renderProps();}
+function updateProposed(id,val){getProp(id).proposedDate=val;renderProps();}
+function updateField(id,field,val){getProp(id)[field]=val;renderProps();}
+
+function deleteProp(id){
+  if(!confirm("Mark this property as deleted? It will be hidden but not removed. You can restore it from the Deleted filter."))return;
+  const p=getProp(id);p.deleted=true;
+  // Also clear from schedule
+  p.userPlannedDate="";p.userPlannedTime="";
+  renderProps();renderSchedule();
+}
+function restoreProp(id){
+  const p=getProp(id);p.deleted=false;p.status="-";
+  renderProps();renderSchedule();
+}
+
+function copyMessage(id){
+  const p=getProp(id);const bi=getBaseForDate(p.userPlannedDate);
+  const m=[
+    `We are looking for a 4+ bedroom, 4+ bathroom casale within a two hour drive of FCO. The house should NOT be divided into apartments, though an annex with 1 or 2 bedrooms or a small service apartment in the main house are fine. We would ideally be a 5-minute drive to a town with a bar and restaurant. Our budget is 800,000 euros (or a little more if it is in move-in condition with modern, US-like bathrooms).`,
+    `We will be in ${bi.name} ${bi.dates} looking at properties. If ${p.url} is available to see, please send a Google Map link or coordinates with the exact property location, as well as a satellite image showing the property boundary.`,
+    `Please contact us by WhatsApp if you have any questions.`,
+    `Thank you.`,
+    `Dan\n+39 331 980 5272`
+  ].join("\n\n");
+  navigator.clipboard.writeText(m).then(()=>flashCopy(id)).catch(()=>{const ta=document.createElement("textarea");ta.value=m;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);flashCopy(id);});
+}
+function flashCopy(id){document.querySelectorAll(`#tile-${id} .t-btn-olive`).forEach(b=>{const o=b.textContent;b.textContent="Copied ✓";b.style.cssText="background:var(--terra);color:#fff";setTimeout(()=>{b.textContent=o;b.style.cssText="";},1800);});}
+
+function addToCalendar(id){
+  const p=getProp(id);if(!p.schedDate)return;
+  const t=p.schedTime||"09:00";const s=new Date(p.schedDate+"T"+t+":00");const e=new Date(s);e.setMinutes(e.getMinutes()+45);
+  const fmt=d=>d.toISOString().replace(/[-:.]/g,"").slice(0,15);
+  const title=encodeURIComponent(`House viewing: ${p.name} (${p.town}, ${p.prov})`);
+  const det=encodeURIComponent(`${p.url}
+FCO: ${p.fco}min | €${p.price}k | ${p.rooms} rooms`);
+  window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(s)}/${fmt(e)}&details=${det}&add=kraut.family@gmail.com`,"_blank");
+}
+
+function getBaseForDate(date){
+  if(!date)return{name:"Città della Pieve",dates:"June 24–26, 2026"};
+  const d=TRIP_DAYS.find(td=>td.date===date);if(!d)return{name:"Città della Pieve",dates:"June 24–26, 2026"};
+  const bm={CdP:{name:"Città della Pieve",dates:"June 24–26, 2026"},CaF:{name:"Castiglion Fiorentino",dates:"June 28–July 3, 2026"},Spo:{name:"Spoleto",dates:"July 5–7, 2026"},Man:{name:"Manciano",dates:"July 7–10, 2026"}};
+  const tm={"2026-06-27":{name:"en route from Città della Pieve to Castiglion Fiorentino",dates:"June 27, 2026"},"2026-07-04":{name:"en route from Castiglion Fiorentino to Spoleto",dates:"July 4, 2026"},"2026-07-08":{name:"en route from Spoleto to Manciano",dates:"July 8, 2026"}};
+  return tm[date]||bm[d.base]||{name:"Città della Pieve",dates:"June 24–26, 2026"};
+}
+
+// ═══ BROKER FETCH ═════════════════════════════════════
+async function fetchBroker(id){
+  const p=getProp(id);
+  const statusEl=document.getElementById(`broker-status-${id}`);
+  if(!p.url||!p.url.includes("idealista.it")){if(statusEl)statusEl.textContent="Only works for Idealista listings.";return;}
+  if(statusEl){statusEl.textContent="Fetching…";statusEl.style.color="var(--adriat)";}
+  // Use Gemini to extract broker from the listing
+  const prompt=`Fetch the Idealista listing at ${p.url} and extract the brokerage firm name shown as "Professionista" on the page. Return ONLY a JSON object: {"broker":"firm name","city":"city if shown"}. If you cannot access the URL, return {"broker":"","city":""}.`;
+  try{
+    const ans=await callGeminiRaw(prompt);
+    // Try parsing JSON from response
+    const m=ans.match(/\{[^}]+\}/);
+    if(m){
+      const obj=JSON.parse(m[0]);
+      if(obj.broker&&obj.broker.trim()){
+        p.broker=obj.broker.trim();
+        if(statusEl){statusEl.textContent=`Found: ${p.broker}`;statusEl.style.color="var(--olive)";}
+        renderProps();
+        return;
+      }
+    }
+    if(statusEl){statusEl.textContent="Not found — enter manually. (Phone requires clicking 'Vedi il telefono' on the listing page.)";statusEl.style.color="var(--text3)";}
+  }catch(e){
+    if(statusEl){statusEl.textContent="Fetch failed — enter manually.";statusEl.style.color="var(--red)";}
+  }
+}
+
+// ═══ ADD PROPERTY MODAL ════════════════════════════════
+let _addFetchTimer=null;
+function openAddModal(prefill){
+  prefill=prefill||{};
+  ["add-url","add-name","add-id","add-town","add-prov","add-price","add-rooms","add-size","add-fco","add-grp","add-loc","add-broker","add-phone"].forEach(function(id){var el=document.getElementById(id);if(el)el.value="";});
+  var st=document.getElementById("add-fetch-status");if(st){st.style.display="none";st.textContent="";}
+  var nt=document.getElementById("add-note");if(nt)nt.textContent="";
+  function setF(id,val){if(val!=null&&String(val)!==""){var el=document.getElementById(id);if(el)el.value=val;}}
+  setF("add-url",prefill.url); setF("add-id",prefill.id);
+  setF("add-name",prefill.title||prefill.name||null); setF("add-town",prefill.town);
+  setF("add-prov",prefill.prov); setF("add-price",prefill.price);
+  setF("add-rooms",prefill.rooms); setF("add-size",prefill.size);
+  setF("add-fco",prefill.fco_min); setF("add-grp",prefill.grp);
+  setF("add-loc",prefill.location); setF("add-broker",prefill.broker);
+  setF("add-phone",prefill.phone);
+  if(prefill.url){var ue=document.getElementById("add-url");if(ue&&ue.value)parseAddUrl();}
+  document.getElementById("add-modal").style.display="flex";
+  var focusEl=document.getElementById(prefill.id?"add-name":"add-url");
+  if(focusEl)focusEl.focus();
+}
+function closeAddModal(){document.getElementById("add-modal").style.display="none";["add-url","add-name","add-id","add-town","add-prov","add-price","add-rooms","add-size","add-fco","add-grp","add-loc","add-broker","add-phone"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});document.getElementById("add-fetch-status").style.display="none";document.getElementById("add-note").textContent="";}
+
+function onAddUrlChange(){
+  clearTimeout(_addFetchTimer);
+  _addFetchTimer=setTimeout(()=>parseAddUrl(),400);
+}
+
+async function parseAddUrl(){
+  const url=(document.getElementById("add-url").value||"").trim();
+  const statusEl=document.getElementById("add-fetch-status");
+  statusEl.style.display="block";
+
+  if(!url){statusEl.style.display="none";return;}
+
+  // Extract Idealista ID from URL (works for /immobile/ and /en/immobile/)
+  const idMatch=url.match(/idealista\.it(?:\/en)?\/immobile\/(\d{5,9})/);
+
+  if(!idMatch){
+    statusEl.className="fetch-status fetch-info";
+    statusEl.textContent="Non-Idealista URL — fill in fields manually.";
+    return;
+  }
+
+  const pid=parseInt(idMatch[1]);
+  document.getElementById("add-id").value=pid;
+
+  // Duplicate check
+  if(state.props.find(p=>p.id===pid)){
+    statusEl.className="fetch-status fetch-err";
+    statusEl.textContent="Property "+pid+" is already in your list.";
+    document.getElementById("add-name").value="⚠ Already in list";
+    return;
+  }
+
+  // Show the listing link and extension instruction
+  statusEl.className="fetch-status fetch-ok";
+  statusEl.innerHTML='ID <strong>'+pid+'</strong> detected. '
+    +'<a href="'+url+'" target="_blank" style="color:#2C5F7A;font-weight:600">Open listing ↗</a>'
+    +' — fill in fields below, or use the 🏡 extension on that page to auto-fill broker + GPS.';
+  document.getElementById("add-note").textContent=
+    "Open the listing in Chrome, click '🏡 Vedi il telefono' for the phone, then click the 🏡 extension icon → Extract → Send to pre-fill broker, phone, and GPS here.";
+}
+function confirmAddProperty(){
+  const url=document.getElementById("add-url").value.trim();
+  const name=document.getElementById("add-name").value.trim();
+  const town=document.getElementById("add-town").value.trim();
+  const prov=(document.getElementById("add-prov").value.trim()||"").toUpperCase();
+  const price=parseFloat(document.getElementById("add-price").value)||0;
+  const rooms=parseInt(document.getElementById("add-rooms").value)||0;
+  const size=parseInt(document.getElementById("add-size").value)||0;
+  const fco=parseInt(document.getElementById("add-fco").value)||90;
+  const grp=parseInt(document.getElementById("add-grp").value)||1;
+  const loc=document.getElementById("add-loc").value.trim();
+  const broker=document.getElementById("add-broker").value.trim();
+  const phone=document.getElementById("add-phone").value.trim();
+
+  if(!name||!town){alert("Property Name and Town are required.");return;}
+
+  // Generate ID: use Idealista ID if present, else timestamp
+  const idMatch=url.match(/idealista\.it\/immobile\/(\d{5,9})/);
+  const pid=idMatch?parseInt(idMatch[1]):Date.now();
+  if(state.props.find(p=>p.id===pid)){
+    alert(`Property ${pid} is already in your list. Use the Search box on the Properties tab to find it.`);
+    closeAddModal();
+    // Highlight existing property
+    state.expanded.add(pid);
+    showTab('props');
+    renderProps();
+    setTimeout(()=>document.getElementById('tile-'+pid)?.scrollIntoView({behavior:'smooth',block:'center'}),200);
+    return;
+  }
+
+  // Parse loc for lat/lng
+  let lat=null,lng=null;
+  const gps=loc.match(/^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/);
+  if(gps){lat=parseFloat(gps[1]);lng=parseFloat(gps[2]);}
+
+  // Estimate base drives from location
+  let cdp=60,caf=60,spo=60,man=60;
+  if(lat&&lng){
+    function hvDrive(lat1,lng1,lat2,lng2){const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180,a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return Math.round(2*R*Math.asin(Math.sqrt(a))*1.4/55*60/5)*5;}
+    cdp=hvDrive(lat,lng,42.9535,12.0022);caf=hvDrive(lat,lng,43.3429,11.9246);spo=hvDrive(lat,lng,42.7341,12.7376);man=hvDrive(lat,lng,42.5876,11.5152);
+  }
+
+  const newProp=initProp({id:pid,name,town,prov,price,rooms,size,grp,fco,cdp,caf,spo,man,url:url||"",lat,lng,plannedDate:"",plannedTime:""});
+  newProp._custom=true;newProp.broker=broker;newProp.brokerPhone=phone;newProp.location=loc;
+  state.props.push(newProp);
+  closeAddModal();renderProps();renderSchedule();
+  saveToStorage();
+  // Scroll to new tile
+  setTimeout(()=>document.getElementById("tile-"+pid)?.scrollIntoView({behavior:"smooth"}),100);
+}
+
+// ═══ SCHEDULE ══════════════════════════════════════════
+function propsForDay(date){
+  const view=document.getElementById("sched-view")?.value||"all";
+  return state.props.filter(p=>{
+    if(p.deleted||ELIM_STATUSES.has(p.status))return false;
+    if(p.userPlannedDate!==date)return false;
+    if(view==="scheduled")return p.status==="Scheduled";
+    if(view==="planned")return p.status!=="Scheduled";
+    return true;
+  }).sort((a,b)=>{const ta=parse12h(a.userPlannedTime)||99,tb=parse12h(b.userPlannedTime)||99;return ta-tb;});
+}
+
+function computeDayTimeline(dayDef,stops){
+  const results=[];let curH=dayDef.startH;let totalDrive=0;
+  stops.forEach((p,i)=>{
+    let driveMin=0,driveKm=0;
+    const prevKey=i===0?dayDef.base:String(stops[i-1].id);
+    const d=driveFromTo(prevKey,String(p.id));
+    if(d){driveMin=d[0];driveKm=d[1];}else{driveMin=20;driveKm=15;}
+    totalDrive+=driveMin;
+    const arriveH=curH+driveMin/60;const departH=arriveH+VIEWING_MIN/60;
+    let conflict=false,warning=false,msg="";
+    if(arriveH>DAY_END-VIEWING_MIN/60){conflict=true;msg=`Arrives ${fmt12h(arriveH)} — no time`;}
+    else if(arriveH>DAY_END-1){warning=true;msg=`Tight — ${fmt12h(arriveH)}`;}
+    results.push({prop:p,driveMin,driveKm,arriveH,departH,conflict,warning,msg,totalDrive,prevKey});
+    curH=departH;
+  });
+  let returnDrive=null,returnKm=null;
+  if(stops.length>0){const d=driveFromTo(String(stops[stops.length-1].id),dayDef.base);if(d){returnDrive=d[0];returnKm=d[1];}else{returnDrive=30;returnKm=25;}totalDrive+=returnDrive;}
+  return{steps:results,totalDrive,returnDrive,returnKm};
+}
+
+function mapItUrl(step,day){
+  const p=step.prop;
+  const toLoc=locationCoords(p)||(p.lat&&p.lng?{lat:p.lat,lng:p.lng}:null);
+  if(!toLoc)return null;
+  let fromLoc=null;
+  if(["CdP","CaF","Spo","Man"].includes(step.prevKey)){const b=BASES[step.prevKey];fromLoc={lat:b.lat,lng:b.lng};}
+  else{const prev=state.props.find(x=>String(x.id)===step.prevKey);if(prev){const lc=locationCoords(prev);fromLoc=lc||(prev.lat&&prev.lng?{lat:prev.lat,lng:prev.lng}:null);}}
+  if(!fromLoc)return`https://www.google.com/maps/dir/My+Location/${toLoc.lat!==undefined?`${toLoc.lat},${toLoc.lng}`:encodeURIComponent(toLoc.address)}/`;
+  return mapsUrl(fromLoc,toLoc);
+}
+
+function renderSchedule(){
+  const container=document.getElementById("days-container");
+  const elimProps=state.props.filter(p=>!p.deleted&&ELIM_STATUSES.has(p.status));
+  const unscheduledProps=state.props.filter(p=>!p.deleted&&!ELIM_STATUSES.has(p.status)&&!p.userPlannedDate);
+
+  container.innerHTML=TRIP_DAYS.map(day=>{
+    const stops=propsForDay(day.date);
+    const tl=computeDayTimeline(day,stops);
+    const td=tl.totalDrive;
+    const hasConflict=tl.steps.some(s=>s.conflict)||td>DRIVE_CAP+10;
+    const hasWarn=!hasConflict&&(tl.steps.some(s=>s.warning)||td>DRIVE_CAP);
+    const driveClass=td>DRIVE_CAP+10?"drive-over":td>DRIVE_CAP?"drive-warn":"drive-ok";
+    const driveLabel=stops.length>0?`${td}m total`:"—";
+    const isCollapsed=state.collapsedDays.has(day.date);
+
+    const stopRows=tl.steps.map((s,i)=>{
+      const p=s.prop;const isS=p.status==="Scheduled";
+      const rowCls=isS?"sched-locked":s.conflict?"row-conflict":s.warning?"row-warn":"";
+      const dcls="drive-chip"+(s.driveMin>60?" drive-chip-over":s.driveMin>40?" drive-chip-warn":"");
+      const miUrl=mapItUrl(s,day);
+      const miBtn=miUrl?`<a class="mapit-btn" href="${miUrl}" target="_blank">🗺</a>`:`<span class="mapit-btn disabled" title="No location">🗺</span>`;
+
+      return `<div class="stop-row ${rowCls}" data-id="${p.id}" data-date="${day.date}" draggable="${!isS}">
+        ${isS?`<span style="width:16px;flex-shrink:0"></span>`:`<span class="drag-handle" style="touch-action:none">⠿</span>`}
+        <span class="${dcls}">${s.driveMin}m·${s.driveKm}km</span>
+        <span class="stop-time">${fmt12h(s.arriveH)}</span>
+        <span class="stop-name"><a href="${p.url}" target="_blank">${p.name}</a></span>
+        <span style="font-size:10px;color:var(--text3);flex-shrink:0;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.town}</span>
+        <span style="font-size:10px;font-family:monospace;color:var(--text2);flex-shrink:0">${p.fco}m</span>
+        ${isS?'<span class="sched-badge">Sched</span>':""}
+        ${s.msg?`<span style="font-size:10px;color:${s.conflict?"var(--red)":"#C07000"};flex-shrink:0;white-space:nowrap">${s.msg}</span>`:""}
+        ${miBtn}
+      </div>`;
+    }).join("");
+
+    const returnRow=stops.length>0?`<div class="return-row"><span class="drive-chip" style="background:var(--bg3)">${tl.returnDrive||"?"}m·${tl.returnKm||"?"}km</span><span>Return to ${BASES[day.base]?.name||day.base}</span><span style="margin-left:auto">${tl.steps.length>0?fmt12h(tl.steps[tl.steps.length-1].departH+(tl.returnDrive||0)/60):"—"}</span></div>`:"";
+    const cMsg=hasConflict&&td>DRIVE_CAP+10?`<div class="conflict-msg">⚠ Drive ${td}m — over cap</div>`:hasWarn&&td>DRIVE_CAP?`<div class="warning-msg">⚡ Drive ${td}m — near cap</div>`:"";
+
+    return `<div class="day-card${hasConflict?" has-conflict":hasWarn?" has-warning":""}${isCollapsed?" collapsed":""}" id="day-${day.date}">
+      <div class="day-header" onclick="toggleDay('${day.date}')">
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+          <span style="font-size:12px;color:var(--text3);margin-right:2px">${isCollapsed?"▶":"▼"}</span>
+          <span class="day-label">${day.label}</span>
+          <span class="day-base">${BASES[day.base]?.name||day.base}</span>
+          ${day.note?`<span class="day-note">(${day.note})</span>`:""}
+        </div>
+        <div class="day-meta">
+          <span class="day-drive-total ${driveClass}">${driveLabel}</span>
+          <span style="font-size:11px;color:var(--text3)">${stops.length} viewing${stops.length!==1?"s":""}</span>
+        </div>
+      </div>
+      <div class="drop-zone" id="dz-${day.date}">${stopRows||'<div class="empty-day">Drop properties here</div>'}</div>
+      ${returnRow}${cMsg}
+    </div>`;
+  }).join("");
+
+  // Unscheduled zone
+  const unschedRows=unscheduledProps.map(p=>`<div class="stop-row" data-id="${p.id}" data-date="" draggable="true">
+    <span class="drag-handle" style="touch-action:none">⠿</span>
+    <span class="stop-name"><a href="${p.url}" target="_blank">${p.name}</a></span>
+    <span style="font-size:10px;color:var(--text3)">${p.town}</span>
+    <span style="font-size:10px;font-family:monospace;color:var(--text2);margin-left:auto">${p.fco}m FCO · ${nearestBase(p)[0]}=${nearestBase(p)[1]}m</span>
+  </div>`).join("");
+
+  container.innerHTML+=`<div class="zone-card" id="zone-unscheduled">
+    <div class="zone-header" onclick="toggleZone('unscheduled')">
+      <span class="zone-label">⊙ Unscheduled (${unscheduledProps.length})</span>
+      <span style="font-size:11px;color:var(--text3)">${state.schedCollapsed.unscheduled?"▶ Show":"▼ Hide"} · Drag to a day above</span>
+    </div>
+    <div class="zone-drop" id="dz-unscheduled" ${state.schedCollapsed.unscheduled?'style="display:none"':''}>${unschedRows||'<div class="empty-day">All properties are scheduled</div>'}</div>
+  </div>`;
+
+  // Eliminated zone
+  const elimRows=elimProps.map(p=>`<div class="zone-row" data-id="${p.id}">
+    <span class="stop-name">${p.name}</span>
+    <span style="font-size:10px;color:var(--text3)">${p.town}</span>
+    <span style="font-size:10px;margin-left:auto;padding:1px 5px;border-radius:4px;background:var(--red-bg);color:var(--red)">${p.status}</span>
+  </div>`).join("");
+
+  container.innerHTML+=`<div class="zone-card elim-zone" id="zone-elim">
+    <div class="zone-header" onclick="toggleZone('eliminated')">
+      <span class="zone-label" style="color:var(--red)">✗ Eliminated (${elimProps.length})</span>
+      <span style="font-size:11px;color:var(--text3)">${state.schedCollapsed.eliminated?"▶ Show":"▼ Hide"}</span>
+    </div>
+    <div id="dz-elim" ${state.schedCollapsed.eliminated?'style="display:none"':''}>${elimRows||'<div class="empty-day">No eliminated properties</div>'}</div>
+  </div>`;
+
+  // Init Sortable for each day drop zone
+  TRIP_DAYS.forEach(day=>{
+    const dz=document.getElementById("dz-"+day.date);if(!dz)return;
+    new Sortable(dz,{
+      group:"viewings",animation:150,
+      handle:".drag-handle",          // ← ONLY drag from handle
+      filter:".sched-locked",
+      onEnd(evt){
+        const movedId=parseInt(evt.item.dataset.id);
+        const newDate=evt.to.id.replace("dz-","");
+        const p=getProp(movedId);
+        if(p&&p.status!=="Scheduled"){
+          p.userPlannedDate=newDate||"";
+          const ordered=[...evt.to.querySelectorAll(".stop-row[data-id]")].map(s=>parseInt(s.dataset.id));
+          const dayDef=TRIP_DAYS.find(d=>d.date===newDate);
+          if(dayDef&&ordered.length){let curH=dayDef.startH+0.5;ordered.forEach((id,i)=>{const pr=getProp(id);if(!pr)return;const d=driveFromTo(i===0?dayDef.base:String(ordered[i-1]),String(id));curH+=(d?d[0]:20)/60;pr.userPlannedTime=fmt12h(curH);curH+=VIEWING_MIN/60;});}
+          else if(!newDate){p.userPlannedTime="";}
+          renderProps();renderSchedule();
+        }else renderSchedule();
+      }
+    });
+  });
+
+  // Sortable for unscheduled zone
+  const dzU=document.getElementById("dz-unscheduled");
+  if(dzU){new Sortable(dzU,{group:"viewings",animation:150,handle:".drag-handle",onEnd(evt){const movedId=parseInt(evt.item.dataset.id);const newDate=evt.to.id.replace("dz-","");const p=getProp(movedId);if(p){p.userPlannedDate=newDate||"";if(!newDate)p.userPlannedTime="";const dayDef=TRIP_DAYS.find(d=>d.date===newDate);if(dayDef){const ordered=[...evt.to.querySelectorAll(".stop-row[data-id]")].map(s=>parseInt(s.dataset.id));let curH=dayDef.startH+0.5;ordered.forEach((id,i)=>{const pr=getProp(id);if(!pr)return;const d=driveFromTo(i===0?dayDef.base:String(ordered[i-1]),String(id));curH+=(d?d[0]:20)/60;pr.userPlannedTime=fmt12h(curH);curH+=VIEWING_MIN/60;});}renderProps();renderSchedule();}}}); }
+}
+
+function toggleDay(date){
+  if(state.collapsedDays.has(date))state.collapsedDays.delete(date);else state.collapsedDays.add(date);
+  renderSchedule();
+}
+function toggleZone(name){
+  state.schedCollapsed[name]=!state.schedCollapsed[name];
+  renderSchedule();
+}
+
+// ═══ MAP ══════════════════════════════════════════════
+function initMap(){
+  if(state.mapInited)return;state.mapInited=true;
+  const map=L.map("map").setView([42.85,12.0],8);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap",maxZoom:16}).addTo(map);
+  state.leafletMap=map;
+  Object.entries(BASES).forEach(([key,b])=>{L.marker([b.lat,b.lng],{icon:L.divIcon({className:"",html:`<div style="background:#2C5F7A;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.3)">★</div>`,iconSize:[26,26],iconAnchor:[13,13]})}).addTo(map).bindPopup(`<b>${b.name}</b><br>${b.dates}`);});
+  refreshMap();
+}
+function refreshMap(){
+  if(!state.leafletMap)return;
+  state.mapMarkers.forEach(m=>m.remove());state.mapMarkers=[];
+  state.mapRoutes.forEach(r=>r.remove());state.mapRoutes=[];
+  const showG1=document.getElementById("map-g1")?.checked;
+  const showG2=document.getElementById("map-g2")?.checked;
+  const schedOnly=document.getElementById("map-sched")?.checked;
+  const filterBase=document.getElementById("map-base")?.value||"";
+  const filterDay=document.getElementById("map-day")?.value||"";
+
+  const visProps=state.props.filter(p=>{
+    if(p.deleted||ELIM_STATUSES.has(p.status))return false;
+    const lc=locationCoords(p);
+    if(!lc&&!p.lat&&!p.lng)return false;
+    if(p.grp===1&&!showG1)return false;
+    if(p.grp===2&&!showG2)return false;
+    if(schedOnly&&p.status!=="Scheduled")return false;
+    if(filterBase&&nearestBase(p)[0]!==filterBase)return false;
+    if(filterDay&&p.userPlannedDate!==filterDay)return false;
+    return true;
+  });
+
+  visProps.forEach(p=>{
+    const col=p.grp===1?"#5B7232":"#C0603A";
+    const lc=locationCoords(p);const lat=lc?.lat||p.lat;const lng=lc?.lng||p.lng;if(!lat)return;
+    const sz=lc?14:11;const bw=lc?"3px":"2px";
+    const icon=L.divIcon({className:"",html:`<div style="background:${col};border-radius:50%;width:${sz}px;height:${sz}px;border:${bw} solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+    const m=L.marker([lat,lng],{icon}).addTo(state.leafletMap).bindPopup(`<b>${p.name}</b><br>${p.town},${p.prov}<br>€${p.price}k · ${p.fco}m FCO<br>Status: ${p.status}${lc?'<br><i>📍 Location set</i>':''}`);
+    state.mapMarkers.push(m);
+  });
+
+  if(filterDay){
+    const dayStops=state.props.filter(p=>p.userPlannedDate===filterDay&&visProps.find(v=>v.id===p.id)).sort((a,b)=>{const ta=parse12h(a.userPlannedTime)||99,tb=parse12h(b.userPlannedTime)||99;return ta-tb;});
+    const dayDef=TRIP_DAYS.find(d=>d.date===filterDay);
+    if(dayDef&&dayStops.length>=1){
+      const coords=[];const base=BASES[dayDef.base];if(base)coords.push([base.lat,base.lng]);
+      dayStops.forEach(p=>{const lc=locationCoords(p);const lat=lc?.lat||p.lat;const lng=lc?.lng||p.lng;if(lat&&lng)coords.push([lat,lng]);});
+      if(base)coords.push([base.lat,base.lng]);
+      if(coords.length>2){const line=L.polyline(coords,{color:"#2C5F7A",weight:2.5,opacity:.75,dashArray:"6,4"}).addTo(state.leafletMap);state.mapRoutes.push(line);state.leafletMap.fitBounds(line.getBounds(),{padding:[40,40]});}
+    }
+  }
+}
+
+// ═══ GEMINI ════════════════════════════════════════════
+const API_KEY="AIzaSyBmBWSxxAvawMG4noiDA7ulzm6hHtYtCAc";
+const GEMINI_URL=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+async function callGemini(prompt,retries=5){
+  const propSummary=JSON.stringify(state.props.filter(p=>!p.deleted).map(p=>({id:p.id,name:p.name,town:p.town+","+p.prov,price:"€"+p.price+"k",rooms:p.rooms,fco:p.fco+"min",grp:p.grp,status:p.status,planned:p.userPlannedDate})));
+  const ctx="Italy house-hunting Jun 24–Jul 10, 2026. 47 props, 4 bases. FCO in min. Cap 120min/day. 45min viewing.\nProperties: "+propSummary;
+  for(let i=0;i<retries;i++){
+    try{
+      const r=await fetch(GEMINI_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts:[{text:ctx+"\n\n"+prompt}]}],generationConfig:{maxOutputTokens:800,temperature:0.7}})});
+      if(r.status===429){await new Promise(r=>setTimeout(r,Math.pow(2,i)*1000));continue;}
+      const d=await r.json();return d.candidates?.[0]?.content?.parts?.[0]?.text||"No response.";
+    }catch(e){if(i===retries-1)return"Error: "+e.message;await new Promise(r=>setTimeout(r,Math.pow(2,i)*1000));}
+  }
+  return"No response after retries.";
+}
+async function callGeminiRaw(prompt,retries=5){
+  // Like callGemini but WITHOUT the property context — used for Add Property scraping
+  for(let i=0;i<retries;i++){
+    try{
+      const r=await fetch(GEMINI_URL,{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],
+          generationConfig:{maxOutputTokens:1024,temperature:0.1}})});
+      if(r.status===429){await new Promise(r=>setTimeout(r,Math.pow(2,i)*1000));continue;}
+      const d=await r.json();
+      return d.candidates?.[0]?.content?.parts?.[0]?.text||"No response.";
+    }catch(e){if(i===retries-1)return"Error: "+e.message;await new Promise(r=>setTimeout(r,Math.pow(2,i)*1000));}
+  }
+  return"No response after retries.";
+}
+function geminiQuick(q){document.getElementById("gem-input").value=q;sendGemini();}
+async function sendGemini(){
+  const inp=document.getElementById("gem-input"),hist=document.getElementById("gem-history");
+  const q=inp.value.trim();if(!q)return;inp.value="";
+  hist.innerHTML+=`<div class="gem-user">${q}</div>`;
+  hist.innerHTML+=`<div class="gem-ai" id="gem-wait" style="color:var(--text3);font-style:italic">Thinking…</div>`;
+  hist.scrollTop=hist.scrollHeight;
+  const ans=await callGemini(q);
+  document.getElementById("gem-wait")?.remove();
+  hist.innerHTML+=`<div class="gem-ai">${ans}</div>`;
+  hist.scrollTop=hist.scrollHeight;
+}
+
+// ═══ CHROME EXTENSION BRIDGE ══════════════════════════
+// Listens for broker data pushed from the househunt Chrome extension.
+// The extension content script scrapes the open Idealista listing and
+// calls: window.postMessage({type:'HOUSEHUNT_BROKER', ...}, '*')
+window.addEventListener('message', evt => {
+  // Accept messages from extension content scripts (same window) or
+  // from the extension background via chrome.tabs.sendMessage → injected postMessage
+  if (!evt.data || evt.data.type !== 'HOUSEHUNT_BROKER') return;
+  const { idealistaId, broker, phone, location, price, rooms, size, town, prov, title } = evt.data;
+  if (!idealistaId) return;
+
+  const pid = parseInt(idealistaId);
+  const p = getProp(pid);
+
+  // Property not in list — offer to add it
+  if (!p) {
+    showExtToast(`Property ${pid} not in list. Use + Add Property to add it.`, 'warn');
+    // Pre-fill the Add Property modal with extracted data
+    openAddModal({
+      url:`https://www.idealista.it/immobile/${pid}/`,
+      id:pid, title:title||null, town:town||null, prov:prov||null,
+      price:price||null, rooms:rooms||null, size:size||null,
+      broker:broker||null, phone:phone||null, location:location||null
+    });
+    return;
+  }
+
+  let updated = [];
+  if (broker && broker.trim()) { p.broker = broker.trim(); updated.push('broker'); }
+  if (phone && phone.trim())   { p.brokerPhone = phone.trim(); updated.push('phone'); }
+  if (location && location.trim()) { p.location = location.trim(); updated.push('location'); }
+
+  if (updated.length) {
+    saveToStorage();
+    state.expanded.add(pid);
+    // Switch to Properties tab so user sees update
+    showTab('props');
+    renderProps();
+    showExtToast(`✓ Updated ${p.name}: ${updated.join(', ')} filled in.`, 'ok');
+    setTimeout(() => document.getElementById('tile-'+pid)?.scrollIntoView({behavior:'smooth', block:'center'}), 250);
+  } else {
+    showExtToast(`Property ${p.name} found but no new data extracted.`, 'warn');
+  }
+});
+
+// Toast notification for extension events
+function showExtToast(msg, type='ok') {
+  const colors = { ok:'#2E7D32', err:'#C0392B', warn:'#E65100' };
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = `position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:${colors[type]||colors.ok};color:#fff;padding:10px 18px;border-radius:6px;
+    font-size:12px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.3);
+    max-width:90vw;text-align:center;pointer-events:none;
+    animation:slideUp .25s ease;`;
+  const style = document.createElement('style');
+  style.textContent = '@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
+  document.head.appendChild(style);
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ═══ INIT ══════════════════════════════════════════════
+loadFromStorage();
+renderProps();
+</script>
+</body>
+</html>
