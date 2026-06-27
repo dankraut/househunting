@@ -244,7 +244,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
     <span style="font-size:11px;font-weight:500;color:var(--text2)">Filter:</span>
     <label>Status <select id="f-status" onchange="renderProps()"><option value="">Active</option><option value="ALL">All</option><option>-</option><option>Reached Out</option><option>Replied</option><option>Info Supplied</option><option>To Be Scheduled</option><option>Proposed</option><option>Scheduled</option><option value="ELIM">Eliminated</option><option value="DELETED">Deleted</option></select></label>
     <label>Base <select id="f-base" onchange="renderProps()"><option value="">All</option><option>CdP</option><option>CaF</option><option>Spo</option><option>Man</option></select></label>
-    <label>Search <input type="text" id="f-search" placeholder="name / ID / price" oninput="renderProps()"></label>
+    <label>Search <input type="text" id="f-search" placeholder="name / ID / price" oninput="renderProps();document.getElementById('btn-clr-search').style.display=this.value?'inline-block':'none'"></label><button class="io-btn" id="btn-clr-search" onclick="document.getElementById('f-search').value='';document.getElementById('btn-clr-search').style.display='none';renderProps()" style="display:none">✕ Clear</button>
   </div>
   <div class="result-count" id="result-count"></div>
   <div class="tiles-grid" id="tiles-container"></div>
