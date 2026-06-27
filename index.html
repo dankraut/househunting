@@ -207,7 +207,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 <div id="app">
 
 <div id="header">
-  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v2.2</span></div></div>
+  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v2.3</span></div></div>
   <div style="display:flex;gap:5px;flex-shrink:0"><span class="badge badge-g1">Grp 1 &lt;135m</span><span class="badge badge-g2">Grp 2 &lt;165m</span></div>
 </div>
 
@@ -361,6 +361,7 @@ Object.assign(DRIVE_MATRIX,FULL_MATRIX_SUPPLEMENT);
 const BASES={CdP:{name:"Città della Pieve",lat:42.9535,lng:12.0022,dates:"Jun 24–26"},CaF:{name:"Castiglion Fiorentino",lat:43.3429,lng:11.9246,dates:"Jun 28–Jul 3"},Spo:{name:"Spoleto",lat:42.7341,lng:12.7376,dates:"Jul 5–7"},Man:{name:"Manciano",lat:42.5876,lng:11.5152,dates:"Jul 7–10"}};
 // Statuses — eliminated group: Unavailable, Unresponsive, Rejected
 // Deleted is separate (soft-delete)
+function stripD(s){return s?s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim():s;}
 const STATUS_OPTS=["-","Reached Out","Replied","Info Supplied","To Be Scheduled","Proposed","Scheduled","Unavailable","Unresponsive","Rejected"];
 const ELIM_STATUSES=new Set(["Unavailable","Unresponsive","Rejected"]);
 const STATUS_CLASS={"-":"","Reached Out":"st-reached","Replied":"st-replied","Info Supplied":"st-info","To Be Scheduled":"st-tbs","Proposed":"st-proposed","Scheduled":"st-scheduled","Unavailable":"st-unavailable","Unresponsive":"st-unresponsive","Rejected":"st-rejected"};
@@ -648,7 +649,7 @@ async function fetchBroker(id){
     if(m){
       const obj=JSON.parse(m[0]);
       if(obj.broker&&obj.broker.trim()){
-        p.broker=obj.broker.trim();
+        p.broker=stripD(obj.broker.trim());
         if(statusEl){statusEl.textContent=`Found: ${p.broker}`;statusEl.style.color="var(--olive)";}
         renderProps();
         return;
@@ -668,6 +669,12 @@ function openAddModal(prefill){
   var st=document.getElementById("add-fetch-status");if(st){st.style.display="none";st.textContent="";}
   var nt=document.getElementById("add-note");if(nt)nt.textContent="";
   function setF(id,val){if(val!=null&&String(val)!==""){var el=document.getElementById(id);if(el)el.value=val;}}
+  // Normalize diacritics in incoming prefill data
+  if(prefill.title) prefill.title=stripD(prefill.title);
+  if(prefill.name) prefill.name=stripD(prefill.name);
+  if(prefill.town) prefill.town=stripD(prefill.town);
+  if(prefill.prov) prefill.prov=stripD(prefill.prov);
+  if(prefill.broker) prefill.broker=stripD(prefill.broker);
   setF("add-url",prefill.url); setF("add-id",prefill.id);
   setF("add-name",prefill.title||prefill.name||null); setF("add-town",prefill.town);
   setF("add-prov",prefill.prov); setF("add-price",prefill.price);
@@ -724,16 +731,16 @@ async function parseAddUrl(){
 }
 function confirmAddProperty(){
   const url=document.getElementById("add-url").value.trim();
-  const name=document.getElementById("add-name").value.trim();
-  const town=document.getElementById("add-town").value.trim();
-  const prov=(document.getElementById("add-prov").value.trim()||"").toUpperCase();
+  const name=stripD(document.getElementById("add-name").value.trim());
+  const town=stripD(document.getElementById("add-town").value.trim());
+  const prov=stripD((document.getElementById("add-prov").value.trim()||"")).toUpperCase();
   const price=parseFloat(document.getElementById("add-price").value)||0;
   const rooms=parseInt(document.getElementById("add-rooms").value)||0;
   const size=parseInt(document.getElementById("add-size").value)||0;
   const fco=parseInt(document.getElementById("add-fco").value)||90;
   const grp=parseInt(document.getElementById("add-grp").value)||1;
   const loc=document.getElementById("add-loc").value.trim();
-  const broker=document.getElementById("add-broker").value.trim();
+  const broker=stripD(document.getElementById("add-broker").value.trim());
   const phone=document.getElementById("add-phone").value.trim();
 
   if(!name||!town){alert("Property Name and Town are required.");return;}
@@ -1042,8 +1049,10 @@ window.addEventListener('message', evt => {
   // Accept messages from extension content scripts (same window) or
   // from the extension background via chrome.tabs.sendMessage → injected postMessage
   if (!evt.data || evt.data.type !== 'HOUSEHUNT_BROKER') return;
-  const { idealistaId, broker, phone, location, price, rooms, size, town, prov, title } = evt.data;
+  let { idealistaId, broker, phone, location, price, rooms, size, town, prov, title } = evt.data;
   if (!idealistaId) return;
+  // Normalize diacritics on all incoming text fields
+  broker = stripD(broker); town = stripD(town); prov = stripD(prov); title = stripD(title);
 
   const pid = parseInt(idealistaId);
   const p = getProp(pid);
