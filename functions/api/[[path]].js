@@ -86,5 +86,71 @@ export async function onRequest(context) {
     return json({ ok: true });
   }
 
+
+  // ── GET /api/bases ──────────────────────────────────────────────────────────
+  if (path === 'bases' && request.method === 'GET') {
+    const bases = await env.HH_KV.get('bases');
+    return json(bases || '[]');
+  }
+
+  // ── PUT /api/bases ──────────────────────────────────────────────────────────
+  if (path === 'bases' && request.method === 'PUT') {
+    const body = await request.text();
+    await env.HH_KV.put('bases', body);
+    return json({ ok: true });
+  }
+
+  // ── POST /api/ifl-sync ──────────────────────────────────────────────────────
+  // body: {baseGrp, iflToken, properties: [{id, price, title?, rooms?, size?, town?}]}
+  // Returns: {toAdd, updated, markedDeleted, writeBackQueue}
+  if (path === 'ifl-sync' && request.method === 'POST') {
+    const { baseGrp, iflToken, properties } = await request.json();
+    const iflIds = new Set(properties.map(p => String(p.id)));
+    const priceMap = Object.fromEntries(properties.map(p => [String(p.id), p.price]));
+
+    const ELIM = new Set(['Unavailable', 'Rejected', 'Deleted-Idealista']);
+
+    const dataRaw = await env.HH_KV.get('data');
+    if (!dataRaw) {
+      return json({ ok: true, toAdd: properties, updated: [], markedDeleted: [], writeBackQueue: [] });
+    }
+
+    const data = JSON.parse(dataRaw);
+    const storedIds = new Set(data.props.map(p => String(p.id)));
+    const toAdd = [];
+    const updated = [];
+    const markedDeleted = [];
+    const writeBackQueue = [];
+
+    for (const sp of data.props) {
+      const sid = String(sp.id);
+      if ((sp.sourceIfl || 'none') !== iflToken) continue;
+      const isElim = sp.deleted || ELIM.has(sp.status);
+
+      if (!isElim && !iflIds.has(sid)) {
+        sp.status = 'Deleted-Idealista';
+        markedDeleted.push(sid);
+      } else if (!isElim && iflIds.has(sid)) {
+        const newPrice = priceMap[sid];
+        if (newPrice !== undefined && Math.abs((sp.price || 0) - newPrice) > 1) {
+          sp.price = newPrice;
+          updated.push({ id: sid, price: newPrice });
+        }
+      } else if (isElim && iflIds.has(sid)) {
+        writeBackQueue.push({ id: sid });
+      }
+    }
+
+    for (const p of properties) {
+      if (!storedIds.has(String(p.id))) toAdd.push(p);
+    }
+
+    if (markedDeleted.length || updated.length) {
+      await env.HH_KV.put('data', JSON.stringify(data));
+    }
+
+    return json({ ok: true, toAdd, updated, markedDeleted, writeBackQueue });
+  }
+
   return json({ error: 'Not found' }, 404);
 }

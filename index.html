@@ -77,6 +77,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 .tile.st-unavailable{background:#F5F5F5;opacity:.7}
 .tile.st-unresponsive{background:#FFF8F0;opacity:.75}
 .tile.st-rejected{background:#FEE;opacity:.65}
+  .tile.st-deleted-idealista{background:#F5EAF7;opacity:.7}
 .tile.st-deleted{background:#ECEFF1;border-left-color:#90A4AE;opacity:.8}
 .tile-top{display:flex;align-items:flex-start;gap:8px;padding:10px 12px 6px}
 .tile-expand-btn{flex-shrink:0;margin-left:auto;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;color:var(--text3);background:var(--bg2)}
@@ -207,7 +208,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 <div id="app">
 
 <div id="header">
-  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v3.0</span></div></div>
+  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v3.1</span></div></div>
   <div style="display:flex;gap:5px;flex-shrink:0"><span class="badge badge-g1">Grp 1 &lt;135m</span><span class="badge badge-g2">Grp 2 &lt;165m</span></div>
 </div>
 
@@ -227,6 +228,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
     <button class="io-btn" onclick="exportJSON()">⬇ Export</button>
     <button class="io-btn" onclick="document.getElementById('import-file').click()">⬆ Import</button>
     <button class="io-btn" onclick="openSnapshotModal()">💾 Snapshots</button>
+    <button class="io-btn" onclick="openSettingsModal()">⚙️ Settings</button>
     <button class="io-btn danger" onclick="resetStorage()">↺ Reset</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
     <button class="io-btn" onclick="openAddModal()" style="margin-left:auto;background:var(--adriat);color:#fff;border-color:var(--adriat)">＋ Add Property</button>
@@ -355,6 +357,70 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
   </div>
 </div>
 
+<!-- Settings Modal -->
+<div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10002;align-items:center;justify-content:center">
+  <div style="background:var(--bg1);border-radius:10px;padding:20px;width:min(560px,95vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="font-size:15px;font-weight:600;color:var(--text1)">⚙️ Settings</h2>
+      <button onclick="closeSettingsModal()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2)">✕</button>
+    </div>
+
+    <!-- Server Key -->
+    <div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Server Key</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">All users must enter this key to access shared server data.</p>
+      <div style="display:flex;gap:8px">
+        <input id="settings-key" type="password" value="" placeholder="Enter server key…"
+          style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg1);color:var(--text1)">
+        <button class="io-btn" onclick="saveSettingsKey()" style="white-space:nowrap">Save Key</button>
+      </div>
+      <div id="settings-key-status" style="font-size:10px;color:var(--text3);margin-top:4px"></div>
+    </div>
+
+    <!-- Bases -->
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:600;color:var(--text2)">Bases</div>
+        <button class="io-btn" onclick="openAddBaseForm()" style="font-size:11px">+ Add Base</button>
+      </div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:10px">Each base can be linked to an Idealista Favorites List (IFL) for sync. One IFL per base.</p>
+      <div id="bases-list"></div>
+
+      <!-- Add/Edit Base Form -->
+      <div id="base-form" style="display:none;margin-top:12px;padding:12px;background:var(--bg2);border-radius:6px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:10px" id="base-form-title">Add Base</div>
+        <input type="hidden" id="base-form-grp" value="">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div style="flex:2">
+            <label style="font-size:10px;font-weight:600;color:var(--text3)">Name</label>
+            <input id="base-form-name" type="text" placeholder="Piemonte and Savona"
+              style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1);margin-top:2px">
+          </div>
+          <div style="flex:1">
+            <label style="font-size:10px;font-weight:600;color:var(--text3)">Abbr</label>
+            <input id="base-form-abbr" type="text" placeholder="PIE" maxlength="5"
+              style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1);margin-top:2px">
+          </div>
+        </div>
+        <div style="margin-bottom:8px">
+          <label style="font-size:10px;font-weight:600;color:var(--text3)">Idealista Favorites List URL (optional)</label>
+          <input id="base-form-ifl" type="url" placeholder="https://www.idealista.it/join-favorites-list/TOKEN"
+            style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1);margin-top:2px">
+        </div>
+        <div style="margin-bottom:10px">
+          <label style="font-size:10px;font-weight:600;color:var(--text3)">Notes / Description</label>
+          <textarea id="base-form-desc" rows="2" placeholder="Coastal Liguria + Piemonte hills…"
+            style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1);resize:vertical;margin-top:2px"></textarea>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="io-btn" onclick="saveBaseForm()" style="background:var(--adriat);color:#fff;border-color:var(--adriat)">Save Base</button>
+          <button class="io-btn" onclick="closeBaseForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Snapshot Modal -->
 <div id="snapshot-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10001;align-items:center;justify-content:center">
   <div style="background:var(--bg1);border-radius:10px;padding:20px;width:min(480px,92vw);max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)">
@@ -382,9 +448,9 @@ const BASES={CdP:{name:"Città della Pieve",lat:42.9535,lng:12.0022,dates:"Jun 2
 // Statuses — eliminated group: Unavailable, Unresponsive, Rejected
 // Deleted is separate (soft-delete)
 function stripD(s){return s?s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim():s;}
-const STATUS_OPTS=["-","Reached Out","Replied","Info Supplied","To Be Scheduled","Proposed","Scheduled","Unavailable","Unresponsive","Rejected"];
-const ELIM_STATUSES=new Set(["Unavailable","Unresponsive","Rejected"]);
-const STATUS_CLASS={"-":"","Reached Out":"st-reached","Replied":"st-replied","Info Supplied":"st-info","To Be Scheduled":"st-tbs","Proposed":"st-proposed","Scheduled":"st-scheduled","Unavailable":"st-unavailable","Unresponsive":"st-unresponsive","Rejected":"st-rejected"};
+const STATUS_OPTS=["-","Reached Out","Replied","Info Supplied","To Be Scheduled","Proposed","Scheduled","Unavailable","Unresponsive","Rejected","Deleted-Idealista"];
+const ELIM_STATUSES=new Set(["Unavailable","Unresponsive","Rejected","Deleted-Idealista"]);
+const STATUS_CLASS={"-":"","Reached Out":"st-reached","Replied":"st-replied","Info Supplied":"st-info","To Be Scheduled":"st-tbs","Proposed":"st-proposed","Scheduled":"st-scheduled","Unavailable":"st-unavailable","Unresponsive":"st-unresponsive","Rejected":"st-rejected","Deleted-Idealista":"st-deleted-idealista"};
 const DRIVE_CAP=120,VIEWING_MIN=45,DAY_END=19.0;
 const TRIP_DAYS=[
   {date:"2026-06-24",label:"Wed Jun 24",base:"CdP",startH:8.5,note:"Other appts"},
@@ -407,16 +473,17 @@ const TRIP_DAYS=[
 ];
 
 // ═══ STATE ════════════════════════════════════════════
-const PERSIST_FIELDS=["status","deleted","schedDate","schedTime","proposedDate","lastContacted","broker","brokerPhone","location","userPlannedDate","userPlannedTime","notes","realtorUrl"];
-function initProp(p){return{...p,status:"-",deleted:false,schedDate:"",schedTime:"",proposedDate:"",lastContacted:"",broker:"",brokerPhone:"",location:"",notes:"",realtorUrl:"",userPlannedDate:p.plannedDate||"",userPlannedTime:p.plannedTime||""};}
+const PERSIST_FIELDS=["status","deleted","schedDate","schedTime","proposedDate","lastContacted","broker","brokerPhone","location","userPlannedDate","userPlannedTime","notes","realtorUrl","sourceIfl"];
+function initProp(p){return{...p,status:"-",deleted:false,schedDate:"",schedTime:"",proposedDate:"",lastContacted:"",broker:"",brokerPhone:"",location:"",notes:"",realtorUrl:"",sourceIfl:"none",userPlannedDate:p.plannedDate||"",userPlannedTime:p.plannedTime||""};}
 let state={props:PROPS_RAW.map(initProp),sort:{field:"fco",dir:"asc"},expanded:new Set(),mapInited:false,leafletMap:null,mapMarkers:[],mapRoutes:[],collapsedDays:new Set(),schedCollapsed:{unscheduled:false,eliminated:false}};
 
 // ═══ STORAGE ══════════════════════════════════════════
 const LS_KEY="italy_hunt_2026_v3";
 // ─── API / server storage ───────────────────────────────────────────────
-const API_TOKEN='jmjk05DK';
+function getApiToken(){return localStorage.getItem('hh_api_key')||'';}
+const API_TOKEN_LEGACY='jmjk05DK';// kept for reference
 const API_BASE='/api';
-function _apiHdr(){return{'Authorization':'Bearer '+API_TOKEN,'Content-Type':'application/json'};}
+function _apiHdr(){return{'Authorization':'Bearer '+getApiToken(),'Content-Type':'application/json'};}
 function _buildSaveData(){
   return{props:state.props.map(p=>{const o={id:p.id,_custom:!!p._custom};PERSIST_FIELDS.forEach(f=>o[f]=p[f]);if(p._custom)Object.assign(o,{name:p.name,town:p.town,prov:p.prov,price:p.price,rooms:p.rooms,size:p.size,grp:p.grp,fco:p.fco,cdp:p.cdp,caf:p.caf,spo:p.spo,man:p.man,url:p.url,lat:p.lat,lng:p.lng});return o;})};
 }
@@ -439,7 +506,7 @@ function saveToStorage(){
 }
 async function loadFromStorage(){
   try{
-    const r=await fetch(API_BASE+'/data',{headers:{'Authorization':'Bearer '+API_TOKEN}});
+    const r=await fetch(API_BASE+'/data',{headers:{'Authorization':'Bearer '+getApiToken()}});
     if(r.ok){const txt=await r.text();if(txt&&txt!=='null'){_applyData(JSON.parse(txt));_setSyncNotice('server');return;}}
   }catch(e){}
   const raw=localStorage.getItem(LS_KEY);
@@ -1091,7 +1158,7 @@ async function loadSnapshots(){
   const el=document.getElementById('snapshot-list');
   el.innerHTML='<em>Loading…</em>';
   try{
-    const r=await fetch(API_BASE+'/snapshots',{headers:{'Authorization':'Bearer '+API_TOKEN}});
+    const r=await fetch(API_BASE+'/snapshots',{headers:{'Authorization':'Bearer '+getApiToken()}});
     if(!r.ok)throw new Error('Server error');
     const list=await r.json();
     if(!list.length){el.innerHTML='<em style="color:var(--text3)">No snapshots yet.</em>';return;}
@@ -1135,6 +1202,128 @@ async function deleteSnapshot(id){
   }catch(e){alert('Failed to delete snapshot.');}
 }
 
+// ─── Settings & Bases ───────────────────────────────────────────────────────
+let state_bases = [];  // [{grp, name, abbr, iflToken, iflName, desc}]
+
+function openSettingsModal() {
+  const km = document.getElementById('settings-key');
+  if (km) km.value = localStorage.getItem('hh_api_key') || '';
+  document.getElementById('settings-modal').style.display = 'flex';
+  loadBasesIntoSettings();
+}
+function closeSettingsModal() {
+  document.getElementById('settings-modal').style.display = 'none';
+  closeBaseForm();
+}
+function saveSettingsKey() {
+  const key = (document.getElementById('settings-key').value || '').trim();
+  localStorage.setItem('hh_api_key', key);
+  const el = document.getElementById('settings-key-status');
+  if (el) { el.textContent = 'Key saved. Reloading data from server…'; el.style.color = 'var(--adriat)'; }
+  loadFromStorage().then(() => { renderProps(); renderSchedule(); if (el) el.textContent = 'Key saved ✓'; });
+}
+
+async function loadBasesIntoSettings() {
+  try {
+    const r = await fetch(API_BASE + '/bases', { headers: _apiHdr() });
+    if (r.ok) { state_bases = await r.json(); }
+  } catch (e) {}
+  // Auto-populate from existing grp values if empty
+  if (!state_bases.length) {
+    const grps = [...new Set(state.props.map(p => p.grp).filter(Boolean))].sort();
+    state_bases = grps.map(g => ({grp: g, name: 'Group ' + g, abbr: 'G' + g, iflToken: null, iflName: null, desc: ''}));
+  }
+  renderBasesList();
+}
+
+function renderBasesList() {
+  const el = document.getElementById('bases-list');
+  if (!el) return;
+  if (!state_bases.length) { el.innerHTML = '<p style="font-size:11px;color:var(--text3)">No bases yet. Add one below.</p>'; return; }
+  el.innerHTML = state_bases.map(b => `
+    <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:12px;color:var(--text1)">${b.name} <span style="color:var(--text3);font-weight:400">(grp ${b.grp})</span></div>
+        ${b.iflToken ? `<div style="font-size:10px;color:var(--adriat);margin-top:2px">IFL: <code>${b.iflToken}</code>${b.iflName ? ' · ' + b.iflName : ''}</div>` : '<div style="font-size:10px;color:var(--text3);margin-top:2px">No IFL linked</div>'}
+        ${b.desc ? `<div style="font-size:10px;color:var(--text3);margin-top:1px">${b.desc}</div>` : ''}
+      </div>
+      <button class="io-btn" onclick="editBase(${b.grp})" style="font-size:10px">Edit</button>
+      ${b.grp > 2 ? `<button class="io-btn danger" onclick="deleteBase(${b.grp})" style="font-size:10px">✕</button>` : ''}
+    </div>`).join('');
+}
+
+function openAddBaseForm() {
+  const nextGrp = state_bases.length ? Math.max(...state_bases.map(b => b.grp)) + 1 : 3;
+  document.getElementById('base-form-grp').value = nextGrp;
+  document.getElementById('base-form-name').value = '';
+  document.getElementById('base-form-abbr').value = '';
+  document.getElementById('base-form-ifl').value = '';
+  document.getElementById('base-form-desc').value = '';
+  document.getElementById('base-form-title').textContent = 'Add Base';
+  document.getElementById('base-form').style.display = 'block';
+}
+
+function editBase(grp) {
+  const b = state_bases.find(x => x.grp === grp);
+  if (!b) return;
+  document.getElementById('base-form-grp').value = b.grp;
+  document.getElementById('base-form-name').value = b.name || '';
+  document.getElementById('base-form-abbr').value = b.abbr || '';
+  document.getElementById('base-form-ifl').value = b.iflToken ? 'https://www.idealista.it/join-favorites-list/' + b.iflToken : '';
+  document.getElementById('base-form-desc').value = b.desc || '';
+  document.getElementById('base-form-title').textContent = 'Edit Base';
+  document.getElementById('base-form').style.display = 'block';
+}
+
+function closeBaseForm() {
+  const el = document.getElementById('base-form');
+  if (el) el.style.display = 'none';
+}
+
+async function saveBaseForm() {
+  const grp = parseInt(document.getElementById('base-form-grp').value);
+  const name = document.getElementById('base-form-name').value.trim();
+  const abbr = document.getElementById('base-form-abbr').value.trim().toUpperCase();
+  const iflUrl = document.getElementById('base-form-ifl').value.trim();
+  const desc = document.getElementById('base-form-desc').value.trim();
+  if (!name) { alert('Name is required.'); return; }
+
+  // Extract token from IFL URL
+  let iflToken = null, iflName = null;
+  const tokenMatch = iflUrl.match(/join-favorites-list\/([^?&#/]+)/);
+  if (tokenMatch) iflToken = tokenMatch[1];
+
+  // Validate: no two bases can share the same IFL token
+  if (iflToken) {
+    const conflict = state_bases.find(b => b.iflToken === iflToken && b.grp !== grp);
+    if (conflict) { alert(`IFL token "${iflToken}" is already linked to base "${conflict.name}". Each IFL can only be linked to one base.`); return; }
+  }
+
+  const existing = state_bases.find(b => b.grp === grp);
+  if (existing) {
+    Object.assign(existing, { name, abbr, iflToken, iflName: existing.iflName || null, desc });
+  } else {
+    state_bases.push({ grp, name, abbr, iflToken, iflName: null, desc });
+    state_bases.sort((a, b) => a.grp - b.grp);
+  }
+
+  try {
+    await fetch(API_BASE + '/bases', { method: 'PUT', headers: _apiHdr(), body: JSON.stringify(state_bases) });
+  } catch (e) {}
+
+  closeBaseForm();
+  renderBasesList();
+}
+
+async function deleteBase(grp) {
+  if (!confirm('Delete this base? Properties with this grp will remain but the base config will be removed.')) return;
+  state_bases = state_bases.filter(b => b.grp !== grp);
+  try {
+    await fetch(API_BASE + '/bases', { method: 'PUT', headers: _apiHdr(), body: JSON.stringify(state_bases) });
+  } catch (e) {}
+  renderBasesList();
+}
+
 // ═══ CHROME EXTENSION BRIDGE ══════════════════════════
 // Listens for broker data pushed from the househunt Chrome extension.
 // The extension content script scrapes the open Idealista listing and
@@ -1142,7 +1331,21 @@ async function deleteSnapshot(id){
 window.addEventListener('message', evt => {
   // Accept messages from extension content scripts (same window) or
   // from the extension background via chrome.tabs.sendMessage → injected postMessage
-  if (!evt.data || evt.data.type !== 'HOUSEHUNT_BROKER') return;
+  if (!evt.data) return;
+  if (evt.data.type === 'HOUSEHUNT_RELOAD') { loadFromStorage().then(()=>{renderProps();renderSchedule();}); return; }
+  if (evt.data.type === 'HOUSEHUNT_IFL_ADD') {
+    const {props, baseGrp, iflToken} = evt.data;
+    if (Array.isArray(props)) {
+      for (const p of props) {
+        if (state.props.find(x=>String(x.id)===String(p.id))) continue;
+        const np=initProp({id:parseInt(p.id),name:p.title||('IFL-'+p.id),town:p.town||'',prov:p.prov||'',price:p.price||0,rooms:p.rooms||0,size:p.size||0,grp:baseGrp||3,fco:0,cdp:0,caf:0,spo:0,man:0,url:'https://www.idealista.it/immobile/'+p.id+'/',lat:null,lng:null,plannedDate:'',plannedTime:''});
+        np._custom=true; np.sourceIfl=iflToken||'none'; state.props.push(np);
+      }
+      renderProps(); saveToStorage();
+    }
+    return;
+  }
+  if (evt.data.type !== 'HOUSEHUNT_BROKER') return;
   let { idealistaId, broker, phone, location, price, rooms, size, town, prov, title, realtorUrl } = evt.data;
   if (!idealistaId) return;
   // Normalize diacritics on all incoming text fields
