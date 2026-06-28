@@ -208,7 +208,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 <div id="app">
 
 <div id="header">
-  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v3.2.0</span></div></div>
+  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v3.2.1</span></div></div>
   <div style="display:flex;gap:5px;flex-shrink:0"><span class="badge badge-g1">Grp 1 &lt;135m</span><span class="badge badge-g2">Grp 2 &lt;165m</span></div>
 </div>
 
@@ -568,17 +568,19 @@ function saveToStorage(){
     .then(r=>{_setSyncNotice(r.ok?'server':'local');}).catch(()=>_setSyncNotice('local'));
 }
 async function loadFromStorage(){
-  // Load bases from server (non-blocking, updates filter UI when ready)
+  // Load bases from server (non-blocking)
   fetch(API_BASE+'/bases',{headers:{'Authorization':'Bearer '+getApiToken()}})
     .then(r=>r.ok?r.json():null).then(b=>{
       if(b&&b.length){state_bases=b;localStorage.setItem(LS_BASES,JSON.stringify(b));refreshBaseFilters();}
     }).catch(()=>{});
+  // Always load localStorage FIRST as baseline (preserves locally-added custom props)
+  const raw=localStorage.getItem(LS_KEY);
+  if(raw){try{_applyData(JSON.parse(raw));}catch(e){console.warn('local load err',e);}}
+  // Then overlay with server data — server wins for PERSIST_FIELDS on existing props
   try{
     const r=await fetch(API_BASE+'/data',{headers:{'Authorization':'Bearer '+getApiToken()}});
     if(r.ok){const txt=await r.text();if(txt&&txt!=='null'){_applyData(JSON.parse(txt));_setSyncNotice('server');return;}}
   }catch(e){}
-  const raw=localStorage.getItem(LS_KEY);
-  if(raw){try{_applyData(JSON.parse(raw));}catch(e){console.warn('load error',e);}}
   _setSyncNotice('local');
 }
 function exportJSON(){const blob=new Blob([JSON.stringify(_buildSaveData(),null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="househunt_2026.json";a.click();}
@@ -1013,6 +1015,8 @@ function confirmAddProperty(){
   state.props.push(newProp);
   closeAddModal();renderProps();renderSchedule();
   saveToStorage();
+  // Show confirmation in save-notice
+  const sn=document.getElementById('save-notice');if(sn){sn.textContent='Saving new property…';sn.style.color='var(--adriat)';sn.style.opacity='1';}
   // Scroll to new tile
   setTimeout(()=>document.getElementById("tile-"+pid)?.scrollIntoView({behavior:"smooth"}),100);
 }
