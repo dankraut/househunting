@@ -359,7 +359,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 
 <!-- Settings Modal -->
 <div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10002;align-items:center;justify-content:center">
-  <div style="background:var(--bg1);border-radius:10px;padding:20px;width:min(560px,95vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+  <div style="background:#FAF7F2;border-radius:10px;padding:20px;width:min(560px,95vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <h2 style="font-size:15px;font-weight:600;color:var(--text1)">⚙️ Settings</h2>
       <button onclick="closeSettingsModal()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2)">✕</button>
@@ -383,11 +383,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
         <div style="font-size:12px;font-weight:600;color:var(--text2)">Bases</div>
         <button class="io-btn" onclick="openAddBaseForm()" style="font-size:11px">+ Add Base</button>
       </div>
-      <p style="font-size:11px;color:var(--text3);margin-bottom:10px">Each base can be linked to an Idealista Favorites List (IFL) for sync. One IFL per base.</p>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:10px">Each base can be linked to an Idealista Favorites List (IFL) for sync. One IFL per base. Groups 1 and 2 are your existing hardcoded property sets — you can link them to IFLs too. Use "+ Add Base" only for <em>new</em> search areas (like Piemonte).</p>
       <div id="bases-list"></div>
 
       <!-- Add/Edit Base Form -->
-      <div id="base-form" style="display:none;margin-top:12px;padding:12px;background:var(--bg2);border-radius:6px;border:1px solid var(--border)">
+      <div id="base-form" style="display:none;margin-top:12px;padding:12px;background:#EEE8DC;border-radius:6px;border:1px solid var(--border)">
         <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:10px" id="base-form-title">Add Base</div>
         <input type="hidden" id="base-form-grp" value="">
         <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -417,6 +417,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
           <button class="io-btn" onclick="closeBaseForm()">Cancel</button>
         </div>
       </div>
+    </div>
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);text-align:right">
+      <button class="io-btn" onclick="closeSettingsModal()" style="background:var(--adriat);color:#fff;border-color:var(--adriat);padding:7px 20px;font-size:12px">Done</button>
     </div>
   </div>
 </div>
@@ -1224,15 +1227,21 @@ function saveSettingsKey() {
 }
 
 async function loadBasesIntoSettings() {
+  let serverBases = [];
   try {
     const r = await fetch(API_BASE + '/bases', { headers: _apiHdr() });
-    if (r.ok) { state_bases = await r.json(); }
+    if (r.ok) serverBases = await r.json();
   } catch (e) {}
-  // Auto-populate from existing grp values if empty
-  if (!state_bases.length) {
-    const grps = [...new Set(state.props.map(p => p.grp).filter(Boolean))].sort();
-    state_bases = grps.map(g => ({grp: g, name: 'Group ' + g, abbr: 'G' + g, iflToken: null, iflName: null, desc: ''}));
+  // Always include grp values found in PROPS_RAW/state.props, merged with server bases
+  const grps = [...new Set(state.props.map(p => p.grp).filter(Boolean))].sort();
+  const merged = [...serverBases];
+  for (const g of grps) {
+    if (!merged.find(b => b.grp === g)) {
+      merged.push({grp: g, name: 'Group ' + g, abbr: 'G' + g, iflToken: null, iflName: null, desc: ''});
+    }
   }
+  merged.sort((a,b) => a.grp - b.grp);
+  state_bases = merged;
   renderBasesList();
 }
 
@@ -1243,7 +1252,7 @@ function renderBasesList() {
   el.innerHTML = state_bases.map(b => `
     <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:12px;color:var(--text1)">${b.name} <span style="color:var(--text3);font-weight:400">(grp ${b.grp})</span></div>
+        <div style="font-weight:600;font-size:12px;color:var(--text1)">${b.name} <span style="color:var(--text3);font-weight:400">(grp ${b.grp} · ${state.props.filter(p=>p.grp===b.grp&&!p.deleted).length} props)</span></div>
         ${b.iflToken ? `<div style="font-size:10px;color:var(--adriat);margin-top:2px">IFL: <code>${b.iflToken}</code>${b.iflName ? ' · ' + b.iflName : ''}</div>` : '<div style="font-size:10px;color:var(--text3);margin-top:2px">No IFL linked</div>'}
         ${b.desc ? `<div style="font-size:10px;color:var(--text3);margin-top:1px">${b.desc}</div>` : ''}
       </div>
@@ -1269,7 +1278,14 @@ function editBase(grp) {
   document.getElementById('base-form-grp').value = b.grp;
   document.getElementById('base-form-name').value = b.name || '';
   document.getElementById('base-form-abbr').value = b.abbr || '';
-  document.getElementById('base-form-ifl').value = b.iflToken ? 'https://www.idealista.it/join-favorites-list/' + b.iflToken : '';
+  // Reconstruct URL based on token type
+  let editIflUrl = '';
+  if (b.iflToken) {
+    editIflUrl = /^\d+$/.test(b.iflToken)
+      ? 'https://www.idealista.it/en/utente/preferiti/?favoritesListId=' + b.iflToken
+      : 'https://www.idealista.it/join-favorites-list/' + b.iflToken;
+  }
+  document.getElementById('base-form-ifl').value = editIflUrl;
   document.getElementById('base-form-desc').value = b.desc || '';
   document.getElementById('base-form-title').textContent = 'Edit Base';
   document.getElementById('base-form').style.display = 'block';
@@ -1288,9 +1304,12 @@ async function saveBaseForm() {
   const desc = document.getElementById('base-form-desc').value.trim();
   if (!name) { alert('Name is required.'); return; }
 
-  // Extract token from IFL URL
+  // Extract token from IFL URL — handle both:
+  // https://www.idealista.it/join-favorites-list/TOKEN
+  // https://www.idealista.it/en/utente/preferiti/?favoritesListId=1343468
   let iflToken = null, iflName = null;
-  const tokenMatch = iflUrl.match(/join-favorites-list\/([^?&#/]+)/);
+  const tokenMatch = iflUrl.match(/join-favorites-list\/([^?&#\/]+)/) ||
+                     iflUrl.match(/[?&]favoritesListId=(\d+)/);
   if (tokenMatch) iflToken = tokenMatch[1];
 
   // Validate: no two bases can share the same IFL token
@@ -1308,8 +1327,12 @@ async function saveBaseForm() {
   }
 
   try {
-    await fetch(API_BASE + '/bases', { method: 'PUT', headers: _apiHdr(), body: JSON.stringify(state_bases) });
-  } catch (e) {}
+    const r = await fetch(API_BASE + '/bases', { method: 'PUT', headers: _apiHdr(), body: JSON.stringify(state_bases) });
+    if (!r.ok) {
+      const err = r.status === 401 ? 'Server key is wrong or not set — go to Settings > Server Key.' : 'Server error ' + r.status;
+      alert('Base saved locally but NOT synced to server: ' + err);
+    }
+  } catch (e) { alert('Base saved locally but server unreachable: ' + e.message); }
 
   closeBaseForm();
   renderBasesList();
