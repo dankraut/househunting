@@ -208,7 +208,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 <div id="app">
 
 <div id="header">
-  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v3.1.2</span></div></div>
+  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v3.2.0</span></div></div>
   <div style="display:flex;gap:5px;flex-shrink:0"><span class="badge badge-g1">Grp 1 &lt;135m</span><span class="badge badge-g2">Grp 2 &lt;165m</span></div>
 </div>
 
@@ -224,12 +224,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 <!-- PROPERTIES TAB -->
 <div id="tab-props" class="tab-panel active">
   <div class="io-bar">
-    <span style="font-size:11px;font-weight:500;color:var(--text2)">Data:</span>
-    <button class="io-btn" onclick="exportJSON()">⬇ Export</button>
-    <button class="io-btn" onclick="document.getElementById('import-file').click()">⬆ Import</button>
-    <button class="io-btn" onclick="openSnapshotModal()">💾 Snapshots</button>
     <button class="io-btn" onclick="openSettingsModal()">⚙️ Settings</button>
-    <button class="io-btn danger" onclick="resetStorage()">↺ Reset</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
     <button class="io-btn" onclick="openAddModal()" style="margin-left:auto;background:var(--adriat);color:#fff;border-color:var(--adriat)">＋ Add Property</button>
     <span class="io-saved" id="save-notice">Saved ✓</span>
@@ -246,8 +241,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
   </div>
   <div class="filter-row">
     <span style="font-size:11px;font-weight:500;color:var(--text2)">Filter:</span>
-    <label>Status <select id="f-status" onchange="renderProps()"><option value="">Active</option><option value="ALL">All</option><option>-</option><option>Reached Out</option><option>Replied</option><option>Info Supplied</option><option>To Be Scheduled</option><option>Proposed</option><option>Scheduled</option><option value="ELIM">Eliminated</option><option value="DELETED">Deleted</option></select></label>
-    <label>Group <select id="f-grp" onchange="renderProps()"><option value="">All</option></select></label>
+    <label>Status <select id="f-status" onchange="renderProps()"><option value="">Active</option><option value="ALL">All</option><option>New</option><option>Working</option><option>Reset</option><option>Reached Out</option><option>Replied</option><option>Info Supplied</option><option>To Be Scheduled</option><option>Proposed</option><option>Scheduled</option><option value="ELIM">Eliminated</option></select></label>
+    <label>Base <select id="f-base" onchange="renderProps()"><option value="">All</option></select></label>
     <label>Search <input type="text" id="f-search" placeholder="name / town / broker / etc." oninput="renderProps();document.getElementById('btn-clr-search').style.display=this.value?'inline-block':'none'"></label><button class="io-btn" id="btn-clr-search" onclick="document.getElementById('f-search').value='';document.getElementById('btn-clr-search').style.display='none';renderProps()" style="display:none">✕ Clear</button>
   </div>
   <div class="result-count" id="result-count"></div>
@@ -417,8 +412,59 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
         </div>
       </div>
     </div>
+    <!-- Data section -->
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">Data</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="io-btn" onclick="exportJSON()">⬇ Export</button>
+        <button class="io-btn" onclick="document.getElementById('import-file').click()">⬆ Import</button>
+        <button class="io-btn" onclick="closeSettingsModal();openSnapshotModal()">💾 Snapshots</button>
+      </div>
+    </div>
+
+    <!-- Reset section -->
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">Reset Base</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Sets active properties to "Reset" status. Use the extension's Sync IFL to pull new properties from Idealista afterward.</p>
+      <div id="reset-bases-list" style="margin-bottom:8px;font-size:12px"></div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);margin-bottom:6px"><input type="checkbox" id="reset-all-chk" onchange="toggleResetAll(this.checked)"> All bases</label>
+      <button class="io-btn" onclick="performReset()" style="background:var(--terra);color:#fff;border-color:var(--terra)">↺ Reset Selected</button>
+    </div>
+
+    <!-- Templates section -->
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Message Templates</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Parameters: [Property URL] [Idealista ID] [Base] [Visit Dates] [Property Name] [Town] [Price] [Rooms] [Broker] [FCO Distance]</p>
+      <div id="tpl-editor" style="display:flex;flex-direction:column;gap:10px"></div>
+      <button class="io-btn" onclick="saveTemplatesFromEditor()" style="margin-top:8px;background:var(--adriat);color:#fff;border-color:var(--adriat)">Save Templates</button>
+    </div>
+
     <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);text-align:right">
       <button class="io-btn" onclick="closeSettingsModal()" style="background:var(--adriat);color:#fff;border-color:var(--adriat);padding:7px 20px;font-size:12px">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Copy Msg Modal -->
+<div id="copy-msg-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10003;align-items:center;justify-content:center">
+  <div style="background:#FAF7F2;border-radius:10px;padding:20px;width:min(480px,92vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+    <div style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:12px">📋 Message Copied</div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Idealista Listing</div>
+      <a id="cpm-link" href="#" target="_blank" rel="noopener" style="font-size:12px;color:var(--adriat);word-break:break-all"></a>
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Template</label>
+      <select id="cpm-tpl-sel" style="margin-top:3px;width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1)"></select>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Message</label>
+      <textarea id="cpm-msg-preview" rows="7" style="margin-top:3px;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;background:var(--bg2);color:var(--text1);resize:vertical"></textarea>
+    </div>
+    <div id="cpm-prop-id" data-pid="" style="display:none"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-secondary" onclick="copyMsgCancel()">Cancel</button>
+      <button class="btn-primary" onclick="copyMsgDone()">Done — Mark Reached Out</button>
     </div>
   </div>
 </div>
@@ -450,9 +496,9 @@ const BASES={CdP:{name:"Città della Pieve",lat:42.9535,lng:12.0022,dates:"Jun 2
 // Statuses — eliminated group: Unavailable, Unresponsive, Rejected
 // Deleted is separate (soft-delete)
 function stripD(s){return s?s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim():s;}
-const STATUS_OPTS=["-","Reached Out","Replied","Info Supplied","To Be Scheduled","Proposed","Scheduled","Unavailable","Unresponsive","Rejected","Deleted-Idealista"];
-const ELIM_STATUSES=new Set(["Unavailable","Unresponsive","Rejected","Deleted-Idealista"]);
-const STATUS_CLASS={"-":"","Reached Out":"st-reached","Replied":"st-replied","Info Supplied":"st-info","To Be Scheduled":"st-tbs","Proposed":"st-proposed","Scheduled":"st-scheduled","Unavailable":"st-unavailable","Unresponsive":"st-unresponsive","Rejected":"st-rejected","Deleted-Idealista":"st-deleted-idealista"};
+const STATUS_OPTS=["New","Working","Reset","Reached Out","Replied","Info Supplied","To Be Scheduled","Proposed","Scheduled","Unavailable","Unresponsive","Rejected","Deleted","Deleted-Idealista"];
+const ELIM_STATUSES=new Set(["Unavailable","Unresponsive","Rejected","Deleted","Deleted-Idealista"]);
+const STATUS_CLASS={"New":"","Working":"st-working","Reset":"","Reached Out":"st-reached","Replied":"st-replied","Info Supplied":"st-info","To Be Scheduled":"st-tbs","Proposed":"st-proposed","Scheduled":"st-scheduled","Unavailable":"st-unavailable","Unresponsive":"st-unresponsive","Rejected":"st-rejected","Deleted":"st-deleted","Deleted-Idealista":"st-deleted-idealista"};
 const DRIVE_CAP=120,VIEWING_MIN=45,DAY_END=19.0;
 const TRIP_DAYS=[
   {date:"2026-06-24",label:"Wed Jun 24",base:"CdP",startH:8.5,note:"Other appts"},
@@ -476,9 +522,11 @@ const TRIP_DAYS=[
 
 // ═══ STATE ════════════════════════════════════════════
 const PERSIST_FIELDS=["status","deleted","schedDate","schedTime","proposedDate","lastContacted","broker","brokerPhone","location","userPlannedDate","userPlannedTime","notes","realtorUrl","sourceIfl"];
-function initProp(p){return{...p,status:"-",deleted:false,schedDate:"",schedTime:"",proposedDate:"",lastContacted:"",broker:"",brokerPhone:"",location:"",notes:"",realtorUrl:"",sourceIfl:"none",userPlannedDate:p.plannedDate||"",userPlannedTime:p.plannedTime||""};}
+function initProp(p){return{...p,status:"New",deleted:false,schedDate:"",schedTime:"",proposedDate:"",lastContacted:"",broker:"",brokerPhone:"",location:"",notes:"",realtorUrl:"",sourceIfl:"none",userPlannedDate:p.plannedDate||"",userPlannedTime:p.plannedTime||""};}
 let state={props:PROPS_RAW.map(initProp),sort:{field:"fco",dir:"asc"},expanded:new Set(),mapInited:false,leafletMap:null,mapMarkers:[],mapRoutes:[],collapsedDays:new Set(),schedCollapsed:{unscheduled:false,eliminated:false}};
-// Load bases synchronously from localStorage cache so filters are ready immediately
+const LS_BASES="hh_bases";
+let state_bases=[];
+// Load bases synchronously from localStorage cache
 (function(){
   const raw=localStorage.getItem(LS_BASES);
   if(raw){try{const b=JSON.parse(raw);if(b.length)state_bases=b;}catch(e){}}
@@ -490,7 +538,6 @@ let state={props:PROPS_RAW.map(initProp),sort:{field:"fco",dir:"asc"},expanded:n
 
 // ═══ STORAGE ══════════════════════════════════════════
 const LS_KEY="italy_hunt_2026_v3";
-const LS_BASES="hh_bases";
 // ─── API / server storage ───────────────────────────────────────────────
 function getApiToken(){return localStorage.getItem('hh_api_key')||'';}
 const API_TOKEN_LEGACY='jmjk05DK';// kept for reference
@@ -501,7 +548,11 @@ function _buildSaveData(){
 }
 function _applyData(data){
   if(!data||!data.props)return;
-  data.props.forEach(d=>{let p=state.props.find(x=>x.id===d.id);if(!p&&d._custom){p=initProp({id:d.id,name:d.name||"",town:d.town||"",prov:d.prov||"",price:d.price||0,rooms:d.rooms||0,size:d.size||0,grp:d.grp||1,fco:d.fco||120,cdp:d.cdp||60,caf:d.caf||60,spo:d.spo||60,man:d.man||60,url:d.url||"",lat:d.lat||null,lng:d.lng||null,plannedDate:"",plannedTime:""});p._custom=true;state.props.push(p);}if(p){PERSIST_FIELDS.forEach(f=>{if(d[f]!==undefined)p[f]=d[f];});if(d._custom)p._custom=true;}});
+  data.props.forEach(d=>{let p=state.props.find(x=>x.id===d.id);if(!p&&d._custom){p=initProp({id:d.id,name:d.name||"",town:d.town||"",prov:d.prov||"",price:d.price||0,rooms:d.rooms||0,size:d.size||0,grp:d.grp||1,fco:d.fco||120,cdp:d.cdp||60,caf:d.caf||60,spo:d.spo||60,man:d.man||60,url:d.url||"",lat:d.lat||null,lng:d.lng||null,plannedDate:"",plannedTime:""});p._custom=true;state.props.push(p);}if(p){PERSIST_FIELDS.forEach(f=>{if(d[f]!==undefined)p[f]=d[f];});if(d._custom)p._custom=true;
+      // Migrate old status "-" → "New", old deleted=true → "Deleted"
+      if(p.status==="-")p.status="New";
+      if(p.deleted&&!ELIM_STATUSES.has(p.status))p.status="Deleted";
+    }});
 }
 function _setSyncNotice(s){
   const n=document.getElementById("save-notice");if(!n)return;
@@ -568,22 +619,23 @@ function showTab(name){
 function setSort(f){if(state.sort.field===f)state.sort.dir=state.sort.dir==="asc"?"desc":"asc";else{state.sort.field=f;state.sort.dir="asc";}renderProps();}
 function setSortSel(val){const[f,d]=val.split('-');state.sort.field=f;state.sort.dir=d;renderProps();}
 
-const ACTIVE_STATUSES=new Set(["-","Reached Out","Replied","Info Supplied","To Be Scheduled","Proposed","Scheduled"]);
+const ACTIVE_STATUSES=new Set(["New","Working","Reset","Reached Out","Replied","Info Supplied","To Be Scheduled","Proposed","Scheduled"]);
 
 function filteredSortedProps(){
   const fS=document.getElementById("f-status")?.value||"";
-  const fG=document.getElementById("f-grp")?.value||"";
+  const fB=document.getElementById("f-base")?.value||"";
   const fQ=(document.getElementById("f-search")?.value||"").toLowerCase().trim();
   let arr=[...state.props];
 
   // Apply status/deleted filter
-  if(fS==="DELETED"){arr=arr.filter(p=>p.deleted);}
-  else if(fS==="ELIM"){arr=arr.filter(p=>!p.deleted&&ELIM_STATUSES.has(p.status));}
-  else if(fS==="ALL"){arr=arr.filter(p=>!p.deleted);}
-  else if(fS===""){arr=arr.filter(p=>!p.deleted&&ACTIVE_STATUSES.has(p.status));}  // default: active only
-  else{arr=arr.filter(p=>!p.deleted&&p.status===fS);}
+  const inactiveGrps=new Set(state_bases.filter(b=>b.active===false).map(b=>b.grp));
+  if(inactiveGrps.size)arr=arr.filter(p=>!inactiveGrps.has(p.grp));
+  if(fS==="ELIM"){arr=arr.filter(p=>ELIM_STATUSES.has(p.status));}
+  else if(fS==="ALL"){/* all */}
+  else if(fS===""){arr=arr.filter(p=>ACTIVE_STATUSES.has(p.status));}
+  else{arr=arr.filter(p=>p.status===fS);}
 
-  if(fG)arr=arr.filter(p=>String(p.grp)===fG);
+  if(fB)arr=arr.filter(p=>nearestBase(p)[0]===fB);
   if(fQ)arr=arr.filter(p=>p.name.toLowerCase().includes(fQ)||String(p.id).includes(fQ)||String(p.price).includes(fQ)||(p.town||"").toLowerCase().includes(fQ)||(p.broker||"").toLowerCase().includes(fQ)||(p.realtorUrl||"").toLowerCase().includes(fQ));
   const{field,dir}=state.sort;const mul=dir==="asc"?1:-1;
   arr.sort((a,b)=>{
@@ -602,14 +654,15 @@ function renderProps(){
   const sortSel=document.getElementById("sort-sel");if(sortSel)sortSel.value=state.sort.field+"-"+state.sort.dir;
   const props=filteredSortedProps();
   const fS=document.getElementById("f-status")?.value||"";
-  var _tot=state.props.filter(function(p){return !p.deleted;}).length;var _elim=state.props.filter(function(p){return !p.deleted&&ELIM_STATUSES.has(p.status);}).length;var _del=state.props.filter(function(p){return p.deleted;}).length;document.getElementById("result-count").textContent="Showing "+props.length+" of "+_tot+" active"+(_elim>0?" · "+_elim+" eliminated":"")+(_del>0?" · "+_del+" deleted":"");
+  const _inact=new Set(state_bases.filter(b=>b.active===false).map(b=>b.grp));
+  var _tot=state.props.filter(function(p){return !ELIM_STATUSES.has(p.status)&&!_inact.has(p.grp);}).length;var _elim=state.props.filter(function(p){return ELIM_STATUSES.has(p.status);}).length;document.getElementById("result-count").textContent="Showing "+props.length+" of "+_tot+" active"+(_elim>0?" · "+_elim+" eliminated":"");
   document.getElementById("tiles-container").innerHTML=props.map(p=>renderTile(p,fS==="DELETED")).join("");
   saveToStorage();
 }
 
 function renderTile(p,isDeletedView=false){
   const nb=nearestBase(p);
-  const stCls=p.deleted?"st-deleted":(STATUS_CLASS[p.status]||"");
+  const stCls=STATUS_CLASS[p.status]||"";
   const grpCls="g"+p.grp;
   const isExp=state.expanded.has(p.id);
   const showTime=showTimePicker(p.status);
@@ -647,7 +700,7 @@ function renderTile(p,isDeletedView=false){
         :`<button class="t-btn t-btn-olive" onclick="copyMessage(${p.id})">📋 Copy Msg</button>
           ${hasCalBtn?`<button class="t-btn t-btn-blue" onclick="addToCalendar(${p.id})">📅 +Cal</button>`:""}
           ${mapUrl?`<a class="t-btn t-btn-terra" href="${mapUrl}" target="_blank">🗺 Map</a>`:`<button class="t-btn" style="opacity:.4;cursor:not-allowed;border:1px solid var(--border);color:var(--text3)" disabled title="Enter location to enable">🗺 Map</button>`}
-          <button class="t-btn t-btn-red" onclick="deleteProp(${p.id})">🗑 Delete</button>`
+          ${p.status==="Deleted"?`<button class="t-btn t-btn-restore" onclick="restoreProp(${p.id})">↩ Restore</button>`:`<button class="t-btn t-btn-red" onclick="deleteProp(${p.id})">🗑 Delete</button>`}`
       }
     </div>
   </div>`;
@@ -658,7 +711,7 @@ function renderTile(p,isDeletedView=false){
       <div class="tile-field"><label>Price</label><span style="font-size:12px">€${p.price}k</span></div>
       <div class="tile-field"><label>Rooms</label><span style="font-size:12px">${p.rooms}</span></div>
       <div class="tile-field"><label>Size</label><span style="font-size:12px">${p.size}m²</span></div>
-      <div class="tile-field"><label>Group</label><span style="font-size:12px">Grp ${p.grp} (${p.fco}m FCO)</span></div>
+      <div class="tile-field"><label>Base / Group</label><select onchange="changePropertyBase(${p.id},this.value)" style="font-size:12px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg1);color:var(--text1)">${state_bases.map(b=>`<option value="${b.grp}"${p.grp===b.grp?" selected":""}>${b.name} (grp ${b.grp})</option>`).join("")}</select></div>
     </div>
     <div class="tile-field"><label>Base drive times</label><span style="font-size:11px;color:var(--text3)">CdP=${p.cdp}m · CaF=${p.caf}m · Spo=${p.spo}m · Man=${p.man}m</span></div>
     <div class="tile-field"><label>Idealista ID</label><span style="font-size:12px">${p.id}</span></div>
@@ -710,36 +763,90 @@ function updateStatus(id,val){
   if(val!=="-"&&val!==prev)p.lastContacted=new Date().toISOString().slice(0,10);
   renderProps();renderSchedule();
 }
-function updateLastContacted(id,val){getProp(id).lastContacted=val;renderProps();}
+function updateLastContacted(id,val){const p=getProp(id);if(p){p.lastContacted=val;autoWorking(id);}renderProps();}
 function updateSchedDate(id,val){getProp(id).schedDate=val;renderProps();renderSchedule();}
 function updateSchedTime(id,val){getProp(id).schedTime=val;renderProps();}
 function updateProposed(id,val){getProp(id).proposedDate=val;renderProps();}
-function updateField(id,field,val){getProp(id)[field]=val;renderProps();}
+function autoWorking(id){const p=getProp(id);if(p&&(p.status==="New"||p.status==="-"||p.status==="Reset")){p.status="Working";}}
+function updateField(id,field,val){const p=getProp(id);if(p){p[field]=val;autoWorking(id);}renderProps();}
 
 function deleteProp(id){
-  if(!confirm("Mark this property as deleted? It will be hidden but not removed. You can restore it from the Deleted filter."))return;
-  const p=getProp(id);p.deleted=true;
-  // Also clear from schedule
+  if(!confirm("Mark as Deleted? This sets status to Deleted (Eliminated). You can change the status back at any time."))return;
+  const p=getProp(id);
+  p.status="Deleted";
   p.userPlannedDate="";p.userPlannedTime="";
   renderProps();renderSchedule();
 }
 function restoreProp(id){
-  const p=getProp(id);p.deleted=false;p.status="-";
+  const p=getProp(id);p.status="New";
   renderProps();renderSchedule();
 }
 
-function copyMessage(id){
-  const p=getProp(id);const bi=getBaseForDate(p.userPlannedDate);
-  const m=[
-    `We are looking for a 4+ bedroom, 4+ bathroom casale within a two hour drive of FCO. The house should NOT be divided into apartments, though an annex with 1 or 2 bedrooms or a small service apartment in the main house are fine. We would ideally be a 5-minute drive to a town with a bar and restaurant. Our budget is 800,000 euros (or a little more if it is in move-in condition with modern, US-like bathrooms).`,
-    `We will be in ${bi.name} ${bi.dates} looking at properties. If ${p.url} is available to see, please send a Google Map link or coordinates with the exact property location, as well as a satellite image showing the property boundary.`,
-    `Please contact us by WhatsApp if you have any questions.`,
-    `Thank you.`,
-    `Dan\n+39 331 980 5272`
-  ].join("\n\n");
-  navigator.clipboard.writeText(m).then(()=>flashCopy(id)).catch(()=>{const ta=document.createElement("textarea");ta.value=m;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);flashCopy(id);});
+// ─── Templates ──────────────────────────────────────────────────────────────
+const LS_TEMPLATES='hh_tpl';
+const LS_LAST_TPL='hh_last_tpl';
+const DEFAULT_TEMPLATES=[
+  `We are looking for a 4+ bedroom, 4+ bathroom casale within a two hour drive of FCO. The house should NOT be divided into apartments, though an annex with 1 or 2 bedrooms or a small service apartment in the main house are fine. We would ideally be a 5-minute drive to a town with a bar and restaurant. Our budget is 800,000 euros (or a little more if it is in move-in condition with modern, US-like bathrooms).\n\nWe will be in [Base] [Visit Dates] looking at properties. If [Property URL] is available to see, please send a Google Map link or coordinates with the exact property location, as well as a satellite image showing the property boundary.\n\nPlease contact us by WhatsApp if you have any questions.\n\nThank you.\n\nDan\n+39 331 980 5272`,
+  ``,``];
+function getTemplates(){try{const t=JSON.parse(localStorage.getItem(LS_TEMPLATES)||'null');if(Array.isArray(t)&&t.length===3)return t;}catch(e){}return[...DEFAULT_TEMPLATES];}
+function saveTemplates(tpls){localStorage.setItem(LS_TEMPLATES,JSON.stringify(tpls));}
+function applyTemplate(tpl,p){
+  const bi=getBaseForDate(p.userPlannedDate);
+  return tpl
+    .replace(/\[Property URL\]/g,p.url||'')
+    .replace(/\[Idealista ID\]/g,String(p.id))
+    .replace(/\[Base\]/g,bi.name)
+    .replace(/\[Visit Dates\]/g,bi.dates)
+    .replace(/\[Property Name\]/g,p.name||'')
+    .replace(/\[Town\]/g,p.town||'')
+    .replace(/\[Price\]/g,p.price?'\u20ac'+p.price+'k':'')
+    .replace(/\[Rooms\]/g,String(p.rooms||''))
+    .replace(/\[Broker\]/g,p.broker||'')
+    .replace(/\[FCO Distance\]/g,p.fco?p.fco+'min from FCO':'');
 }
-function flashCopy(id){document.querySelectorAll(`#tile-${id} .t-btn-olive`).forEach(b=>{const o=b.textContent;b.textContent="Copied ✓";b.style.cssText="background:var(--terra);color:#fff";setTimeout(()=>{b.textContent=o;b.style.cssText="";},1800);});}
+function copyToClipboard(text){
+  try{navigator.clipboard.writeText(text);}
+  catch(e){const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
+}
+
+function copyMessage(id){
+  const p=getProp(id);if(!p)return;
+  const tpls=getTemplates();
+  const lastIdx=parseInt(localStorage.getItem(LS_LAST_TPL)||'0');
+  const tplIdx=Math.min(Math.max(0,lastIdx),tpls.length-1);
+  const msg=applyTemplate(tpls[tplIdx],p);
+  copyToClipboard(msg);
+  // Populate popup
+  const modal=document.getElementById('copy-msg-modal');
+  document.getElementById('cpm-link').href=p.url||'#';
+  document.getElementById('cpm-link').textContent=(p.name||'Property')+' ('+p.id+') ↗';
+  document.getElementById('cpm-prop-id').dataset.pid=id;
+  document.getElementById('cpm-msg-preview').value=msg;
+  // Template selector
+  const sel=document.getElementById('cpm-tpl-sel');
+  sel.innerHTML=tpls.map((t,i)=>`<option value="${i}"${i===tplIdx?' selected':''}>${'Template '+(i+1)}${!t.trim()?' (empty)':''}</option>`).join('');
+  sel.onchange=()=>{
+    const idx=parseInt(sel.value);
+    localStorage.setItem(LS_LAST_TPL,idx);
+    const newMsg=applyTemplate(tpls[idx],p);
+    document.getElementById('cpm-msg-preview').value=newMsg;
+    copyToClipboard(newMsg);
+  };
+  modal.style.display='flex';
+}
+function copyMsgDone(){
+  const id=parseInt(document.getElementById('cpm-prop-id').dataset.pid);
+  const p=getProp(id);
+  if(p&&(p.status==='New'||p.status==='-'||p.status==='Reset'||p.status==='Working')){
+    p.status='Reached Out';
+    if(p.lastContacted==='')p.lastContacted=new Date().toISOString().slice(0,10);
+    renderProps();
+  }
+  document.getElementById('copy-msg-modal').style.display='none';
+}
+function copyMsgCancel(){document.getElementById('copy-msg-modal').style.display='none';}
+function flashCopy(id){document.querySelectorAll(`#tile-${id} .t-btn-olive`).forEach(b=>{const o=b.textContent;b.textContent="Copied \u2713";b.style.cssText="background:var(--terra);color:#fff";setTimeout(()=>{b.textContent=o;b.style.cssText="";},1800);})
+function changePropertyBase(id,grp){const p=getProp(id);if(p){p.grp=parseInt(grp);saveToStorage();renderProps();}};}
 
 function addToCalendar(id){
   const p=getProp(id);if(!p.schedDate)return;
@@ -914,7 +1021,7 @@ function confirmAddProperty(){
 function propsForDay(date){
   const view=document.getElementById("sched-view")?.value||"all";
   return state.props.filter(p=>{
-    if(p.deleted||ELIM_STATUSES.has(p.status))return false;
+    if(ELIM_STATUSES.has(p.status))return false;
     if(p.userPlannedDate!==date)return false;
     if(view==="scheduled")return p.status==="Scheduled";
     if(view==="planned")return p.status!=="Scheduled";
@@ -955,8 +1062,8 @@ function mapItUrl(step,day){
 
 function renderSchedule(){
   const container=document.getElementById("days-container");
-  const elimProps=state.props.filter(p=>!p.deleted&&ELIM_STATUSES.has(p.status));
-  const unscheduledProps=state.props.filter(p=>!p.deleted&&!ELIM_STATUSES.has(p.status)&&!p.userPlannedDate);
+  const elimProps=state.props.filter(p=>ELIM_STATUSES.has(p.status));
+  const unscheduledProps=state.props.filter(p=>!ELIM_STATUSES.has(p.status)&&!p.userPlannedDate);
 
   container.innerHTML=TRIP_DAYS.map(day=>{
     const stops=propsForDay(day.date);
@@ -1096,7 +1203,7 @@ function refreshMap(){
   const filterDay=document.getElementById("map-day")?.value||"";
 
   const visProps=state.props.filter(p=>{
-    if(p.deleted||ELIM_STATUSES.has(p.status))return false;
+    if(ELIM_STATUSES.has(p.status))return false;
     const lc=locationCoords(p);
     if(!lc&&!p.lat&&!p.lng)return false;
     const grpChk=document.getElementById('map-grp-'+p.grp);
@@ -1133,7 +1240,7 @@ function refreshMap(){
 const API_KEY="AIzaSyBmBWSxxAvawMG4noiDA7ulzm6hHtYtCAc";
 const GEMINI_URL=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 async function callGemini(prompt,retries=5){
-  const propSummary=JSON.stringify(state.props.filter(p=>!p.deleted).map(p=>({id:p.id,name:p.name,town:p.town+","+p.prov,price:"€"+p.price+"k",rooms:p.rooms,fco:p.fco+"min",grp:p.grp,status:p.status,planned:p.userPlannedDate})));
+  const propSummary=JSON.stringify(state.props.filter(p=>!ELIM_STATUSES.has(p.status)).map(p=>({id:p.id,name:p.name,town:p.town+","+p.prov,price:"€"+p.price+"k",rooms:p.rooms,fco:p.fco+"min",grp:p.grp,status:p.status,planned:p.userPlannedDate})));
   const ctx="Italy house-hunting Jun 24–Jul 10, 2026. 47 props, 4 bases. FCO in min. Cap 120min/day. 45min viewing.\nProperties: "+propSummary;
   for(let i=0;i<retries;i++){
     try{
@@ -1224,15 +1331,20 @@ async function deleteSnapshot(id){
 
 // ─── Dynamic base filters ───────────────────────────────────────────────────
 function refreshBaseFilters(){
-  // Group filter dropdown
-  const grpSel=document.getElementById('f-grp');
-  if(grpSel){
-    const cur=grpSel.value;
-    grpSel.innerHTML='<option value="">All</option>'+
-      state_bases.map(b=>`<option value="${b.grp}">${b.name}</option>`).join('');
-    if(cur)grpSel.value=cur;
+  // f-base: Trip base filter from non-eliminated properties
+  const baseEl=document.getElementById('f-base');
+  if(baseEl){
+    const inactGrps=new Set(state_bases.filter(b=>b.active===false).map(b=>b.grp));
+    const activeBases=[...new Set(
+      state.props.filter(p=>!ELIM_STATUSES.has(p.status)&&!inactGrps.has(p.grp))
+        .map(p=>nearestBase(p)[0])
+    )].sort((a,b2)=>a.localeCompare(b2));
+    const cur=baseEl.value;
+    baseEl.innerHTML='<option value="">All</option>'+
+      activeBases.map(b=>`<option value="${b}">${(BASES[b]&&BASES[b].name)||b}</option>`).join('');
+    if(cur)baseEl.value=cur;
   }
-  // Map group checkboxes
+  // Map group checkboxes — from state_bases
   const mapFilters=document.getElementById('map-grp-filters');
   if(mapFilters){
     const GRP_COLS=["#5B7232","#C0603A","#2C5F7A","#7B2D8B","#E65100","#1B5E20","#880E4F","#4E342E"];
@@ -1245,13 +1357,15 @@ function refreshBaseFilters(){
 }
 
 // ─── Settings & Bases ───────────────────────────────────────────────────────
-let state_bases = [];  // [{grp, name, abbr, iflToken, iflName, desc}]
+// state_bases declared before state
 
 function openSettingsModal() {
   const km = document.getElementById('settings-key');
   if (km) km.value = localStorage.getItem('hh_api_key') || '';
   document.getElementById('settings-modal').style.display = 'flex';
   loadBasesIntoSettings();
+  renderResetBasesList();
+  renderTemplateEditor();
 }
 function closeSettingsModal() {
   document.getElementById('settings-modal').style.display = 'none';
@@ -1261,8 +1375,8 @@ function saveSettingsKey() {
   const key = (document.getElementById('settings-key').value || '').trim();
   localStorage.setItem('hh_api_key', key);
   const el = document.getElementById('settings-key-status');
-  if (el) { el.textContent = 'Key saved. Reloading data from server…'; el.style.color = 'var(--adriat)'; }
-  loadFromStorage().then(() => { renderProps(); renderSchedule(); if (el) el.textContent = 'Key saved ✓'; });
+  if (el) { el.textContent = 'Key saved ✓'; el.style.color = 'var(--olive)'; }
+  loadFromStorage().then(() => { refreshBaseFilters(); renderSchedule(); }).catch(()=>{});
 }
 
 async function loadBasesIntoSettings() {
@@ -1291,11 +1405,12 @@ function renderBasesList() {
   el.innerHTML = state_bases.map(b => `
     <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:12px;color:var(--text1)">${b.name} <span style="color:var(--text3);font-weight:400">(grp ${b.grp} · ${state.props.filter(p=>p.grp===b.grp&&!p.deleted).length} props)</span></div>
+        <div style="font-weight:600;font-size:12px;color:var(--text1)">${b.name} <span style="color:var(--text3);font-weight:400">(grp ${b.grp} · ${state.props.filter(p=>p.grp===b.grp&&!ELIM_STATUSES.has(p.status)).length} props)</span></div>
         ${b.iflToken ? `<div style="font-size:10px;color:var(--adriat);margin-top:2px">IFL: <code>${b.iflToken}</code>${b.iflName ? ' · ' + b.iflName : ''}</div>` : '<div style="font-size:10px;color:var(--text3);margin-top:2px">No IFL linked</div>'}
         ${b.desc ? `<div style="font-size:10px;color:var(--text3);margin-top:1px">${b.desc}</div>` : ''}
       </div>
       <button class="io-btn" onclick="editBase(${b.grp})" style="font-size:10px">Edit</button>
+      <button class="io-btn" onclick="toggleBaseActive(${b.grp})" style="font-size:10px;${b.active===false?'color:var(--terra)':''}" title="${b.active===false?'Base is paused — properties hidden':'Pause this base'}}">${b.active===false?'▶ Activate':'⏸ Pause'}</button>
       ${b.grp > 2 ? `<button class="io-btn danger" onclick="deleteBase(${b.grp})" style="font-size:10px">✕</button>` : ''}
     </div>`).join('');
 }
@@ -1385,7 +1500,52 @@ async function deleteBase(grp) {
   try {
     await fetch(API_BASE + '/bases', { method: 'PUT', headers: _apiHdr(), body: JSON.stringify(state_bases) });
   } catch (e) {}
+  localStorage.setItem(LS_BASES,JSON.stringify(state_bases));
   renderBasesList();
+  refreshBaseFilters();
+}
+
+async function toggleBaseActive(grp){
+  const b=state_bases.find(x=>x.grp===grp);if(!b)return;
+  b.active=(b.active===false)?true:false;
+  try{await fetch(API_BASE+'/bases',{method:'PUT',headers:_apiHdr(),body:JSON.stringify(state_bases)});}catch(e){}
+  localStorage.setItem(LS_BASES,JSON.stringify(state_bases));
+  renderBasesList();refreshBaseFilters();renderProps();
+}
+
+function renderResetBasesList(){
+  const el=document.getElementById('reset-bases-list');if(!el)return;
+  el.innerHTML=state_bases.map(b=>`<label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:12px"><input type="checkbox" class="reset-base-chk" value="${b.grp}"> ${b.name} (${state.props.filter(p=>p.grp===b.grp&&!ELIM_STATUSES.has(p.status)).length} active)</label>`).join('');
+}
+function toggleResetAll(checked){
+  document.querySelectorAll('.reset-base-chk').forEach(c=>c.checked=checked);
+}
+function performReset(){
+  const checked=[...document.querySelectorAll('.reset-base-chk:checked')].map(c=>parseInt(c.value));
+  if(!checked.length){alert('Select at least one base.');return;}
+  if(!confirm('Reset '+checked.length+' base(s)? Active properties will be set to "Reset" status.'))return;
+  state.props.forEach(p=>{
+    if(!ELIM_STATUSES.has(p.status))p.status=p.status==='-'?'New':'New'; // migrate old dash
+  });
+  state.props.forEach(p=>{
+    if(!checked.includes(p.grp))return;
+    if(!ELIM_STATUSES.has(p.status))p.status='Reset';
+  });
+  document.getElementById('reset-all-chk').checked=false;
+  document.querySelectorAll('.reset-base-chk').forEach(c=>c.checked=false);
+  saveToStorage();renderProps();renderSchedule();
+  alert('Reset complete. Use Sync IFL in the extension to pull new properties.');
+}
+
+function saveTemplatesFromEditor(){
+  const tpls=[0,1,2].map(i=>(document.getElementById('tpl-txt-'+i)||{value:''}).value.trim());
+  saveTemplates(tpls);
+  alert('Templates saved.');
+}
+function renderTemplateEditor(){
+  const el=document.getElementById('tpl-editor');if(!el)return;
+  const tpls=getTemplates();
+  el.innerHTML=tpls.map((t,i)=>`<div><label style="font-size:10px;font-weight:600;color:var(--text3)">Template ${i+1}</label><textarea id="tpl-txt-${i}" rows="5" style="margin-top:3px;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;background:var(--bg1);color:var(--text1);resize:vertical">${t}</textarea></div>`).join('');
 }
 
 // ═══ CHROME EXTENSION BRIDGE ══════════════════════════
