@@ -208,7 +208,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 <div id="app">
 
 <div id="header">
-  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v3.1</span></div></div>
+  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v3.1.2</span></div></div>
   <div style="display:flex;gap:5px;flex-shrink:0"><span class="badge badge-g1">Grp 1 &lt;135m</span><span class="badge badge-g2">Grp 2 &lt;165m</span></div>
 </div>
 
@@ -247,7 +247,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
   <div class="filter-row">
     <span style="font-size:11px;font-weight:500;color:var(--text2)">Filter:</span>
     <label>Status <select id="f-status" onchange="renderProps()"><option value="">Active</option><option value="ALL">All</option><option>-</option><option>Reached Out</option><option>Replied</option><option>Info Supplied</option><option>To Be Scheduled</option><option>Proposed</option><option>Scheduled</option><option value="ELIM">Eliminated</option><option value="DELETED">Deleted</option></select></label>
-    <label>Base <select id="f-base" onchange="renderProps()"><option value="">All</option><option>CdP</option><option>CaF</option><option>Spo</option><option>Man</option></select></label>
+    <label>Group <select id="f-grp" onchange="renderProps()"><option value="">All</option></select></label>
     <label>Search <input type="text" id="f-search" placeholder="name / town / broker / etc." oninput="renderProps();document.getElementById('btn-clr-search').style.display=this.value?'inline-block':'none'"></label><button class="io-btn" id="btn-clr-search" onclick="document.getElementById('f-search').value='';document.getElementById('btn-clr-search').style.display='none';renderProps()" style="display:none">✕ Clear</button>
   </div>
   <div class="result-count" id="result-count"></div>
@@ -276,8 +276,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 <!-- MAP TAB -->
 <div id="tab-map" class="tab-panel">
   <div class="map-controls">
-    <label><input type="checkbox" id="map-g1" checked onchange="refreshMap()"> <span style="color:var(--olive);font-weight:600">Grp 1</span></label>
-    <label><input type="checkbox" id="map-g2" checked onchange="refreshMap()"> <span style="color:var(--terra);font-weight:600">Grp 2</span></label>
+    <span id="map-grp-filters" style="display:flex;gap:8px;flex-wrap:wrap"></span>
     <label><input type="checkbox" id="map-sched" onchange="refreshMap()"> Scheduled only</label>
     <label>Base <select id="map-base" onchange="refreshMap()"><option value="">All</option><option value="CdP">CdP</option><option value="CaF">CaF</option><option value="Spo">Spoleto</option><option value="Man">Manciano</option></select></label>
     <label>Day <select id="map-day" onchange="refreshMap()"><option value="">All days</option><option value="2026-06-24">Jun 24</option><option value="2026-06-25">Jun 25</option><option value="2026-06-26">Jun 26</option><option value="2026-06-27">Jun 27</option><option value="2026-06-28">Jun 28</option><option value="2026-06-29">Jun 29</option><option value="2026-06-30">Jun 30</option><option value="2026-07-01">Jul 1</option><option value="2026-07-02">Jul 2</option><option value="2026-07-03">Jul 3</option><option value="2026-07-04">Jul 4</option><option value="2026-07-05">Jul 5</option><option value="2026-07-06">Jul 6</option><option value="2026-07-07">Jul 7</option><option value="2026-07-08">Jul 8</option><option value="2026-07-09">Jul 9</option><option value="2026-07-10">Jul 10</option></select></label>
@@ -337,7 +336,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
       </div>
       <div class="tile-field-row">
         <div class="tile-field"><label>FCO Drive (min)</label><input type="number" id="add-fco" placeholder="90" autocomplete="off"></div>
-        <div class="tile-field"><label>Group (1 or 2)</label><input type="number" id="add-grp" placeholder="1" min="1" max="2" autocomplete="off"></div>
+        <div class="tile-field"><label>Base / Group</label><select id="add-grp" autocomplete="off"></select></div>
       </div>
       <div class="tile-field-row">
         <div class="tile-field"><label>Location (lat,lng)</label><input type="text" id="add-loc" placeholder="42.418,11.875" autocomplete="off"></div>
@@ -479,9 +478,19 @@ const TRIP_DAYS=[
 const PERSIST_FIELDS=["status","deleted","schedDate","schedTime","proposedDate","lastContacted","broker","brokerPhone","location","userPlannedDate","userPlannedTime","notes","realtorUrl","sourceIfl"];
 function initProp(p){return{...p,status:"-",deleted:false,schedDate:"",schedTime:"",proposedDate:"",lastContacted:"",broker:"",brokerPhone:"",location:"",notes:"",realtorUrl:"",sourceIfl:"none",userPlannedDate:p.plannedDate||"",userPlannedTime:p.plannedTime||""};}
 let state={props:PROPS_RAW.map(initProp),sort:{field:"fco",dir:"asc"},expanded:new Set(),mapInited:false,leafletMap:null,mapMarkers:[],mapRoutes:[],collapsedDays:new Set(),schedCollapsed:{unscheduled:false,eliminated:false}};
+// Load bases synchronously from localStorage cache so filters are ready immediately
+(function(){
+  const raw=localStorage.getItem(LS_BASES);
+  if(raw){try{const b=JSON.parse(raw);if(b.length)state_bases=b;}catch(e){}}
+  if(!state_bases.length){
+    const grps=[...new Set(PROPS_RAW.map(p=>p.grp))].sort((a,b)=>a-b);
+    state_bases=grps.map(g=>({grp:g,name:'Group '+g,abbr:'G'+g,iflToken:null,iflName:null,desc:''}));
+  }
+})();
 
 // ═══ STORAGE ══════════════════════════════════════════
 const LS_KEY="italy_hunt_2026_v3";
+const LS_BASES="hh_bases";
 // ─── API / server storage ───────────────────────────────────────────────
 function getApiToken(){return localStorage.getItem('hh_api_key')||'';}
 const API_TOKEN_LEGACY='jmjk05DK';// kept for reference
@@ -508,6 +517,11 @@ function saveToStorage(){
     .then(r=>{_setSyncNotice(r.ok?'server':'local');}).catch(()=>_setSyncNotice('local'));
 }
 async function loadFromStorage(){
+  // Load bases from server (non-blocking, updates filter UI when ready)
+  fetch(API_BASE+'/bases',{headers:{'Authorization':'Bearer '+getApiToken()}})
+    .then(r=>r.ok?r.json():null).then(b=>{
+      if(b&&b.length){state_bases=b;localStorage.setItem(LS_BASES,JSON.stringify(b));refreshBaseFilters();}
+    }).catch(()=>{});
   try{
     const r=await fetch(API_BASE+'/data',{headers:{'Authorization':'Bearer '+getApiToken()}});
     if(r.ok){const txt=await r.text();if(txt&&txt!=='null'){_applyData(JSON.parse(txt));_setSyncNotice('server');return;}}
@@ -558,7 +572,7 @@ const ACTIVE_STATUSES=new Set(["-","Reached Out","Replied","Info Supplied","To B
 
 function filteredSortedProps(){
   const fS=document.getElementById("f-status")?.value||"";
-  const fB=document.getElementById("f-base")?.value||"";
+  const fG=document.getElementById("f-grp")?.value||"";
   const fQ=(document.getElementById("f-search")?.value||"").toLowerCase().trim();
   let arr=[...state.props];
 
@@ -569,7 +583,7 @@ function filteredSortedProps(){
   else if(fS===""){arr=arr.filter(p=>!p.deleted&&ACTIVE_STATUSES.has(p.status));}  // default: active only
   else{arr=arr.filter(p=>!p.deleted&&p.status===fS);}
 
-  if(fB)arr=arr.filter(p=>nearestBase(p)[0]===fB);
+  if(fG)arr=arr.filter(p=>String(p.grp)===fG);
   if(fQ)arr=arr.filter(p=>p.name.toLowerCase().includes(fQ)||String(p.id).includes(fQ)||String(p.price).includes(fQ)||(p.town||"").toLowerCase().includes(fQ)||(p.broker||"").toLowerCase().includes(fQ)||(p.realtorUrl||"").toLowerCase().includes(fQ));
   const{field,dir}=state.sort;const mul=dir==="asc"?1:-1;
   arr.sort((a,b)=>{
@@ -596,7 +610,7 @@ function renderProps(){
 function renderTile(p,isDeletedView=false){
   const nb=nearestBase(p);
   const stCls=p.deleted?"st-deleted":(STATUS_CLASS[p.status]||"");
-  const grpCls=p.grp===1?"g1":"g2";
+  const grpCls="g"+p.grp;
   const isExp=state.expanded.has(p.id);
   const showTime=showTimePicker(p.status);
   const showPD=showProposedDate(p.status);
@@ -780,6 +794,9 @@ function openAddModal(prefill){
   var st=document.getElementById("add-fetch-status");if(st){st.style.display="none";st.textContent="";}
   var nt=document.getElementById("add-note");if(nt)nt.textContent="";
   function setF(id,val){if(val!=null&&String(val)!==""){var el=document.getElementById(id);if(el)el.value=val;}}
+  // Populate base select
+  const grpSel=document.getElementById('add-grp');
+  if(grpSel){grpSel.innerHTML=state_bases.map(b=>`<option value="${b.grp}">${b.name} (grp ${b.grp})</option>`).join('');} 
   // Normalize diacritics in incoming prefill data
   if(prefill.title) prefill.title=stripD(prefill.title);
   if(prefill.name) prefill.name=stripD(prefill.name);
@@ -1073,8 +1090,7 @@ function refreshMap(){
   if(!state.leafletMap)return;
   state.mapMarkers.forEach(m=>m.remove());state.mapMarkers=[];
   state.mapRoutes.forEach(r=>r.remove());state.mapRoutes=[];
-  const showG1=document.getElementById("map-g1")?.checked;
-  const showG2=document.getElementById("map-g2")?.checked;
+  // Dynamic group visibility from state_bases checkboxes
   const schedOnly=document.getElementById("map-sched")?.checked;
   const filterBase=document.getElementById("map-base")?.value||"";
   const filterDay=document.getElementById("map-day")?.value||"";
@@ -1083,8 +1099,8 @@ function refreshMap(){
     if(p.deleted||ELIM_STATUSES.has(p.status))return false;
     const lc=locationCoords(p);
     if(!lc&&!p.lat&&!p.lng)return false;
-    if(p.grp===1&&!showG1)return false;
-    if(p.grp===2&&!showG2)return false;
+    const grpChk=document.getElementById('map-grp-'+p.grp);
+    if(grpChk&&!grpChk.checked)return false;
     if(schedOnly&&p.status!=="Scheduled")return false;
     if(filterBase&&nearestBase(p)[0]!==filterBase)return false;
     if(filterDay&&p.userPlannedDate!==filterDay)return false;
@@ -1092,7 +1108,8 @@ function refreshMap(){
   });
 
   visProps.forEach(p=>{
-    const col=p.grp===1?"#5B7232":"#C0603A";
+    const GRP_COLS=["#5B7232","#C0603A","#2C5F7A","#7B2D8B","#E65100","#1B5E20","#880E4F","#4E342E"];
+    const col=GRP_COLS[(p.grp-1)%GRP_COLS.length];
     const lc=locationCoords(p);const lat=lc?.lat||p.lat;const lng=lc?.lng||p.lng;if(!lat)return;
     const sz=lc?14:11;const bw=lc?"3px":"2px";
     const icon=L.divIcon({className:"",html:`<div style="background:${col};border-radius:50%;width:${sz}px;height:${sz}px;border:${bw} solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
@@ -1203,6 +1220,28 @@ async function deleteSnapshot(id){
     await fetch(API_BASE+'/snapshots/'+id,{method:'DELETE',headers:_apiHdr()});
     loadSnapshots();
   }catch(e){alert('Failed to delete snapshot.');}
+}
+
+// ─── Dynamic base filters ───────────────────────────────────────────────────
+function refreshBaseFilters(){
+  // Group filter dropdown
+  const grpSel=document.getElementById('f-grp');
+  if(grpSel){
+    const cur=grpSel.value;
+    grpSel.innerHTML='<option value="">All</option>'+
+      state_bases.map(b=>`<option value="${b.grp}">${b.name}</option>`).join('');
+    if(cur)grpSel.value=cur;
+  }
+  // Map group checkboxes
+  const mapFilters=document.getElementById('map-grp-filters');
+  if(mapFilters){
+    const GRP_COLS=["#5B7232","#C0603A","#2C5F7A","#7B2D8B","#E65100","#1B5E20","#880E4F","#4E342E"];
+    mapFilters.innerHTML=state_bases.map(b=>{
+      const col=GRP_COLS[(b.grp-1)%GRP_COLS.length];
+      return `<label><input type="checkbox" id="map-grp-${b.grp}" checked onchange="refreshMap()"> <span style="color:${col};font-weight:600">${b.name||'Grp '+b.grp}</span></label>`;
+    }).join('');
+  }
+  renderProps();
 }
 
 // ─── Settings & Bases ───────────────────────────────────────────────────────
@@ -1334,6 +1373,8 @@ async function saveBaseForm() {
     }
   } catch (e) { alert('Base saved locally but server unreachable: ' + e.message); }
 
+  localStorage.setItem(LS_BASES,JSON.stringify(state_bases));
+  refreshBaseFilters();
   closeBaseForm();
   renderBasesList();
 }
@@ -1427,7 +1468,7 @@ function showExtToast(msg, type='ok') {
 }
 
 // ═══ INIT ══════════════════════════════════════════════
-loadFromStorage().then(()=>{renderProps();});
+loadFromStorage().then(()=>{refreshBaseFilters();});
 </script>
 </body>
 </html>
