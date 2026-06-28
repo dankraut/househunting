@@ -398,6 +398,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
           <textarea id="base-form-desc" rows="2" placeholder="Coastal Liguria + Piemonte hills…"
             style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1);resize:vertical;margin-top:2px"></textarea>
         </div>
+        <div style="margin-bottom:10px">
+          <label style="font-size:10px;font-weight:600;color:var(--text3)">Default Airport</label>
+          <select id="base-form-airport" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1);margin-top:2px"></select>
+        </div>
         <div style="display:flex;gap:8px">
           <button class="io-btn" onclick="saveBaseForm()" style="background:var(--adriat);color:#fff;border-color:var(--adriat)">Save Base</button>
           <button class="io-btn" onclick="closeBaseForm()">Cancel</button>
@@ -1517,7 +1521,7 @@ async function saveBaseForm() {
   const abbr = document.getElementById('base-form-abbr').value.trim().toUpperCase();
   const iflUrl = document.getElementById('base-form-ifl').value.trim();
   const desc = document.getElementById('base-form-desc').value.trim();
-  const airport = document.getElementById('base-form-airport').value.trim()||'FCO';
+  const airport = (document.getElementById('base-form-airport')?.value||'').trim()||'FCO';
   if (!name) { alert('Name is required.'); return; }
   if (!abbr) { alert('Abbreviation is required.'); return; }
 
