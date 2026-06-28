@@ -32,8 +32,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 #header h1{font-size:15px;font-weight:700;color:var(--terra-dk)}
 #header .sub{font-size:11px;color:var(--text3);margin-top:1px}
 .badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
-.badge-g1{background:var(--olive-bg);color:var(--olive)}
-.badge-g2{background:var(--amber-bg);color:var(--terra)}
 #tabs{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;flex-shrink:0;overflow-x:auto}
 .tab{padding:9px 14px;font-size:12px;font-weight:500;color:var(--text3);border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s}
 .tab.active{color:var(--terra);border-bottom-color:var(--terra);font-weight:600}
@@ -42,17 +40,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 .tab-panel{position:absolute;inset:0;overflow-y:auto;display:none;padding:12px}
 .tab-panel.active{display:block}
 /* IO bar */
-.io-bar{display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap}
+#props-toolbar{position:sticky;top:0;margin:-12px -12px 8px;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10}.toolbar-inner{display:flex;align-items:center;gap:6px;padding:7px 12px;overflow-x:auto;white-space:nowrap}.tb-lbl{font-size:11px;font-weight:500;color:var(--text2);display:flex;align-items:center;gap:3px;flex-shrink:0}.tb-lbl select{font-size:11px;padding:3px 6px;height:26px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1)}.tb-sep{color:var(--border);flex-shrink:0;margin:0 2px}#f-search{font-size:11px;padding:3px 6px;height:26px;width:120px;flex-shrink:0;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1)}
 .io-btn{padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);font-size:11px;font-weight:500}
 .io-btn:hover{border-color:var(--adriat);color:var(--adriat)}
 .io-btn.active-filter{border-color:var(--terra);color:var(--terra);background:#FFF0E8}
 .io-btn.danger:hover{border-color:var(--red);color:var(--red)}
 .io-saved{font-size:11px;color:var(--olive);opacity:0;transition:opacity .3s}
 /* Filter/sort row */
-.filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}
-.filter-row label{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:3px}
-.filter-row select,.filter-row input[type=text]{font-size:11px;padding:3px 6px;height:26px}
-.filter-row input[type=text]{width:140px}
+
 .sort-btn{padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);font-size:11px}
 .sort-btn:hover,.sort-btn.active{border-color:var(--terra);color:var(--terra)}
 .arr{opacity:.5;font-size:9px;margin-left:2px}
@@ -66,8 +61,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 @media(min-width:1024px){.tiles-grid{grid-template-columns:1fr 1fr 1fr}}
 .tile{border-radius:var(--radius);border:1px solid var(--border);background:#fff;box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .15s}
 .tile:hover{box-shadow:0 3px 10px rgba(0,0,0,.14)}
-.tile.g1{border-left:3px solid var(--olive)}
-.tile.g2{border-left:3px solid var(--amber)}
+.tile.base-CdP{border-left:3px solid var(--olive)}.tile.base-CaF{border-left:3px solid var(--amber)}.tile.base-Spo{border-left:3px solid var(--adriat)}.tile.base-Man{border-left:3px solid var(--terra)}.tile.base-PMN{border-left:3px solid #8B5CF6}
 .tile.st-reached{background:#EDF5FF}
 .tile.st-replied{background:#EDFAEF}
 .tile.st-info{background:#FFFBEE}
@@ -208,8 +202,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 <div id="app">
 
 <div id="header">
-  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v3.2.2</span></div></div>
-  <div style="display:flex;gap:5px;flex-shrink:0"><span class="badge badge-g1">Grp 1 &lt;135m</span><span class="badge badge-g2">Grp 2 &lt;165m</span></div>
+  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v3.3.0</span></div></div>
 </div>
 
 <div id="tabs">
@@ -224,24 +217,25 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 
 <!-- PROPERTIES TAB -->
 <div id="tab-props" class="tab-panel active">
-  <div class="io-bar">
-    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
-    <button class="io-btn" onclick="openAddModal()" style="margin-left:auto;background:var(--adriat);color:#fff;border-color:var(--adriat)">＋ Add Property</button>
-    <span class="io-saved" id="save-notice">Saved ✓</span>
-  </div>
-  <div class="filter-row">
-    <label style="font-size:11px;font-weight:500;color:var(--text2)">Sort:&nbsp;<select id="sort-sel" onchange="setSortSel(this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1)">
-      <option value="fco-asc">FCO &#9650;</option><option value="fco-desc">FCO &#9660;</option>
-      <option value="price-asc">Price &#9650;</option><option value="price-desc">Price &#9660;</option>
-      <option value="base-asc">Base &#9650;</option><option value="base-desc">Base &#9660;</option>
-      <option value="planned-asc">Planned &#9650;</option><option value="planned-desc">Planned &#9660;</option>
-      <option value="sched-asc">Sched &#9650;</option><option value="sched-desc">Sched &#9660;</option>
-      <option value="status-asc">Status &#9650;</option><option value="status-desc">Status &#9660;</option>
-    </select></label>
-    <span style="color:var(--border);margin:0 2px">|</span>
-    <label>Status <select id="f-status" onchange="renderProps()"><option value="">Active</option><option value="ALL">All</option><option>New</option><option>Working</option><option>Reset</option><option>Reached Out</option><option>Replied</option><option>Info Supplied</option><option>To Be Scheduled</option><option>Proposed</option><option>Scheduled</option><option value="ELIM">Eliminated</option></select></label>
-    <label>Base <select id="f-base" onchange="renderProps()"><option value="">All</option></select></label>
-    <label>Search <input type="text" id="f-search" placeholder="name / town / broker / etc." oninput="renderProps();document.getElementById('btn-clr-search').style.display=this.value?'inline-block':'none'"></label><button class="io-btn" id="btn-clr-search" onclick="document.getElementById('f-search').value='';document.getElementById('btn-clr-search').style.display='none';renderProps()" style="display:none">✕ Clear</button>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+  <div id="props-toolbar">
+    <div class="toolbar-inner">
+      <label class="tb-lbl">Sort&nbsp;<select id="sort-sel" onchange="setSortSel(this.value)">
+        <option value="fco-asc">Airport &#9650;</option><option value="fco-desc">Airport &#9660;</option>
+        <option value="price-asc">Price &#9650;</option><option value="price-desc">Price &#9660;</option>
+        <option value="base-asc">Base &#9650;</option><option value="base-desc">Base &#9660;</option>
+        <option value="planned-asc">Planned &#9650;</option><option value="planned-desc">Planned &#9660;</option>
+        <option value="sched-asc">Sched &#9650;</option><option value="sched-desc">Sched &#9660;</option>
+        <option value="status-asc">Status &#9650;</option><option value="status-desc">Status &#9660;</option>
+      </select></label>
+      <span class="tb-sep">│</span>
+      <label class="tb-lbl">Status&nbsp;<select id="f-status" onchange="renderProps()"><option value="">Active</option><option value="ALL">All</option><option>New</option><option>Working</option><option>Reset</option><option>Reached Out</option><option>Replied</option><option>Info Supplied</option><option>To Be Scheduled</option><option>Proposed</option><option>Scheduled</option><option value="ELIM">Eliminated</option></select></label>
+      <label class="tb-lbl">Base&nbsp;<select id="f-base" onchange="renderProps()"><option value="">All</option></select></label>
+      <input type="text" id="f-search" placeholder="search…" oninput="renderProps();document.getElementById('btn-clr-search').style.display=this.value?'inline-block':'none'">
+      <button class="io-btn" id="btn-clr-search" onclick="document.getElementById('f-search').value='';document.getElementById('btn-clr-search').style.display='none';renderProps()" style="display:none;flex-shrink:0">✕</button>
+      <button class="io-btn" onclick="openAddModal()" style="margin-left:auto;background:var(--adriat);color:#fff;border-color:var(--adriat);white-space:nowrap;flex-shrink:0">＋ Add</button>
+      <span class="io-saved" id="save-notice" style="flex-shrink:0">Saved ✓</span>
+    </div>
   </div>
   <div class="result-count" id="result-count"></div>
   <div class="tiles-grid" id="tiles-container"></div>
@@ -271,7 +265,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
   <div class="map-controls">
     <span id="map-grp-filters" style="display:flex;gap:8px;flex-wrap:wrap"></span>
     <label><input type="checkbox" id="map-sched" onchange="refreshMap()"> Scheduled only</label>
-    <label>Base <select id="map-base" onchange="refreshMap()"><option value="">All</option><option value="CdP">CdP</option><option value="CaF">CaF</option><option value="Spo">Spoleto</option><option value="Man">Manciano</option></select></label>
+    <label>Base <select id="map-base" onchange="refreshMap()"><option value="">All</option></select></label>
     <label>Day <select id="map-day" onchange="refreshMap()"><option value="">All days</option><option value="2026-06-24">Jun 24</option><option value="2026-06-25">Jun 25</option><option value="2026-06-26">Jun 26</option><option value="2026-06-27">Jun 27</option><option value="2026-06-28">Jun 28</option><option value="2026-06-29">Jun 29</option><option value="2026-06-30">Jun 30</option><option value="2026-07-01">Jul 1</option><option value="2026-07-02">Jul 2</option><option value="2026-07-03">Jul 3</option><option value="2026-07-04">Jul 4</option><option value="2026-07-05">Jul 5</option><option value="2026-07-06">Jul 6</option><option value="2026-07-07">Jul 7</option><option value="2026-07-08">Jul 8</option><option value="2026-07-09">Jul 9</option><option value="2026-07-10">Jul 10</option></select></label>
   </div>
   <div id="map"></div>
@@ -329,7 +323,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
       </div>
       <div class="tile-field-row">
         <div class="tile-field"><label>FCO Drive (min)</label><input type="number" id="add-fco" placeholder="90" autocomplete="off"></div>
-        <div class="tile-field"><label>Base / Group</label><select id="add-grp" autocomplete="off"></select></div>
+        <div class="tile-field"><label>Base</label><select id="add-grp" autocomplete="off"></select></div>
       </div>
       <div class="tile-field-row">
         <div class="tile-field"><label>Location (lat,lng)</label><input type="text" id="add-loc" placeholder="42.418,11.875" autocomplete="off"></div>
@@ -375,13 +369,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
         <div style="font-size:12px;font-weight:600;color:var(--text2)">Bases</div>
         <button class="io-btn" onclick="openAddBaseForm()" style="font-size:11px">+ Add Base</button>
       </div>
-      <p style="font-size:11px;color:var(--text3);margin-bottom:10px">Each base can be linked to an Idealista Favorites List (IFL) for sync. One IFL per base. Groups 1 and 2 are your existing hardcoded property sets — you can link them to IFLs too. Use "+ Add Base" only for <em>new</em> search areas (like Piemonte).</p>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:10px">Each base is a trip location. Link a base to an Idealista Favorites List (IFL) to enable sync. Each base has a default airport for distance calculations.</p>
       <div id="bases-list"></div>
 
       <!-- Add/Edit Base Form -->
       <div id="base-form" style="display:none;margin-top:12px;padding:12px;background:#EEE8DC;border-radius:6px;border:1px solid var(--border)">
         <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:10px" id="base-form-title">Add Base</div>
-        <input type="hidden" id="base-form-grp" value="">
+        <input type="hidden" id="base-form-abbr-orig" value="">
         <div style="display:flex;gap:8px;margin-bottom:8px">
           <div style="flex:2">
             <label style="font-size:10px;font-weight:600;color:var(--text3)">Name</label>
@@ -420,6 +414,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
       </div>
     </div>
 
+    <!-- Airports section -->
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Airports</div>
+      <div id="airports-list" style="margin-bottom:8px"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end">
+        <div><label style="font-size:10px;font-weight:600;color:var(--text3)">Code</label><br><input id="apt-abbr" type="text" maxlength="5" placeholder="BLQ" style="width:56px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1)"></div>
+        <div><label style="font-size:10px;font-weight:600;color:var(--text3)">Name</label><br><input id="apt-name" type="text" placeholder="Bologna Marconi" style="width:150px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1)"></div>
+        <div><label style="font-size:10px;font-weight:600;color:var(--text3)">Lat</label><br><input id="apt-lat" type="number" step="any" placeholder="44.535" style="width:78px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1)"></div>
+        <div><label style="font-size:10px;font-weight:600;color:var(--text3)">Lng</label><br><input id="apt-lng" type="number" step="any" placeholder="11.289" style="width:78px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1)"></div>
+        <button class="io-btn" onclick="addAirport()" style="flex-shrink:0">+ Airport</button>
+      </div>
+    </div>
+
     <!-- Reset section -->
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
       <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">Reset Base</div>
@@ -432,7 +439,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
     <!-- Templates section -->
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
       <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Message Templates</div>
-      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Parameters: [Property URL] [Idealista ID] [Base] [Visit Dates] [Property Name] [Town] [Price] [Rooms] [Broker] [FCO Distance]</p>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Parameters: [Property URL] [Idealista ID] [Base] [Visit Dates] [Property Name] [Town] [Price] [Rooms] [Broker] [Airport Distance]</p>
       <div id="tpl-editor" style="display:flex;flex-direction:column;gap:10px"></div>
       <button class="io-btn" onclick="saveTemplatesFromEditor()" style="margin-top:8px;background:var(--adriat);color:#fff;border-color:var(--adriat)">Save Templates</button>
     </div>
@@ -519,19 +526,36 @@ const TRIP_DAYS=[
 ];
 
 // ═══ STATE ════════════════════════════════════════════
-const PERSIST_FIELDS=["status","deleted","schedDate","schedTime","proposedDate","lastContacted","broker","brokerPhone","location","userPlannedDate","userPlannedTime","notes","realtorUrl","sourceIfl"];
-function initProp(p){return{...p,status:"New",deleted:false,schedDate:"",schedTime:"",proposedDate:"",lastContacted:"",broker:"",brokerPhone:"",location:"",notes:"",realtorUrl:"",sourceIfl:"none",userPlannedDate:p.plannedDate||"",userPlannedTime:p.plannedTime||""};}
+const PERSIST_FIELDS=["status","deleted","schedDate","schedTime","proposedDate","lastContacted","broker","brokerPhone","location","userPlannedDate","userPlannedTime","notes","realtorUrl","sourceIfl","grp"];
+function initProp(p){
+  let grp=p.grp;
+  if(typeof grp==='number'||!grp){
+    grp=(p.cdp||p.caf||p.spo||p.man)?nearestBase(p)[0]:'CdP';
+  }
+  return{...p,grp,status:"New",deleted:false,schedDate:"",schedTime:"",proposedDate:"",lastContacted:"",broker:"",brokerPhone:"",location:"",notes:"",realtorUrl:"",sourceIfl:"none",userPlannedDate:p.plannedDate||"",userPlannedTime:p.plannedTime||""};
+}
 let state={props:PROPS_RAW.map(initProp),sort:{field:"fco",dir:"asc"},expanded:new Set(),mapInited:false,leafletMap:null,mapMarkers:[],mapRoutes:[],collapsedDays:new Set(),schedCollapsed:{unscheduled:false,eliminated:false}};
 const LS_BASES="hh_bases";
+const LS_AIRPORTS="hh_airports";
+let state_airports=[
+  {abbr:"FCO",name:"Rome Fiumicino Int'l",lat:41.8003,lng:12.2389},
+  {abbr:"MXP",name:"Milan Malpensa Int'l",lat:45.6306,lng:8.7231}
+];
+function getDefaultBases(){return[
+  {abbr:"CdP",name:"Città della Pieve",iflToken:null,iflName:null,desc:"",active:true,airport:"FCO",lat:42.9535,lng:12.0022,dates:"Jun 24–26"},
+  {abbr:"CaF",name:"Castiglion Fiorentino",iflToken:null,iflName:null,desc:"",active:true,airport:"FCO",lat:43.3429,lng:11.9246,dates:"Jun 28–Jul 3"},
+  {abbr:"Spo",name:"Spoleto",iflToken:null,iflName:null,desc:"",active:true,airport:"FCO",lat:42.7341,lng:12.7376,dates:"Jul 5–7"},
+  {abbr:"Man",name:"Manciano",iflToken:null,iflName:null,desc:"",active:true,airport:"FCO",lat:42.5876,lng:11.5152,dates:"Jul 7–10"},
+  {abbr:"PMN",name:"Piemonte",iflToken:"1343468",iflName:"Piemonte",desc:"",active:true,airport:"MXP",lat:44.8,lng:8.0,dates:""}
+];}
 let state_bases=[];
-// Load bases synchronously from localStorage cache
+// Load bases + airports synchronously from localStorage cache
 (function(){
+  const rawA=localStorage.getItem(LS_AIRPORTS);
+  if(rawA){try{const a=JSON.parse(rawA);if(a&&a.length)state_airports=a;}catch(e){}}
   const raw=localStorage.getItem(LS_BASES);
-  if(raw){try{const b=JSON.parse(raw);if(b.length)state_bases=b;}catch(e){}}
-  if(!state_bases.length){
-    const grps=[...new Set(PROPS_RAW.map(p=>p.grp))].sort((a,b)=>a-b);
-    state_bases=grps.map(g=>({grp:g,name:'Group '+g,abbr:'G'+g,iflToken:null,iflName:null,desc:''}));
-  }
+  if(raw){try{const b=JSON.parse(raw);if(b&&b.length&&!b.some(x=>typeof x.grp==='number'))state_bases=b;}catch(e){}}
+  if(!state_bases.length)state_bases=getDefaultBases();
 })();
 
 // ═══ STORAGE ══════════════════════════════════════════
@@ -546,7 +570,14 @@ function _buildSaveData(){
 }
 function _applyData(data){
   if(!data||!data.props)return;
-  data.props.forEach(d=>{let p=state.props.find(x=>x.id===d.id);if(!p&&d._custom){p=initProp({id:d.id,name:d.name||"",town:d.town||"",prov:d.prov||"",price:d.price||0,rooms:d.rooms||0,size:d.size||0,grp:d.grp||1,fco:d.fco||120,cdp:d.cdp||60,caf:d.caf||60,spo:d.spo||60,man:d.man||60,url:d.url||"",lat:d.lat||null,lng:d.lng||null,plannedDate:"",plannedTime:""});p._custom=true;state.props.push(p);}if(p){PERSIST_FIELDS.forEach(f=>{if(d[f]!==undefined)p[f]=d[f];});if(d._custom)p._custom=true;
+  data.props.forEach(d=>{let p=state.props.find(x=>x.id===d.id);if(!p&&d._custom){p=initProp({id:d.id,name:d.name||"",town:d.town||"",prov:d.prov||"",price:d.price||0,rooms:d.rooms||0,size:d.size||0,grp:d.grp||(state_bases[0]?.abbr||'CdP'),fco:d.fco||120,cdp:d.cdp||60,caf:d.caf||60,spo:d.spo||60,man:d.man||60,url:d.url||"",lat:d.lat||null,lng:d.lng||null,plannedDate:"",plannedTime:""});p._custom=true;state.props.push(p);}if(p){PERSIST_FIELDS.forEach(f=>{if(d[f]!==undefined)p[f]=d[f];});if(d._custom)p._custom=true;
+      // Migrate grp: reassign by IFL token match, or fix numeric grp
+      const _matchBase=state_bases.find(b=>b.iflToken&&String(b.iflToken)===String(p.sourceIfl));
+      if(_matchBase){p.grp=_matchBase.abbr;}
+      else if(typeof p.grp==='number'||!state_bases.find(b=>b.abbr===p.grp)){
+        if(p.cdp||p.caf||p.spo||p.man)p.grp=nearestBase(p)[0];
+        else if(state_bases.length)p.grp=state_bases[0].abbr;
+      }
       // Migrate old status "-" → "New", old deleted=true → "Deleted"
       if(p.status==="-")p.status="New";
       if(p.deleted&&!ELIM_STATUSES.has(p.status))p.status="Deleted";
@@ -569,7 +600,15 @@ async function loadFromStorage(){
   // Load bases from server (non-blocking)
   fetch(API_BASE+'/bases',{headers:{'Authorization':'Bearer '+getApiToken()}})
     .then(r=>r.ok?r.json():null).then(b=>{
-      if(b&&b.length){state_bases=b;localStorage.setItem(LS_BASES,JSON.stringify(b));refreshBaseFilters();}
+      if(b&&b.length){
+        if(b.some(x=>typeof x.grp==='number')){
+          const newBases=getDefaultBases();
+          b.forEach(old=>{if(old.iflToken){const ex=newBases.find(n=>n.iflToken===old.iflToken);if(!ex&&old.abbr&&old.abbr.length>1&&!/^G\d/.test(old.abbr))newBases.push({abbr:old.abbr,name:old.name,iflToken:old.iflToken,iflName:old.iflName,desc:old.desc||'',active:old.active!==false,airport:'FCO',lat:0,lng:0,dates:''});}});
+          state_bases=newBases;
+          fetch(API_BASE+'/bases',{method:'PUT',headers:_apiHdr(),body:JSON.stringify(state_bases)}).catch(()=>{});
+        }else{state_bases=b;}
+        localStorage.setItem(LS_BASES,JSON.stringify(state_bases));refreshBaseFilters();
+      }
     }).catch(()=>{});
   // Always load localStorage FIRST as baseline (preserves locally-added custom props)
   const raw=localStorage.getItem(LS_KEY);
@@ -596,6 +635,17 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 
 // ═══ HELPERS ══════════════════════════════════════════
 function getProp(id){return state.props.find(p=>p.id===id);}
+function hvDrive(lat1,lng1,lat2,lng2){const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180,a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return Math.round(2*R*Math.asin(Math.sqrt(a))*1.4/55*60/5)*5;}
+function getBaseObj(abbr){return state_bases.find(b=>b.abbr===abbr);}
+function getAirportObj(abbr){return state_airports.find(a=>a.abbr===abbr);}
+function getAirportDist(p){
+  const base=getBaseObj(p.grp);
+  const aptAbbr=(base&&base.airport)||'FCO';
+  const apt=getAirportObj(aptAbbr);
+  if(apt&&p.lat&&p.lng)return hvDrive(p.lat,p.lng,apt.lat,apt.lng);
+  return p.fco||0;
+}
+function getAirportLabel(p){const base=getBaseObj(p.grp);return(base&&base.airport)||'FCO';}
 function nearestBase(p){return[["CdP",p.cdp],["CaF",p.caf],["Spo",p.spo],["Man",p.man]].sort((a,b)=>a[1]-b[1])[0];}
 function showTimePicker(s){return["To Be Scheduled","Proposed","Scheduled"].includes(s);}
 function showProposedDate(s){return s==="Proposed";}
@@ -628,20 +678,20 @@ function filteredSortedProps(){
   let arr=[...state.props];
 
   // Apply status/deleted filter
-  const inactiveGrps=new Set(state_bases.filter(b=>b.active===false).map(b=>b.grp));
+  const inactiveGrps=new Set(state_bases.filter(b=>b.active===false).map(b=>b.abbr));
   if(inactiveGrps.size)arr=arr.filter(p=>!inactiveGrps.has(p.grp));
   if(fS==="ELIM"){arr=arr.filter(p=>ELIM_STATUSES.has(p.status));}
   else if(fS==="ALL"){/* all */}
   else if(fS===""){arr=arr.filter(p=>ACTIVE_STATUSES.has(p.status));}
   else{arr=arr.filter(p=>p.status===fS);}
 
-  if(fB)arr=arr.filter(p=>nearestBase(p)[0]===fB);
+  if(fB)arr=arr.filter(p=>p.grp===fB);
   if(fQ)arr=arr.filter(p=>p.name.toLowerCase().includes(fQ)||String(p.id).includes(fQ)||String(p.price).includes(fQ)||(p.town||"").toLowerCase().includes(fQ)||(p.broker||"").toLowerCase().includes(fQ)||(p.realtorUrl||"").toLowerCase().includes(fQ));
   const{field,dir}=state.sort;const mul=dir==="asc"?1:-1;
   arr.sort((a,b)=>{
-    if(field==="fco")return mul*(a.fco-b.fco);
+    if(field==="fco")return mul*(getAirportDist(a)-getAirportDist(b));
     if(field==="price")return mul*(a.price-b.price);
-    if(field==="base")return mul*(nearestBase(a)[1]-nearestBase(b)[1]);
+    if(field==="base")return mul*(getAirportDist(a)-getAirportDist(b));
     if(field==="planned")return mul*((a.userPlannedDate||"zzz").localeCompare(b.userPlannedDate||"zzz"));
     if(field==="sched")return mul*((a.schedDate||"zzz").localeCompare(b.schedDate||"zzz"));
     if(field==="status")return mul*(STATUS_OPTS.indexOf(a.status)-STATUS_OPTS.indexOf(b.status));
@@ -654,7 +704,7 @@ function renderProps(){
   const sortSel=document.getElementById("sort-sel");if(sortSel)sortSel.value=state.sort.field+"-"+state.sort.dir;
   const props=filteredSortedProps();
   const fS=document.getElementById("f-status")?.value||"";
-  const _inact=new Set(state_bases.filter(b=>b.active===false).map(b=>b.grp));
+  const _inact=new Set(state_bases.filter(b=>b.active===false).map(b=>b.abbr));
   var _tot=state.props.filter(function(p){return !ELIM_STATUSES.has(p.status)&&!_inact.has(p.grp);}).length;var _elim=state.props.filter(function(p){return ELIM_STATUSES.has(p.status);}).length;document.getElementById("result-count").textContent="Showing "+props.length+" of "+_tot+" active"+(_elim>0?" · "+_elim+" eliminated":"");
   document.getElementById("tiles-container").innerHTML=props.map(p=>renderTile(p,fS==="DELETED")).join("");
   saveToStorage();
@@ -663,7 +713,7 @@ function renderProps(){
 function renderTile(p,isDeletedView=false){
   const nb=nearestBase(p);
   const stCls=STATUS_CLASS[p.status]||"";
-  const grpCls="g"+p.grp;
+  const grpCls="base-"+p.grp;
   const isExp=state.expanded.has(p.id);
   const showTime=showTimePicker(p.status);
   const showPD=showProposedDate(p.status);
@@ -693,7 +743,7 @@ function renderTile(p,isDeletedView=false){
   </div>
   <div class="tile-body">
     <div class="tile-name"><a href="${p.url||"#"}" target="${p.url?"_blank":"_self"}">${p.name}</a>${p.fco<=120?' <span style="color:var(--terra);font-size:10px">⭐</span>':''}</div>
-    <div class="tile-sub">${p.town}, ${p.prov} · €${p.price}k · ${p.rooms}rms · <span class="${p.fco<=120?"fco-hot":""}">${p.fco}m FCO</span> · ${nb[0]}=${nb[1]}m${brokerShort?" · "+brokerShort:""}</div>
+    <div class="tile-sub">${p.town}, ${p.prov} · €${p.price}k · ${p.rooms}rms · <span class="${getAirportDist(p)<=120?"fco-hot":""}">${getAirportDist(p)}m ${getAirportLabel(p)}</span>${(p.cdp||p.caf||p.spo||p.man)?" · "+nb[0]+"="+nb[1]+"m":""}${brokerShort?" · "+brokerShort:""}</div>
     <div class="tile-actions">
       ${isDeletedView
         ?`<button class="t-btn t-btn-restore" onclick="restoreProp(${p.id})">↩ Restore</button>`
@@ -711,7 +761,7 @@ function renderTile(p,isDeletedView=false){
       <div class="tile-field"><label>Price</label><span style="font-size:12px">€${p.price}k</span></div>
       <div class="tile-field"><label>Rooms</label><span style="font-size:12px">${p.rooms}</span></div>
       <div class="tile-field"><label>Size</label><span style="font-size:12px">${p.size}m²</span></div>
-      <div class="tile-field"><label>Base / Group</label><select onchange="changePropertyBase(${p.id},this.value)" style="font-size:12px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg1);color:var(--text1)">${state_bases.map(b=>`<option value="${b.grp}"${p.grp===b.grp?" selected":""}>${b.name} (grp ${b.grp})</option>`).join("")}</select></div>
+      <div class="tile-field"><label>Base</label><select onchange="changePropertyBase(${p.id},this.value)" style="font-size:12px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg1);color:var(--text1)">${state_bases.map(b=>`<option value="${b.abbr}"${p.grp===b.abbr?" selected":""}>${b.name} (${b.abbr})</option>`).join("")}</select></div>
     </div>
     <div class="tile-field"><label>Base drive times</label><span style="font-size:11px;color:var(--text3)">CdP=${p.cdp}m · CaF=${p.caf}m · Spo=${p.spo}m · Man=${p.man}m</span></div>
     <div class="tile-field"><label>Idealista ID</label><span style="font-size:12px">${p.id}</span></div>
@@ -846,7 +896,7 @@ function copyMsgDone(){
 }
 function copyMsgCancel(){document.getElementById('copy-msg-modal').style.display='none';}
 function flashCopy(id){document.querySelectorAll(`#tile-${id} .t-btn-olive`).forEach(b=>{const o=b.textContent;b.textContent="Copied \u2713";b.style.cssText="background:var(--terra);color:#fff";setTimeout(()=>{b.textContent=o;b.style.cssText="";},1800);})
-function changePropertyBase(id,grp){const p=getProp(id);if(p){p.grp=parseInt(grp);saveToStorage();renderProps();}};}
+function changePropertyBase(id,grp){const p=getProp(id);if(p){p.grp=grp;saveToStorage();renderProps();}};}
 
 function addToCalendar(id){
   const p=getProp(id);if(!p.schedDate)return;
@@ -903,7 +953,7 @@ function openAddModal(prefill){
   function setF(id,val){if(val!=null&&String(val)!==""){var el=document.getElementById(id);if(el)el.value=val;}}
   // Populate base select
   const grpSel=document.getElementById('add-grp');
-  if(grpSel){grpSel.innerHTML=state_bases.map(b=>`<option value="${b.grp}">${b.name} (grp ${b.grp})</option>`).join('');} 
+  if(grpSel){grpSel.innerHTML=state_bases.map(b=>`<option value="${b.abbr}">${b.name} (${b.abbr})</option>`).join('');} 
   // Normalize diacritics in incoming prefill data
   if(prefill.title) prefill.title=stripD(prefill.title);
   if(prefill.name) prefill.name=stripD(prefill.name);
@@ -973,7 +1023,7 @@ function confirmAddProperty(){
   const rooms=parseInt(document.getElementById("add-rooms").value)||0;
   const size=parseInt(document.getElementById("add-size").value)||0;
   const fco=parseInt(document.getElementById("add-fco").value)||90;
-  const grp=parseInt(document.getElementById("add-grp").value)||1;
+  const grp=document.getElementById("add-grp").value||state_bases[0]?.abbr||"CdP";
   const loc=document.getElementById("add-loc").value.trim();
   const broker=stripD(document.getElementById("add-broker").value.trim());
   const phone=document.getElementById("add-phone").value.trim();
@@ -1004,7 +1054,6 @@ function confirmAddProperty(){
   // Estimate base drives from location
   let cdp=60,caf=60,spo=60,man=60;
   if(lat&&lng){
-    function hvDrive(lat1,lng1,lat2,lng2){const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180,a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return Math.round(2*R*Math.asin(Math.sqrt(a))*1.4/55*60/5)*5;}
     cdp=hvDrive(lat,lng,42.9535,12.0022);caf=hvDrive(lat,lng,43.3429,11.9246);spo=hvDrive(lat,lng,42.7341,12.7376);man=hvDrive(lat,lng,42.5876,11.5152);
   }
 
@@ -1123,7 +1172,7 @@ function renderSchedule(){
     <span class="drag-handle" style="touch-action:none">⠿</span>
     <span class="stop-name"><a href="${p.url}" target="_blank">${p.name}</a></span>
     <span style="font-size:10px;color:var(--text3)">${p.town}</span>
-    <span style="font-size:10px;font-family:monospace;color:var(--text2);margin-left:auto">${p.fco}m FCO · ${nearestBase(p)[0]}=${nearestBase(p)[1]}m</span>
+    <span style="font-size:10px;font-family:monospace;color:var(--text2);margin-left:auto">${getAirportDist(p)}m ${getAirportLabel(p)}${(p.cdp||p.caf||p.spo||p.man)?" · "+nearestBase(p)[0]+"="+nearestBase(p)[1]+"m":""}</span>
   </div>`).join("");
 
   container.innerHTML+=`<div class="zone-card" id="zone-unscheduled">
@@ -1208,7 +1257,7 @@ function refreshMap(){
     if(ELIM_STATUSES.has(p.status))return false;
     const lc=locationCoords(p);
     if(!lc&&!p.lat&&!p.lng)return false;
-    const grpChk=document.getElementById('map-grp-'+p.grp);
+    const grpChk=document.getElementById('map-grp-'+p.grp);  // grp is now abbr
     if(grpChk&&!grpChk.checked)return false;
     if(schedOnly&&p.status!=="Scheduled")return false;
     if(filterBase&&nearestBase(p)[0]!==filterBase)return false;
@@ -1217,8 +1266,9 @@ function refreshMap(){
   });
 
   visProps.forEach(p=>{
-    const GRP_COLS=["#5B7232","#C0603A","#2C5F7A","#7B2D8B","#E65100","#1B5E20","#880E4F","#4E342E"];
-    const col=GRP_COLS[(p.grp-1)%GRP_COLS.length];
+    const MAP_COLS=["#4A7C59","#C8843F","#2B7A9E","#C74B2E","#8B5CF6","#6B7280","#B45309","#0369A1"];
+    const _bIdx=state_bases.findIndex(b=>b.abbr===p.grp);
+    const col=MAP_COLS[Math.max(0,_bIdx)%MAP_COLS.length];
     const lc=locationCoords(p);const lat=lc?.lat||p.lat;const lng=lc?.lng||p.lng;if(!lat)return;
     const sz=lc?14:11;const bw=lc?"3px":"2px";
     const icon=L.divIcon({className:"",html:`<div style="background:${col};border-radius:50%;width:${sz}px;height:${sz}px;border:${bw} solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
@@ -1331,40 +1381,12 @@ async function deleteSnapshot(id){
   }catch(e){alert('Failed to delete snapshot.');}
 }
 
-// ─── Dynamic base filters ───────────────────────────────────────────────────
-function refreshBaseFilters(){
-  // f-base: Trip base filter from non-eliminated properties
-  const baseEl=document.getElementById('f-base');
-  if(baseEl){
-    const inactGrps=new Set(state_bases.filter(b=>b.active===false).map(b=>b.grp));
-    const activeBases=[...new Set(
-      state.props.filter(p=>!ELIM_STATUSES.has(p.status)&&!inactGrps.has(p.grp))
-        .map(p=>nearestBase(p)[0])
-    )].sort((a,b2)=>a.localeCompare(b2));
-    const cur=baseEl.value;
-    baseEl.innerHTML='<option value="">All</option>'+
-      activeBases.map(b=>`<option value="${b}">${(BASES[b]&&BASES[b].name)||b}</option>`).join('');
-    if(cur)baseEl.value=cur;
-  }
-  // Map group checkboxes — from state_bases
-  const mapFilters=document.getElementById('map-grp-filters');
-  if(mapFilters){
-    const GRP_COLS=["#5B7232","#C0603A","#2C5F7A","#7B2D8B","#E65100","#1B5E20","#880E4F","#4E342E"];
-    mapFilters.innerHTML=state_bases.map(b=>{
-      const col=GRP_COLS[(b.grp-1)%GRP_COLS.length];
-      return `<label><input type="checkbox" id="map-grp-${b.grp}" checked onchange="refreshMap()"> <span style="color:${col};font-weight:600">${b.name||'Grp '+b.grp}</span></label>`;
-    }).join('');
-  }
-  renderProps();
-}
-
 // ─── Settings & Bases ───────────────────────────────────────────────────────
-// state_bases declared before state
-
 function openSettingsModal() {
   const km = document.getElementById('settings-key');
   if (km) km.value = localStorage.getItem('hh_api_key') || '';
   document.getElementById('settings-modal').style.display = 'flex';
+  renderAirportsList();
   loadBasesIntoSettings();
   renderResetBasesList();
   renderTemplateEditor();
@@ -1382,24 +1404,54 @@ function saveSettingsKey() {
 }
 
 async function loadBasesIntoSettings() {
-  let serverBases = [];
+  // Bases already loaded in state_bases; just re-fetch to ensure fresh
   try {
     const r = await fetch(API_BASE + '/bases', { headers: _apiHdr() });
-    if (r.ok) serverBases = await r.json();
-  } catch (e) {}
-  // Always include grp values found in PROPS_RAW/state.props, merged with server bases
-  const grps = [...new Set(state.props.map(p => p.grp).filter(Boolean))].sort();
-  const merged = [...serverBases];
-  for (const g of grps) {
-    if (!merged.find(b => b.grp === g)) {
-      merged.push({grp: g, name: 'Group ' + g, abbr: 'G' + g, iflToken: null, iflName: null, desc: ''});
+    if (r.ok) {
+      const serverBases = await r.json();
+      if (serverBases && serverBases.length) {
+        if (!serverBases.some(x=>typeof x.grp==='number')) {
+          state_bases = serverBases;
+          localStorage.setItem(LS_BASES, JSON.stringify(state_bases));
+        }
+      }
     }
-  }
-  merged.sort((a,b) => a.grp - b.grp);
-  state_bases = merged;
+  } catch (e) {}
   renderBasesList();
 }
 
+function _populateAirportSelect(selId, selectedAbbr){
+  const sel=document.getElementById(selId);if(!sel)return;
+  sel.innerHTML=state_airports.map(a=>`<option value="${a.abbr}"${a.abbr===selectedAbbr?' selected':''}>${a.abbr} — ${a.name}</option>`).join('');
+}
+function renderAirportsList(){
+  const el=document.getElementById('airports-list');if(!el)return;
+  el.innerHTML=state_airports.map(a=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px">
+      <code style="font-size:12px;font-weight:600;color:var(--adriat);width:40px">${a.abbr}</code>
+      <span style="flex:1">${a.name}</span>
+      <span style="color:var(--text3);font-family:monospace">${a.lat.toFixed(4)}, ${a.lng.toFixed(4)}</span>
+      ${state_airports.length>2?`<button class="io-btn" onclick="deleteAirport('${a.abbr}')" style="font-size:10px">✕</button>`:''}
+    </div>`).join('');
+}
+function addAirport(){
+  const abbr=(document.getElementById('apt-abbr').value||'').trim().toUpperCase();
+  const name=(document.getElementById('apt-name').value||'').trim();
+  const lat=parseFloat(document.getElementById('apt-lat').value);
+  const lng=parseFloat(document.getElementById('apt-lng').value);
+  if(!abbr||!name||isNaN(lat)||isNaN(lng)){alert('All fields required.');return;}
+  if(state_airports.find(a=>a.abbr===abbr)){alert(`Airport ${abbr} already exists.`);return;}
+  state_airports.push({abbr,name,lat,lng});
+  localStorage.setItem(LS_AIRPORTS,JSON.stringify(state_airports));
+  ['apt-abbr','apt-name','apt-lat','apt-lng'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderAirportsList();
+}
+function deleteAirport(abbr){
+  if(state_bases.some(b=>b.airport===abbr)){alert(`Airport ${abbr} is in use by a base. Change the base first.`);return;}
+  state_airports=state_airports.filter(a=>a.abbr!==abbr);
+  localStorage.setItem(LS_AIRPORTS,JSON.stringify(state_airports));
+  renderAirportsList();
+}
 function renderBasesList() {
   const el = document.getElementById('bases-list');
   if (!el) return;
@@ -1407,31 +1459,31 @@ function renderBasesList() {
   el.innerHTML = state_bases.map(b => `
     <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:12px;color:var(--text1)">${b.name} <span style="color:var(--text3);font-weight:400">(grp ${b.grp} · ${state.props.filter(p=>p.grp===b.grp&&!ELIM_STATUSES.has(p.status)).length} props)</span></div>
+        <div style="font-weight:600;font-size:12px;color:var(--text1)">${b.name} <span style="color:var(--text3);font-weight:400">(${b.abbr} · ✈ ${b.airport||'FCO'} · ${state.props.filter(p=>p.grp===b.abbr&&!ELIM_STATUSES.has(p.status)).length} props)</span></div>
         ${b.iflToken ? `<div style="font-size:10px;color:var(--adriat);margin-top:2px">IFL: <code>${b.iflToken}</code>${b.iflName ? ' · ' + b.iflName : ''}</div>` : '<div style="font-size:10px;color:var(--text3);margin-top:2px">No IFL linked</div>'}
         ${b.desc ? `<div style="font-size:10px;color:var(--text3);margin-top:1px">${b.desc}</div>` : ''}
       </div>
-      <button class="io-btn" onclick="editBase(${b.grp})" style="font-size:10px">Edit</button>
-      <button class="io-btn" onclick="toggleBaseActive(${b.grp})" style="font-size:10px;${b.active===false?'color:var(--terra)':''}" title="${b.active===false?'Base is paused — properties hidden':'Pause this base'}}">${b.active===false?'▶ Activate':'⏸ Pause'}</button>
-      ${b.grp > 2 ? `<button class="io-btn danger" onclick="deleteBase(${b.grp})" style="font-size:10px">✕</button>` : ''}
+      <button class="io-btn" onclick="editBase('${b.abbr}')" style="font-size:10px">Edit</button>
+      <button class="io-btn" onclick="toggleBaseActive('${b.abbr}')" style="font-size:10px;${b.active===false?'color:var(--terra)':''}" title="${b.active===false?'Base is paused':'Pause this base'}">${b.active===false?'▶ Activate':'⏸ Pause'}</button>
+      <button class="io-btn danger" onclick="deleteBase('${b.abbr}')" style="font-size:10px">✕</button>
     </div>`).join('');
 }
 
 function openAddBaseForm() {
-  const nextGrp = state_bases.length ? Math.max(...state_bases.map(b => b.grp)) + 1 : 3;
-  document.getElementById('base-form-grp').value = nextGrp;
+  document.getElementById('base-form-abbr-orig').value = '';
   document.getElementById('base-form-name').value = '';
   document.getElementById('base-form-abbr').value = '';
   document.getElementById('base-form-ifl').value = '';
   document.getElementById('base-form-desc').value = '';
+  _populateAirportSelect('base-form-airport','FCO');
   document.getElementById('base-form-title').textContent = 'Add Base';
   document.getElementById('base-form').style.display = 'block';
 }
 
-function editBase(grp) {
-  const b = state_bases.find(x => x.grp === grp);
+function editBase(abbr) {
+  const b = state_bases.find(x => x.abbr === abbr);
   if (!b) return;
-  document.getElementById('base-form-grp').value = b.grp;
+  document.getElementById('base-form-abbr-orig').value = b.abbr;
   document.getElementById('base-form-name').value = b.name || '';
   document.getElementById('base-form-abbr').value = b.abbr || '';
   // Reconstruct URL based on token type
@@ -1443,6 +1495,7 @@ function editBase(grp) {
   }
   document.getElementById('base-form-ifl').value = editIflUrl;
   document.getElementById('base-form-desc').value = b.desc || '';
+  _populateAirportSelect('base-form-airport', b.airport||'FCO');
   document.getElementById('base-form-title').textContent = 'Edit Base';
   document.getElementById('base-form').style.display = 'block';
 }
@@ -1453,33 +1506,30 @@ function closeBaseForm() {
 }
 
 async function saveBaseForm() {
-  const grp = parseInt(document.getElementById('base-form-grp').value);
+  const origAbbr = document.getElementById('base-form-abbr-orig').value.trim();
   const name = document.getElementById('base-form-name').value.trim();
   const abbr = document.getElementById('base-form-abbr').value.trim().toUpperCase();
   const iflUrl = document.getElementById('base-form-ifl').value.trim();
   const desc = document.getElementById('base-form-desc').value.trim();
+  const airport = document.getElementById('base-form-airport').value.trim()||'FCO';
   if (!name) { alert('Name is required.'); return; }
+  if (!abbr) { alert('Abbreviation is required.'); return; }
 
-  // Extract token from IFL URL — handle both:
-  // https://www.idealista.it/join-favorites-list/TOKEN
-  // https://www.idealista.it/en/utente/preferiti/?favoritesListId=1343468
   let iflToken = null, iflName = null;
   const tokenMatch = iflUrl.match(/join-favorites-list\/([^?&#\/]+)/) ||
                      iflUrl.match(/[?&]favoritesListId=(\d+)/);
   if (tokenMatch) iflToken = tokenMatch[1];
 
-  // Validate: no two bases can share the same IFL token
   if (iflToken) {
-    const conflict = state_bases.find(b => b.iflToken === iflToken && b.grp !== grp);
-    if (conflict) { alert(`IFL token "${iflToken}" is already linked to base "${conflict.name}". Each IFL can only be linked to one base.`); return; }
+    const conflict = state_bases.find(b => b.iflToken === iflToken && b.abbr !== origAbbr);
+    if (conflict) { alert(`IFL token "${iflToken}" is already linked to base "${conflict.name}".`); return; }
   }
 
-  const existing = state_bases.find(b => b.grp === grp);
+  const existing = state_bases.find(b => b.abbr === origAbbr);
   if (existing) {
-    Object.assign(existing, { name, abbr, iflToken, iflName: existing.iflName || null, desc });
+    Object.assign(existing, { name, abbr, iflToken, iflName: existing.iflName || null, desc, airport });
   } else {
-    state_bases.push({ grp, name, abbr, iflToken, iflName: null, desc });
-    state_bases.sort((a, b) => a.grp - b.grp);
+    state_bases.push({ abbr, name, iflToken, iflName: null, desc, active: true, airport, lat: 0, lng: 0, dates: '' });
   }
 
   try {
@@ -1496,9 +1546,9 @@ async function saveBaseForm() {
   renderBasesList();
 }
 
-async function deleteBase(grp) {
-  if (!confirm('Delete this base? Properties with this grp will remain but the base config will be removed.')) return;
-  state_bases = state_bases.filter(b => b.grp !== grp);
+async function deleteBase(abbr) {
+  if (!confirm('Delete this base? Properties assigned to it will remain but the base config will be removed.')) return;
+  state_bases = state_bases.filter(b => b.abbr !== abbr);
   try {
     await fetch(API_BASE + '/bases', { method: 'PUT', headers: _apiHdr(), body: JSON.stringify(state_bases) });
   } catch (e) {}
@@ -1507,8 +1557,8 @@ async function deleteBase(grp) {
   refreshBaseFilters();
 }
 
-async function toggleBaseActive(grp){
-  const b=state_bases.find(x=>x.grp===grp);if(!b)return;
+async function toggleBaseActive(abbr){
+  const b=state_bases.find(x=>x.abbr===abbr);if(!b)return;
   b.active=(b.active===false)?true:false;
   try{await fetch(API_BASE+'/bases',{method:'PUT',headers:_apiHdr(),body:JSON.stringify(state_bases)});}catch(e){}
   localStorage.setItem(LS_BASES,JSON.stringify(state_bases));
@@ -1517,18 +1567,15 @@ async function toggleBaseActive(grp){
 
 function renderResetBasesList(){
   const el=document.getElementById('reset-bases-list');if(!el)return;
-  el.innerHTML=state_bases.map(b=>`<label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:12px"><input type="checkbox" class="reset-base-chk" value="${b.grp}"> ${b.name} (${state.props.filter(p=>p.grp===b.grp&&!ELIM_STATUSES.has(p.status)).length} active)</label>`).join('');
+  el.innerHTML=state_bases.map(b=>`<label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:12px"><input type="checkbox" class="reset-base-chk" value="${b.abbr}"> ${b.name} (${state.props.filter(p=>p.grp===b.abbr&&!ELIM_STATUSES.has(p.status)).length} active)</label>`).join('');
 }
 function toggleResetAll(checked){
   document.querySelectorAll('.reset-base-chk').forEach(c=>c.checked=checked);
 }
 function performReset(){
-  const checked=[...document.querySelectorAll('.reset-base-chk:checked')].map(c=>parseInt(c.value));
+  const checked=[...document.querySelectorAll('.reset-base-chk:checked')].map(c=>c.value);
   if(!checked.length){alert('Select at least one base.');return;}
   if(!confirm('Reset '+checked.length+' base(s)? Active properties will be set to "Reset" status.'))return;
-  state.props.forEach(p=>{
-    if(!ELIM_STATUSES.has(p.status))p.status=p.status==='-'?'New':'New'; // migrate old dash
-  });
   state.props.forEach(p=>{
     if(!checked.includes(p.grp))return;
     if(!ELIM_STATUSES.has(p.status))p.status='Reset';
@@ -1564,7 +1611,7 @@ window.addEventListener('message', evt => {
     if (Array.isArray(props)) {
       for (const p of props) {
         if (state.props.find(x=>String(x.id)===String(p.id))) continue;
-        const np=initProp({id:parseInt(p.id),name:p.title||('IFL-'+p.id),town:p.town||'',prov:p.prov||'',price:p.price||0,rooms:p.rooms||0,size:p.size||0,grp:baseGrp||3,fco:0,cdp:0,caf:0,spo:0,man:0,url:'https://www.idealista.it/immobile/'+p.id+'/',lat:null,lng:null,plannedDate:'',plannedTime:''});
+        const np=initProp({id:parseInt(p.id),name:p.title||('IFL-'+p.id),town:p.town||'',prov:p.prov||'',price:p.price||0,rooms:p.rooms||0,size:p.size||0,grp:baseGrp||state_bases[0]?.abbr||'CdP',fco:0,cdp:0,caf:0,spo:0,man:0,url:'https://www.idealista.it/immobile/'+p.id+'/',lat:p.lat||null,lng:p.lng||null,plannedDate:'',plannedTime:''});
         np._custom=true; np.sourceIfl=iflToken||'none'; state.props.push(np);
       }
       renderProps(); saveToStorage();
