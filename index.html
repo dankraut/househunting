@@ -207,7 +207,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 <div id="app">
 
 <div id="header">
-  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v2.3</span></div></div>
+  <div><h1>Central Italy · House Hunt 2026</h1><div class="sub">47 properties · Jun 24–Jul 10 · CdP · CaF · Spoleto · Manciano · <span style="opacity:.5;font-size:10px">SPA v3.0</span></div></div>
   <div style="display:flex;gap:5px;flex-shrink:0"><span class="badge badge-g1">Grp 1 &lt;135m</span><span class="badge badge-g2">Grp 2 &lt;165m</span></div>
 </div>
 
@@ -226,25 +226,27 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
     <span style="font-size:11px;font-weight:500;color:var(--text2)">Data:</span>
     <button class="io-btn" onclick="exportJSON()">⬇ Export</button>
     <button class="io-btn" onclick="document.getElementById('import-file').click()">⬆ Import</button>
+    <button class="io-btn" onclick="openSnapshotModal()">💾 Snapshots</button>
     <button class="io-btn danger" onclick="resetStorage()">↺ Reset</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
     <button class="io-btn" onclick="openAddModal()" style="margin-left:auto;background:var(--adriat);color:#fff;border-color:var(--adriat)">＋ Add Property</button>
     <span class="io-saved" id="save-notice">Saved ✓</span>
   </div>
   <div class="filter-row">
-    <span style="font-size:11px;font-weight:500;color:var(--text2)">Sort:</span>
-    <button class="sort-btn" id="sb-fco" onclick="setSort('fco')">FCO <span class="arr"></span></button>
-    <button class="sort-btn" id="sb-price" onclick="setSort('price')">Price <span class="arr"></span></button>
-    <button class="sort-btn" id="sb-base" onclick="setSort('base')">Base <span class="arr"></span></button>
-    <button class="sort-btn" id="sb-planned" onclick="setSort('planned')">Planned <span class="arr"></span></button>
-    <button class="sort-btn" id="sb-sched" onclick="setSort('sched')">Sched <span class="arr"></span></button>
-    <button class="sort-btn" id="sb-status" onclick="setSort('status')">Status <span class="arr"></span></button>
+    <label style="font-size:11px;font-weight:500;color:var(--text2)">Sort:&nbsp;<select id="sort-sel" onchange="setSortSel(this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1)">
+      <option value="fco-asc">FCO &#9650;</option><option value="fco-desc">FCO &#9660;</option>
+      <option value="price-asc">Price &#9650;</option><option value="price-desc">Price &#9660;</option>
+      <option value="base-asc">Base &#9650;</option><option value="base-desc">Base &#9660;</option>
+      <option value="planned-asc">Planned &#9650;</option><option value="planned-desc">Planned &#9660;</option>
+      <option value="sched-asc">Sched &#9650;</option><option value="sched-desc">Sched &#9660;</option>
+      <option value="status-asc">Status &#9650;</option><option value="status-desc">Status &#9660;</option>
+    </select></label>
   </div>
   <div class="filter-row">
     <span style="font-size:11px;font-weight:500;color:var(--text2)">Filter:</span>
     <label>Status <select id="f-status" onchange="renderProps()"><option value="">Active</option><option value="ALL">All</option><option>-</option><option>Reached Out</option><option>Replied</option><option>Info Supplied</option><option>To Be Scheduled</option><option>Proposed</option><option>Scheduled</option><option value="ELIM">Eliminated</option><option value="DELETED">Deleted</option></select></label>
     <label>Base <select id="f-base" onchange="renderProps()"><option value="">All</option><option>CdP</option><option>CaF</option><option>Spo</option><option>Man</option></select></label>
-    <label>Search <input type="text" id="f-search" placeholder="name / ID / price" oninput="renderProps();document.getElementById('btn-clr-search').style.display=this.value?'inline-block':'none'"></label><button class="io-btn" id="btn-clr-search" onclick="document.getElementById('f-search').value='';document.getElementById('btn-clr-search').style.display='none';renderProps()" style="display:none">✕ Clear</button>
+    <label>Search <input type="text" id="f-search" placeholder="name / town / broker / etc." oninput="renderProps();document.getElementById('btn-clr-search').style.display=this.value?'inline-block':'none'"></label><button class="io-btn" id="btn-clr-search" onclick="document.getElementById('f-search').value='';document.getElementById('btn-clr-search').style.display='none';renderProps()" style="display:none">✕ Clear</button>
   </div>
   <div class="result-count" id="result-count"></div>
   <div class="tiles-grid" id="tiles-container"></div>
@@ -342,12 +344,30 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
         <div class="tile-field"><label>Broker / Firm</label><input type="text" id="add-broker" placeholder="Agent or firm name" autocomplete="off"></div>
         <div class="tile-field"><label>Phone</label><input type="tel" id="add-phone" placeholder="+39 …" autocomplete="off"></div>
       </div>
+      <div class="tile-field"><label>Realtor / Agency URL</label><input type="url" id="add-realtorUrl" placeholder="https://www.idealista.it/pro/…" autocomplete="off"></div>
+      <div class="tile-field"><label>Notes</label><textarea id="add-notes" rows="3" placeholder="Your notes about this property…" autocomplete="off" style="width:100%;resize:vertical;font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg1);color:var(--text1);margin-top:2px"></textarea></div>
       <div id="add-note" style="font-size:11px;color:var(--text3)"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeAddModal()">Cancel</button>
       <button class="btn-primary" onclick="confirmAddProperty()">Add Property</button>
     </div>
+  </div>
+</div>
+
+<!-- Snapshot Modal -->
+<div id="snapshot-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10001;align-items:center;justify-content:center">
+  <div style="background:var(--bg1);border-radius:10px;padding:20px;width:min(480px,92vw);max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h2 style="font-size:14px;font-weight:600;color:var(--text1)">Snapshots</h2>
+      <button onclick="closeSnapshotModal()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2);line-height:1">&#10005;</button>
+    </div>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">Snapshots stored on server. Use Export for offline JSON backup.</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <input id="snapshot-label" type="text" placeholder="Optional label…" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1)">
+      <button class="io-btn" onclick="saveSnapshot()" style="background:var(--adriat);color:#fff;border-color:var(--adriat);white-space:nowrap">&#128190; Save Now</button>
+    </div>
+    <div id="snapshot-list" style="font-size:12px;color:var(--text2)">Loading…</div>
   </div>
 </div>
 
@@ -387,36 +407,53 @@ const TRIP_DAYS=[
 ];
 
 // ═══ STATE ════════════════════════════════════════════
-const PERSIST_FIELDS=["status","deleted","schedDate","schedTime","proposedDate","lastContacted","broker","brokerPhone","location","userPlannedDate","userPlannedTime"];
-function initProp(p){return{...p,status:"-",deleted:false,schedDate:"",schedTime:"",proposedDate:"",lastContacted:"",broker:"",brokerPhone:"",location:"",userPlannedDate:p.plannedDate||"",userPlannedTime:p.plannedTime||""};}
+const PERSIST_FIELDS=["status","deleted","schedDate","schedTime","proposedDate","lastContacted","broker","brokerPhone","location","userPlannedDate","userPlannedTime","notes","realtorUrl"];
+function initProp(p){return{...p,status:"-",deleted:false,schedDate:"",schedTime:"",proposedDate:"",lastContacted:"",broker:"",brokerPhone:"",location:"",notes:"",realtorUrl:"",userPlannedDate:p.plannedDate||"",userPlannedTime:p.plannedTime||""};}
 let state={props:PROPS_RAW.map(initProp),sort:{field:"fco",dir:"asc"},expanded:new Set(),mapInited:false,leafletMap:null,mapMarkers:[],mapRoutes:[],collapsedDays:new Set(),schedCollapsed:{unscheduled:false,eliminated:false}};
 
 // ═══ STORAGE ══════════════════════════════════════════
 const LS_KEY="italy_hunt_2026_v3";
+// ─── API / server storage ───────────────────────────────────────────────
+const API_TOKEN='jmjk05DK';
+const API_BASE='/api';
+function _apiHdr(){return{'Authorization':'Bearer '+API_TOKEN,'Content-Type':'application/json'};}
+function _buildSaveData(){
+  return{props:state.props.map(p=>{const o={id:p.id,_custom:!!p._custom};PERSIST_FIELDS.forEach(f=>o[f]=p[f]);if(p._custom)Object.assign(o,{name:p.name,town:p.town,prov:p.prov,price:p.price,rooms:p.rooms,size:p.size,grp:p.grp,fco:p.fco,cdp:p.cdp,caf:p.caf,spo:p.spo,man:p.man,url:p.url,lat:p.lat,lng:p.lng});return o;})};
+}
+function _applyData(data){
+  if(!data||!data.props)return;
+  data.props.forEach(d=>{let p=state.props.find(x=>x.id===d.id);if(!p&&d._custom){p=initProp({id:d.id,name:d.name||"",town:d.town||"",prov:d.prov||"",price:d.price||0,rooms:d.rooms||0,size:d.size||0,grp:d.grp||1,fco:d.fco||120,cdp:d.cdp||60,caf:d.caf||60,spo:d.spo||60,man:d.man||60,url:d.url||"",lat:d.lat||null,lng:d.lng||null,plannedDate:"",plannedTime:""});p._custom=true;state.props.push(p);}if(p){PERSIST_FIELDS.forEach(f=>{if(d[f]!==undefined)p[f]=d[f];});if(d._custom)p._custom=true;}});
+}
+function _setSyncNotice(s){
+  const n=document.getElementById("save-notice");if(!n)return;
+  if(s==='saving'){n.textContent='Saving…';n.style.color='var(--text3)';n.style.opacity='1';return;}
+  n.textContent=s==='server'?'Synced ✓':'Local only ⚠';
+  n.style.color=s==='server'?'var(--text3)':'var(--amber)';
+  n.style.opacity='1';setTimeout(()=>{n.style.opacity='0';},2500);
+}
 function saveToStorage(){
-  const data={props:state.props.map(p=>{const o={id:p.id,_custom:!!p._custom};PERSIST_FIELDS.forEach(f=>o[f]=p[f]);if(p._custom)Object.assign(o,{name:p.name,town:p.town,prov:p.prov,price:p.price,rooms:p.rooms,size:p.size,grp:p.grp,fco:p.fco,cdp:p.cdp,caf:p.caf,spo:p.spo,man:p.man,url:p.url,lat:p.lat,lng:p.lng});return o;})};
-  localStorage.setItem(LS_KEY,JSON.stringify(data));
-  const n=document.getElementById("save-notice");if(n){n.style.opacity="1";setTimeout(()=>n.style.opacity="0",2000);}
+  const data=_buildSaveData();const json=JSON.stringify(data);
+  localStorage.setItem(LS_KEY,json);_setSyncNotice('saving');
+  fetch(API_BASE+'/data',{method:'PUT',headers:_apiHdr(),body:json})
+    .then(r=>{_setSyncNotice(r.ok?'server':'local');}).catch(()=>_setSyncNotice('local'));
 }
-function loadFromStorage(){
-  const raw=localStorage.getItem(LS_KEY);if(!raw)return;
+async function loadFromStorage(){
   try{
-    const data=JSON.parse(raw);
-    data.props.forEach(d=>{
-      let p=state.props.find(x=>x.id===d.id);
-      if(!p&&d._custom){p=initProp({id:d.id,name:d.name||"",town:d.town||"",prov:d.prov||"",price:d.price||0,rooms:d.rooms||0,size:d.size||0,grp:d.grp||1,fco:d.fco||120,cdp:d.cdp||60,caf:d.caf||60,spo:d.spo||60,man:d.man||60,url:d.url||"",lat:d.lat||null,lng:d.lng||null,plannedDate:"",plannedTime:""});p._custom=true;state.props.push(p);}
-      if(p){PERSIST_FIELDS.forEach(f=>{if(d[f]!==undefined)p[f]=d[f];});if(d._custom)p._custom=true;}
-    });
-  }catch(e){console.error("Load error",e);}
+    const r=await fetch(API_BASE+'/data',{headers:{'Authorization':'Bearer '+API_TOKEN}});
+    if(r.ok){const txt=await r.text();if(txt&&txt!=='null'){_applyData(JSON.parse(txt));_setSyncNotice('server');return;}}
+  }catch(e){}
+  const raw=localStorage.getItem(LS_KEY);
+  if(raw){try{_applyData(JSON.parse(raw));}catch(e){console.warn('load error',e);}}
+  _setSyncNotice('local');
 }
-function exportJSON(){saveToStorage();const blob=new Blob([localStorage.getItem(LS_KEY)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="househunt_2026.json";a.click();}
+function exportJSON(){const blob=new Blob([JSON.stringify(_buildSaveData(),null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="househunt_2026.json";a.click();}
 function importJSON(evt){
   const file=evt.target.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=e=>{try{const data=JSON.parse(e.target.result);data.props.forEach(d=>{let p=state.props.find(x=>x.id===d.id);if(!p&&d._custom){p=initProp({id:d.id,name:d.name||"",town:d.town||"",prov:d.prov||"",price:d.price||0,rooms:d.rooms||0,size:d.size||0,grp:d.grp||1,fco:d.fco||120,cdp:d.cdp||60,caf:d.caf||60,spo:d.spo||60,man:d.man||60,url:d.url||"",lat:d.lat||null,lng:d.lng||null,plannedDate:"",plannedTime:""});p._custom=true;state.props.push(p);}if(p){PERSIST_FIELDS.forEach(f=>{if(d[f]!==undefined)p[f]=d[f];});if(d._custom)p._custom=true;}});renderProps();renderSchedule();alert("Imported.");}catch(e){alert("Failed: "+e.message);}};
+  reader.onload=e=>{try{_applyData(JSON.parse(e.target.result));renderProps();renderSchedule();saveToStorage();alert("Imported.");}catch(e){alert("Failed: "+e.message);}};
   reader.readAsText(file);evt.target.value="";
 }
-function resetStorage(){if(!confirm("Reset all data?"))return;localStorage.removeItem(LS_KEY);state.props=PROPS_RAW.map(initProp);state.expanded=new Set();renderProps();renderSchedule();}
+function resetStorage(){if(!confirm("Reset all data?"))return;localStorage.removeItem(LS_KEY);state.props=PROPS_RAW.map(initProp);state.expanded=new Set();renderProps();renderSchedule();saveToStorage();}
 // Autosave every 90 seconds
 setInterval(saveToStorage,90000);
 // Also save on page hide (mobile background/close)
@@ -445,6 +482,7 @@ function showTab(name){
 
 // ═══ PROPERTIES — TILES ═══════════════════════════════
 function setSort(f){if(state.sort.field===f)state.sort.dir=state.sort.dir==="asc"?"desc":"asc";else{state.sort.field=f;state.sort.dir="asc";}renderProps();}
+function setSortSel(val){const[f,d]=val.split('-');state.sort.field=f;state.sort.dir=d;renderProps();}
 
 const ACTIVE_STATUSES=new Set(["-","Reached Out","Replied","Info Supplied","To Be Scheduled","Proposed","Scheduled"]);
 
@@ -462,7 +500,7 @@ function filteredSortedProps(){
   else{arr=arr.filter(p=>!p.deleted&&p.status===fS);}
 
   if(fB)arr=arr.filter(p=>nearestBase(p)[0]===fB);
-  if(fQ)arr=arr.filter(p=>p.name.toLowerCase().includes(fQ)||String(p.id).includes(fQ)||String(p.price).includes(fQ));
+  if(fQ)arr=arr.filter(p=>p.name.toLowerCase().includes(fQ)||String(p.id).includes(fQ)||String(p.price).includes(fQ)||(p.town||"").toLowerCase().includes(fQ)||(p.broker||"").toLowerCase().includes(fQ)||(p.realtorUrl||"").toLowerCase().includes(fQ));
   const{field,dir}=state.sort;const mul=dir==="asc"?1:-1;
   arr.sort((a,b)=>{
     if(field==="fco")return mul*(a.fco-b.fco);
@@ -477,11 +515,7 @@ function filteredSortedProps(){
 }
 
 function renderProps(){
-  ["fco","price","base","planned","sched","status"].forEach(f=>{
-    const btn=document.getElementById("sb-"+f);if(!btn)return;
-    btn.classList.remove("active","asc","desc");const arr=btn.querySelector(".arr");if(arr)arr.className="arr";
-    if(state.sort.field===f){btn.classList.add("active",state.sort.dir);if(arr)arr.className="arr "+state.sort.dir;}
-  });
+  const sortSel=document.getElementById("sort-sel");if(sortSel)sortSel.value=state.sort.field+"-"+state.sort.dir;
   const props=filteredSortedProps();
   const fS=document.getElementById("f-status")?.value||"";
   var _tot=state.props.filter(function(p){return !p.deleted;}).length;var _elim=state.props.filter(function(p){return !p.deleted&&ELIM_STATUSES.has(p.status);}).length;var _del=state.props.filter(function(p){return p.deleted;}).length;document.getElementById("result-count").textContent="Showing "+props.length+" of "+_tot+" active"+(_elim>0?" · "+_elim+" eliminated":"")+(_del>0?" · "+_del+" deleted":"");
@@ -563,6 +597,13 @@ function renderTile(p,isDeletedView=false){
     <div class="tile-field"><label>Location (GPS lat,lng — or address)</label>
       <input type="text" value="${p.location}" placeholder="42.418,11.875 or full address" onchange="updateField(${p.id},'location',this.value)">
       <span style="font-size:10px;color:var(--text3);margin-top:1px">Enables the Map button above.</span>
+    </div>
+    <div class="tile-field"><label>Realtor / Agency URL</label>
+      <input type="url" value="${p.realtorUrl||''}" placeholder="https://www.idealista.it/pro/…" onchange="updateField(${p.id},'realtorUrl',this.value)">
+      ${p.realtorUrl?`<a href="${p.realtorUrl}" target="_blank" rel="noopener" style="font-size:10px;color:var(--adriat);display:inline-block;margin-top:2px">Open agency page ↗</a>`:''}
+    </div>
+    <div class="tile-field"><label>Notes</label>
+      <textarea rows="3" style="width:100%;resize:vertical;font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg1);color:var(--text1)" placeholder="Your notes…" onchange="updateField(${p.id},'notes',this.value)">${p.notes||''}</textarea>
     </div>
     `:""}
   </div>`;
@@ -665,7 +706,7 @@ async function fetchBroker(id){
 let _addFetchTimer=null;
 function openAddModal(prefill){
   prefill=prefill||{};
-  ["add-url","add-name","add-id","add-town","add-prov","add-price","add-rooms","add-size","add-fco","add-grp","add-loc","add-broker","add-phone"].forEach(function(id){var el=document.getElementById(id);if(el)el.value="";});
+  ["add-url","add-name","add-id","add-town","add-prov","add-price","add-rooms","add-size","add-fco","add-grp","add-loc","add-broker","add-phone","add-realtorUrl"].forEach(function(id){var el=document.getElementById(id);if(el)el.value="";});var _an=document.getElementById("add-notes");if(_an)_an.value="";
   var st=document.getElementById("add-fetch-status");if(st){st.style.display="none";st.textContent="";}
   var nt=document.getElementById("add-note");if(nt)nt.textContent="";
   function setF(id,val){if(val!=null&&String(val)!==""){var el=document.getElementById(id);if(el)el.value=val;}}
@@ -681,13 +722,13 @@ function openAddModal(prefill){
   setF("add-rooms",prefill.rooms); setF("add-size",prefill.size);
   setF("add-fco",prefill.fco_min); setF("add-grp",prefill.grp);
   setF("add-loc",prefill.location); setF("add-broker",prefill.broker);
-  setF("add-phone",prefill.phone);
+  setF("add-phone",prefill.phone); setF("add-realtorUrl",prefill.realtorUrl);
   if(prefill.url){var ue=document.getElementById("add-url");if(ue&&ue.value)parseAddUrl();}
   document.getElementById("add-modal").style.display="flex";
   var focusEl=document.getElementById(prefill.id?"add-name":"add-url");
   if(focusEl)focusEl.focus();
 }
-function closeAddModal(){document.getElementById("add-modal").style.display="none";["add-url","add-name","add-id","add-town","add-prov","add-price","add-rooms","add-size","add-fco","add-grp","add-loc","add-broker","add-phone"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});document.getElementById("add-fetch-status").style.display="none";document.getElementById("add-note").textContent="";}
+function closeAddModal(){document.getElementById("add-modal").style.display="none";["add-url","add-name","add-id","add-town","add-prov","add-price","add-rooms","add-size","add-fco","add-grp","add-loc","add-broker","add-phone","add-realtorUrl"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});var _an=document.getElementById("add-notes");if(_an)_an.value="";document.getElementById("add-fetch-status").style.display="none";document.getElementById("add-note").textContent="";}
 
 function onAddUrlChange(){
   clearTimeout(_addFetchTimer);
@@ -742,6 +783,8 @@ function confirmAddProperty(){
   const loc=document.getElementById("add-loc").value.trim();
   const broker=stripD(document.getElementById("add-broker").value.trim());
   const phone=document.getElementById("add-phone").value.trim();
+  const realtorUrl=document.getElementById("add-realtorUrl").value.trim();
+  const notes=document.getElementById("add-notes").value.trim();
 
   if(!name||!town){alert("Property Name and Town are required.");return;}
 
@@ -772,7 +815,7 @@ function confirmAddProperty(){
   }
 
   const newProp=initProp({id:pid,name,town,prov,price,rooms,size,grp,fco,cdp,caf,spo,man,url:url||"",lat,lng,plannedDate:"",plannedTime:""});
-  newProp._custom=true;newProp.broker=broker;newProp.brokerPhone=phone;newProp.location=loc;
+  newProp._custom=true;newProp.broker=broker;newProp.brokerPhone=phone;newProp.location=loc;newProp.realtorUrl=realtorUrl;newProp.notes=notes;
   state.props.push(newProp);
   closeAddModal();renderProps();renderSchedule();
   saveToStorage();
@@ -1041,6 +1084,57 @@ async function sendGemini(){
   hist.scrollTop=hist.scrollHeight;
 }
 
+// ─── Snapshots ──────────────────────────────────────────────────────────────────
+function openSnapshotModal(){document.getElementById('snapshot-modal').style.display='flex';loadSnapshots();}
+function closeSnapshotModal(){document.getElementById('snapshot-modal').style.display='none';}
+async function loadSnapshots(){
+  const el=document.getElementById('snapshot-list');
+  el.innerHTML='<em>Loading…</em>';
+  try{
+    const r=await fetch(API_BASE+'/snapshots',{headers:{'Authorization':'Bearer '+API_TOKEN}});
+    if(!r.ok)throw new Error('Server error');
+    const list=await r.json();
+    if(!list.length){el.innerHTML='<em style="color:var(--text3)">No snapshots yet.</em>';return;}
+    el.innerHTML=list.map(s=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:500;color:var(--text1)">${s.label||'(no label)'}</div>
+          <div style="color:var(--text3);font-size:10px;margin-top:1px">${new Date(s.ts).toLocaleString()} · ${s.count} props</div>
+        </div>
+        <button class="io-btn" onclick="restoreSnapshot('${s.id}')">&#8617; Restore</button>
+        <button class="io-btn danger" onclick="deleteSnapshot('${s.id}')">&#10005;</button>
+      </div>`).join('');
+  }catch(e){el.innerHTML='<em style="color:var(--red)">Server unavailable — set up KV binding in Cloudflare.</em>';}
+}
+async function saveSnapshot(){
+  const label=document.getElementById('snapshot-label').value.trim();
+  const data=JSON.stringify(_buildSaveData());
+  try{
+    const r=await fetch(API_BASE+'/snapshots',{method:'POST',headers:_apiHdr(),body:JSON.stringify({label,data})});
+    if(!r.ok)throw new Error();
+    document.getElementById('snapshot-label').value='';
+    loadSnapshots();
+  }catch(e){alert('Failed to save snapshot. Is the KV binding set up?');}
+}
+async function restoreSnapshot(id){
+  if(!confirm('Restore this snapshot? Current data will be overwritten.'))return;
+  try{
+    const r=await fetch(API_BASE+'/snapshots/restore',{method:'POST',headers:_apiHdr(),body:JSON.stringify({id})});
+    if(!r.ok)throw new Error();
+    state.props=PROPS_RAW.map(initProp);
+    await loadFromStorage();
+    renderProps();renderSchedule();
+    closeSnapshotModal();
+  }catch(e){alert('Failed to restore snapshot.');}
+}
+async function deleteSnapshot(id){
+  if(!confirm('Delete this snapshot?'))return;
+  try{
+    await fetch(API_BASE+'/snapshots/'+id,{method:'DELETE',headers:_apiHdr()});
+    loadSnapshots();
+  }catch(e){alert('Failed to delete snapshot.');}
+}
+
 // ═══ CHROME EXTENSION BRIDGE ══════════════════════════
 // Listens for broker data pushed from the househunt Chrome extension.
 // The extension content script scrapes the open Idealista listing and
@@ -1049,7 +1143,7 @@ window.addEventListener('message', evt => {
   // Accept messages from extension content scripts (same window) or
   // from the extension background via chrome.tabs.sendMessage → injected postMessage
   if (!evt.data || evt.data.type !== 'HOUSEHUNT_BROKER') return;
-  let { idealistaId, broker, phone, location, price, rooms, size, town, prov, title } = evt.data;
+  let { idealistaId, broker, phone, location, price, rooms, size, town, prov, title, realtorUrl } = evt.data;
   if (!idealistaId) return;
   // Normalize diacritics on all incoming text fields
   broker = stripD(broker); town = stripD(town); prov = stripD(prov); title = stripD(title);
@@ -1065,7 +1159,7 @@ window.addEventListener('message', evt => {
       url:`https://www.idealista.it/immobile/${pid}/`,
       id:pid, title:title||null, town:town||null, prov:prov||null,
       price:price||null, rooms:rooms||null, size:size||null,
-      broker:broker||null, phone:phone||null, location:location||null
+      broker:broker||null, phone:phone||null, location:location||null, realtorUrl:realtorUrl||null
     });
     return;
   }
@@ -1074,6 +1168,7 @@ window.addEventListener('message', evt => {
   if (broker && broker.trim()) { p.broker = broker.trim(); updated.push('broker'); }
   if (phone && phone.trim())   { p.brokerPhone = phone.trim(); updated.push('phone'); }
   if (location && location.trim()) { p.location = location.trim(); updated.push('location'); }
+  if (realtorUrl && realtorUrl.trim()) { p.realtorUrl = realtorUrl.trim(); updated.push('realtorUrl'); }
 
   if (updated.length) {
     saveToStorage();
@@ -1106,8 +1201,7 @@ function showExtToast(msg, type='ok') {
 }
 
 // ═══ INIT ══════════════════════════════════════════════
-loadFromStorage();
-renderProps();
+loadFromStorage().then(()=>{renderProps();});
 </script>
 </body>
 </html>
