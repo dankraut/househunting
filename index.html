@@ -37,10 +37,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 .tab.active{color:var(--terra);border-bottom-color:var(--terra);font-weight:600}
 .tab:hover:not(.active){color:var(--text2);border-bottom-color:var(--border2)}
 #content{flex:1;overflow:hidden;position:relative}
-.tab-panel{position:absolute;inset:0;overflow-y:auto;display:none;padding:12px}
+.tab-panel{position:absolute;inset:0;overflow-y:auto;display:none;padding:0 12px 12px}
 .tab-panel.active{display:block}
 /* IO bar */
-#props-toolbar{position:sticky;top:0;margin:-12px -12px 8px;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10}.toolbar-inner{display:flex;align-items:center;gap:6px;padding:7px 12px;overflow-x:auto;white-space:nowrap}.tb-lbl{font-size:11px;font-weight:500;color:var(--text2);display:flex;align-items:center;gap:3px;flex-shrink:0}.tb-lbl select{font-size:11px;padding:3px 6px;height:26px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1)}.tb-sep{color:var(--border);flex-shrink:0;margin:0 2px}#f-search{font-size:11px;padding:3px 6px;height:26px;width:120px;flex-shrink:0;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1)}
+#props-toolbar{position:sticky;top:0;margin:0 -12px 0;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10}.toolbar-inner{display:flex;align-items:center;gap:6px;padding:7px 12px;overflow-x:auto;white-space:nowrap}.tb-lbl{font-size:11px;font-weight:500;color:var(--text2);display:flex;align-items:center;gap:3px;flex-shrink:0}.tb-lbl select{font-size:11px;padding:3px 6px;height:26px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1)}.tb-sep{color:var(--border);flex-shrink:0;margin:0 2px}#f-search{font-size:11px;padding:3px 6px;height:26px;width:120px;flex-shrink:0;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1)}
 .io-btn{padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);font-size:11px;font-weight:500}
 .io-btn:hover{border-color:var(--adriat);color:var(--adriat)}
 .io-btn.active-filter{border-color:var(--terra);color:var(--terra);background:#FFF0E8}
@@ -236,8 +236,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
       <button class="io-btn" onclick="openAddModal()" style="margin-left:auto;background:var(--adriat);color:#fff;border-color:var(--adriat);white-space:nowrap;flex-shrink:0">＋ Add</button>
       <span class="io-saved" id="save-notice" style="flex-shrink:0">Saved ✓</span>
     </div>
+    <div id="result-count" style="font-size:11px;color:var(--text3);padding:2px 12px 5px"></div>
   </div>
-  <div class="result-count" id="result-count"></div>
   <div class="tiles-grid" id="tiles-container"></div>
 </div>
 
@@ -671,6 +671,12 @@ function setSortSel(val){const[f,d]=val.split('-');state.sort.field=f;state.sort
 
 const ACTIVE_STATUSES=new Set(["New","Working","Reset","Reached Out","Replied","Info Supplied","To Be Scheduled","Proposed","Scheduled"]);
 
+function refreshBaseFilters(){
+  const sel=document.getElementById('f-base');
+  if(sel){const cur=sel.value;sel.innerHTML='<option value="">All</option>'+state_bases.filter(b=>b.active).map(b=>`<option value="${b.abbr}">${b.name} (${b.abbr})</option>`).join('');if(state_bases.find(b=>b.abbr===cur))sel.value=cur;}
+  const ms=document.getElementById('map-base');
+  if(ms){const mc=ms.value;ms.innerHTML='<option value="">All</option>'+state_bases.map(b=>`<option value="${b.abbr}">${b.name} (${b.abbr})</option>`).join('');if(state_bases.find(b=>b.abbr===mc))ms.value=mc;}
+}
 function filteredSortedProps(){
   const fS=document.getElementById("f-status")?.value||"";
   const fB=document.getElementById("f-base")?.value||"";
@@ -743,7 +749,7 @@ function renderTile(p,isDeletedView=false){
   </div>
   <div class="tile-body">
     <div class="tile-name"><a href="${p.url||"#"}" target="${p.url?"_blank":"_self"}">${p.name}</a>${p.fco<=120?' <span style="color:var(--terra);font-size:10px">⭐</span>':''}</div>
-    <div class="tile-sub">${p.town}, ${p.prov} · €${p.price}k · ${p.rooms}rms · <span class="${getAirportDist(p)<=120?"fco-hot":""}">${getAirportDist(p)}m ${getAirportLabel(p)}</span>${(p.cdp||p.caf||p.spo||p.man)?" · "+nb[0]+"="+nb[1]+"m":""}${brokerShort?" · "+brokerShort:""}</div>
+    <div class="tile-sub">${p.town}, ${p.prov} · €${p.price}k · ${p.rooms?p.rooms+"rms ·":""} <span class="${getAirportDist(p)<=120?"fco-hot":""}">${getAirportDist(p)}m ${getAirportLabel(p)}</span>${['CdP','CaF','Spo','Man'].includes(p.grp)&&(p.cdp||p.caf||p.spo||p.man)?" · "+nb[0]+"="+nb[1]+"m":""}${brokerShort?" · "+brokerShort:""}</div>
     <div class="tile-actions">
       ${isDeletedView
         ?`<button class="t-btn t-btn-restore" onclick="restoreProp(${p.id})">↩ Restore</button>`
@@ -759,8 +765,8 @@ function renderTile(p,isDeletedView=false){
     <div class="sect-label">Property</div>
     <div class="tile-field-row">
       <div class="tile-field"><label>Price</label><span style="font-size:12px">€${p.price}k</span></div>
-      <div class="tile-field"><label>Rooms</label><span style="font-size:12px">${p.rooms}</span></div>
-      <div class="tile-field"><label>Size</label><span style="font-size:12px">${p.size}m²</span></div>
+      <div class="tile-field"><label>Rooms</label><span style="font-size:12px">${p.rooms||"—"}</span></div>
+      <div class="tile-field"><label>Size</label><span style="font-size:12px">${p.size?p.size+"m²":"—"}</span></div>
       <div class="tile-field"><label>Base</label><select onchange="changePropertyBase(${p.id},this.value)" style="font-size:12px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg1);color:var(--text1)">${state_bases.map(b=>`<option value="${b.abbr}"${p.grp===b.abbr?" selected":""}>${b.name} (${b.abbr})</option>`).join("")}</select></div>
     </div>
     <div class="tile-field"><label>Base drive times</label><span style="font-size:11px;color:var(--text3)">CdP=${p.cdp}m · CaF=${p.caf}m · Spo=${p.spo}m · Man=${p.man}m</span></div>
