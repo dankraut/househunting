@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "House Hunt · Idealista Extractor",
+  "version": "1.6.5",
+  "description": "Extracts broker, phone, GPS, price, rooms, size, town, and name from Idealista listings. Pushes to House Hunt SPA v2.3.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.idealista.it/*",
+    "file://*/*",
+    "http://localhost/*",
+    "https://*.github.io/*",
+    "https://*.pages.dev/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.idealista.it/immobile/*",
+        "https://www.idealista.it/en/immobile/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
