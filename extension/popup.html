@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;width:320px;background:#FAF7F2;color:#2E2A25;font-size:13px}
+.hdr{background:#2C5F7A;color:#fff;padding:12px 14px;display:flex;align-items:center;gap:8px}
+.hdr h1{font-size:13px;font-weight:600}
+.hdr .sub{font-size:10px;opacity:.75;margin-top:1px}
+.logo{width:28px;height:28px;border-radius:6px;background:#C0603A;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.body{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.status{font-size:11px;padding:7px 10px;border-radius:5px;line-height:1.4}
+.idle{background:#E3EFF5;color:#2C5F7A}
+.ok{background:#E8F5E9;color:#2E7D32}
+.err{background:#FDECEA;color:#C0392B}
+.loading{background:#FFF8E1;color:#E65100}
+.field{display:flex;flex-direction:column;gap:2px}
+.field label{font-size:10px;font-weight:600;color:#9A9088;text-transform:uppercase;letter-spacing:.4px}
+.val{font-size:12px;color:#2E2A25;min-height:16px;word-break:break-word}
+.empty{color:#C8BAA5;font-style:italic}
+.fields-row{display:flex;gap:8px}
+.fields-row .field{flex:1}
+.btn{width:100%;padding:9px;border:none;border-radius:5px;font:600 12px system-ui;cursor:pointer;transition:background .15s}
+.primary{background:#C0603A;color:#fff}
+.primary:hover{background:#9A4328}
+.primary:disabled{background:#C8BAA5;cursor:not-allowed}
+.secondary{background:#E8E0D2;color:#5A5248}
+.secondary:hover{background:#D4C9B5}
+hr{border:none;border-top:1px solid #E8E0D2}
+.spa-label{font-size:10px;font-weight:600;color:#9A9088;text-transform:uppercase;letter-spacing:.4px}
+.spa-input{font-size:11px;padding:5px 7px;border:1px solid #D4C9B5;border-radius:4px;background:#fff;width:100%;color:#2E2A25;margin-top:3px}
+.spa-input:focus{outline:none;border-color:#4A7F9A}
+.note{font-size:10px;color:#9A9088;line-height:1.4}
+.tabs{display:flex;border-bottom:2px solid #E8E0D2;margin-bottom:0}
+.tab-btn{flex:1;padding:7px;font-size:11px;font-weight:600;background:none;border:none;cursor:pointer;color:#9A9088;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab-btn.active{color:#2C5F7A;border-bottom-color:#2C5F7A}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.sync-log{font-size:10px;line-height:1.5;padding:6px 8px;background:#F5F0E8;border-radius:4px;color:#5A5248;min-height:32px;margin-top:6px;word-break:break-word}
+.not-idealista{text-align:center;padding:20px 14px}
+.not-idealista .icon{font-size:32px;margin-bottom:8px}
+.not-idealista p{font-size:11px;color:#9A9088;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="logo">🏡</div>
+  <div><h1>House Hunt Extractor</h1><div class="sub">Idealista → SPA bridge &nbsp;·&nbsp; v1.6.5</div></div>
+</div>
+
+<div id="not-idealista" class="not-idealista" style="display:none">
+  <div class="icon">🏠</div>
+  <p>Navigate to an Idealista listing<br><code>idealista.it/immobile/…</code><br>then open this popup.</p>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tab-extract-btn">Extract</button>
+  <button class="tab-btn" id="tab-sync-btn">Sync IFL</button>
+</div>
+<div id="tab-extract" class="tab-pane active"><div id="main-ui" class="body">
+  <div id="status" class="status idle">Ready — click Extract to scrape this listing.</div>
+  <div class="field"><label>Idealista ID</label><div id="f-id" class="val empty">—</div></div>
+  <div class="field"><label>Name / Title</label><div id="f-name" class="val empty">—</div></div>
+  <div class="field"><label>Broker / Firm</label><div id="f-broker" class="val empty">—</div></div>
+  <div class="field">
+    <label>Phone</label>
+    <div id="f-phone" class="val empty">— <span style="font-size:10px;color:#9A9088">(click "Vedi il telefono" first)</span></div>
+  </div>
+  <div class="field"><label>Realtor / Agency URL</label><div id="f-realtorUrl" class="val empty">—</div></div>
+  <div class="field"><label>GPS Location</label><div id="f-loc" class="val empty">—</div></div>
+  <div class="field"><label>Town / Province</label><div id="f-town" class="val empty">—</div></div>
+  <div class="fields-row">
+    <div class="field"><label>Price (€k)</label><div id="f-price" class="val empty">—</div></div>
+    <div class="field"><label>Rooms</label><div id="f-rooms" class="val empty">—</div></div>
+    <div class="field"><label>Size (m²)</label><div id="f-size" class="val empty">—</div></div>
+  </div>
+  <!-- NO onclick= attributes — MV3 CSP blocks them. Listeners added in popup.js -->
+  <button id="btn-extract" class="btn primary">⟳ Extract from current tab</button>
+  <button id="btn-send" class="btn secondary" style="display:none">📤 Send to House Hunt SPA</button>
+  <hr>
+  <div>
+    <div class="spa-label">House Hunt SPA URL (partial match)</div>
+    <input id="spa-url-input" class="spa-input" type="text" placeholder="househunting.pages.dev">
+    <p class="note" style="margin-top:5px">The extension finds any open tab whose URL contains this text.</p>
+  </div>
+</div>
+</div></div><!-- /tab-extract -->
+
+<div id="tab-sync" class="tab-pane">
+<div class="body" style="gap:10px">
+  <!-- Server Key (minimal, masked) -->
+  <div style="display:flex;gap:6px;align-items:center">
+    <div style="flex:1;font-size:11px;color:#9A9088" id="key-status-line">Server key: <span id="key-set-indicator">not set</span></div>
+    <button id="sync-key-change-btn" class="btn secondary" style="padding:4px 8px;font-size:10px;width:auto">Change Key</button>
+  </div>
+  <div id="key-change-form" style="display:none;margin-top:4px">
+    <div style="display:flex;gap:6px">
+      <input id="sync-key" type="password" class="spa-input" placeholder="Enter server key…" style="flex:1">
+      <button id="sync-key-save" class="btn secondary" style="padding:5px 10px;font-size:11px;width:auto;white-space:nowrap">Save</button>
+    </div>
+  </div>
+  <hr>
+  <!-- IFL URL input -->
+  <div>
+    <div class="spa-label" style="margin-bottom:4px">IFL Link</div>
+    <input id="sync-ifl-url" type="url" class="spa-input" placeholder="https://www.idealista.it/en/utente/preferiti/?favoritesListId=…" style="margin-bottom:4px">
+    <p class="note">Paste your Idealista Favorites List URL. Required to sync.</p>
+  </div>
+  <hr>
+  <!-- Bases list -->
+  <div>
+    <div class="spa-label" style="margin-bottom:6px">Bases with IFL</div>
+    <div id="sync-bases-list" style="font-size:12px;color:#9A9088">Loading…</div>
+  </div>
+  <div id="sync-log" class="sync-log" style="display:none"></div>
+</div>
+</div><!-- /tab-sync -->
+
+<script src="sync.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>

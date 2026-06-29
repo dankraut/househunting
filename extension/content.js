@@ -1,0 +1,226 @@
+// content.js — House Hunt Chrome Extension v1.5.1
+// Runs on idealista.it/immobile/* and idealista.it/en/immobile/* pages
+
+(function() {
+  'use strict';
+  if (document.getElementById('hh-extract-btn')) return;
+
+  // ── Build floating button ──────────────────────────────────────
+  const btn = document.createElement('button');
+  btn.id = 'hh-extract-btn';
+  btn.innerHTML = '🏡 Send to Hunt';
+  btn.style.cssText = [
+    'position:fixed', 'bottom:80px', 'right:16px', 'z-index:2147483647',
+    'background:#C0603A', 'color:#fff', 'border:none', 'border-radius:24px',
+    'padding:10px 18px', 'font:600 13px system-ui,sans-serif', 'cursor:pointer',
+    'box-shadow:0 4px 14px rgba(0,0,0,.35)', 'transition:background .15s',
+    'white-space:nowrap', 'line-height:1'
+  ].join(';');
+
+  btn.onmouseenter = () => btn.style.background = '#9A4328';
+  btn.onmouseleave = () => btn.style.background = '#C0603A';
+
+  btn.addEventListener('click', handleClick);
+  document.body.appendChild(btn);
+
+  // ── Click handler ─────────────────────────────────────────────────────────
+  function handleClick() {
+    btn.textContent = '⏳ Extracting…';
+    btn.disabled = true;
+
+    const data = extractData();
+
+    // Always send — even if only ID found, the SPA can use that
+    chrome.storage.local.get(['spaUrl'], ({ spaUrl }) => {
+      const fragment = (spaUrl && spaUrl.trim()) || 'househunt.pages.dev';
+
+      // Send to background which will relay to SPA tab
+      chrome.runtime.sendMessage(
+        { type: 'SEND_TO_SPA', data, fragment },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            // Background inactive — store data and show instructions
+            chrome.storage.local.set({ pendingData: data });
+            showToast('⚠ Open the extension popup and click Send to complete transfer', '#E65100', 5000);
+            btn.innerHTML = '🏡 Send to Hunt';
+            btn.disabled = false;
+            return;
+          }
+          if (response && response.ok) {
+            const count = [data.broker, data.phone, data.location].filter(Boolean).length;
+            showToast(`✓ Sent to House Hunt! ${count} field${count !== 1 ? 's' : ''} extracted`, '#2E7D32');
+            btn.innerHTML = '✓ Sent!';
+            setTimeout(() => { btn.innerHTML = '🏡 Send to Hunt'; btn.disabled = false; }, 3000);
+          } else {
+            const reason = (response && response.reason) || 'SPA tab not found';
+            showToast(`Open househunt.pages.dev in a tab first (${reason})`, '#E65100', 5000);
+            btn.innerHTML = '🏡 Send to Hunt';
+            btn.disabled = false;
+          }
+        }
+      );
+    });
+  }
+
+  // ── Data extraction ─────────────────────────────────────────────────────────
+  function extractData() {
+    const result = {
+      idealistaId: null, broker: null, phone: null, location: null,
+      price: null, rooms: null, size: null, town: null, prov: null, title: null, realtorUrl: null
+    };
+    const strip = s => s ? s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim() : s;
+
+    // ID from URL
+    const idMatch = location.pathname.match(/\/immobile\/(\d+)/);
+    if (idMatch) result.idealistaId = idMatch[1];
+
+    // ── Broker ─────────────────────────────────────────────────────────────
+    const brokerSelectors = [
+      '[class*="professional-name"]', '[class*="advertiser-name"]',
+      '.professional-name', '.advertiser-name',
+      '[data-testid="professional-name"]', '[class*="agency-name"]',
+      '[class*="professional"] h2', '[class*="professional"] h3',
+    ];
+    for (const sel of brokerSelectors) {
+      const el = document.querySelector(sel);
+      if (el) {
+        const txt = el.textContent.trim();
+        if (txt.length > 2 && txt.length < 100) { result.broker = txt; break; }
+      }
+    }
+    // Fallback: "Professionista" label
+    if (!result.broker) {
+      const bodyText = document.body.innerText;
+      const pm = bodyText.match(/Professionista[\s\n]+([^\n]{3,80})/);
+      if (pm) result.broker = pm[1].trim();
+    }
+    // Realtor URL + broker fallback via /pro/ /agency/ links
+    for (const a of document.querySelectorAll('a[href*="/pro/"], a[href*="/agency/"]')) {
+      const href = a.href;
+      if (href && /idealista\.it\/(en\/)?(pro|agency)\//i.test(href)) {
+        result.realtorUrl = href.split('?')[0];
+        if (!result.broker) {
+          const txt = a.textContent.trim();
+          if (txt.length > 2 && txt.length < 100 && !txt.includes('http')) result.broker = txt;
+        }
+        break;
+      }
+    }
+
+    // ── Phone ──────────────────────────────────────────────────────────────
+    const telLink = document.querySelector('a[href^="tel:"]');
+    if (telLink) {
+      result.phone = (telLink.href.replace('tel:', '') || telLink.textContent).trim();
+    }
+
+    // ── GPS ──────────────────────────────────────────────────────────────────
+    // JSON-LD
+    for (const s of document.querySelectorAll('script[type="application/ld+json"]')) {
+      try {
+        const obj = JSON.parse(s.textContent);
+        const geo = obj.geo || obj?.location?.geo;
+        if (geo && geo.latitude && geo.longitude) {
+          result.location = `${geo.latitude},${geo.longitude}`; break;
+        }
+      } catch(e) {}
+    }
+    // Meta tags
+    if (!result.location) {
+      const lat = document.querySelector('meta[property="place:location:latitude"]')?.content;
+      const lng = document.querySelector('meta[property="place:location:longitude"]')?.content;
+      if (lat && lng) result.location = `${lat},${lng}`;
+    }
+    // Inline scripts
+    if (!result.location) {
+      for (const s of document.querySelectorAll('script:not([src])')) {
+        const t = s.textContent;
+        let m = t.match(/"latitude"\s*:\s*([\d.]+).*?"longitude"\s*:\s*([\d.]+)/s);
+        if (!m) m = t.match(/lat[itude]*["']?\s*[=:]\s*([\d.]+).*?lng|lon[gitude]*["']?\s*[=:]\s*([\d.]+)/s);
+        if (m && m[1] && m[2]) { result.location = `${m[1]},${m[2]}`; break; }
+      }
+    }
+
+    // ── Price ──────────────────────────────────────────────────────────────
+    const priceEl = document.querySelector('[class*="price"],.price,h2.price,[class*="Price"]');
+    if (priceEl) {
+      const pm = priceEl.textContent.match(/([\d.,]+)\s*€|€\s*([\d.,]+)/);
+      if (pm) {
+        const raw = (pm[1] || pm[2]).replace(/[.,]/g, '');
+        result.price = Math.round(parseInt(raw) / 1000); // to €k
+      }
+    }
+    if (!result.price) {
+      const bodyText = document.body.innerText;
+      const pm = bodyText.match(/([\d.]+\.[\d]+|[\d]{3,7})\s*€/);
+      if (pm) result.price = Math.round(parseFloat(pm[1].replace('.','')) / 1000);
+    }
+
+    // ── Rooms / size ───────────────────────────────────────────────────────────
+    const bodyText = document.body.innerText;
+    const roomM = bodyText.match(/(\d+)\s*(?:locali|rooms|vani|bagni)/i);
+    if (roomM) result.rooms = parseInt(roomM[1]);
+    const sizeM = bodyText.match(/(\d+)\s*m[²2]/i);
+    if (sizeM) result.size = parseInt(sizeM[1]);
+
+    // ── Town / province ────────────────────────────────────────────────────────
+    const titleMinor = document.querySelector('.main-info__title-minor,[class*="title-minor"]');
+    if (titleMinor) {
+      const txt = titleMinor.textContent.trim();
+      const ci = txt.lastIndexOf(',');
+      result.town = ci >= 0 ? txt.slice(ci + 1).trim() : txt;
+    }
+    if (!result.town) {
+      const breadcrumb = document.querySelector('[class*="breadcrumb"],[class*="Breadcrumb"]');
+      if (breadcrumb) {
+        const parts = breadcrumb.textContent.split(/[>\/\|]/).map(s => s.trim()).filter(Boolean);
+        if (parts.length >= 2) result.town = parts[parts.length - 1];
+      }
+    }
+    if (!result.town) {
+      const subtitle = document.querySelector('span[class*="location"],p[class*="location"],[class*="subtitle"]');
+      if (subtitle) {
+        const txt = subtitle.textContent.trim();
+        const ci = txt.lastIndexOf(',');
+        result.town = ci >= 0 ? txt.slice(ci + 1).trim() : txt;
+      }
+    }
+    const provM = bodyText.match(/\(([A-Z]{2})\)/);
+    if (provM) result.prov = provM[1];
+
+    result.title = document.querySelector('h1')?.textContent?.trim()
+      || document.title.replace(/\s*(—|-|\|).*$/, '').split(',')[0].trim();
+
+    if (result.broker) {
+      result.broker = result.broker
+        .replace(/^Professional advertiser\s*/i, '')
+        .replace(/^Professionista\s*/i, '')
+        .replace(/^Advertiser\s*/i, '')
+        .replace(/^Inserzionista\s*/i, '')
+        .trim();
+      if (!result.broker) result.broker = null;
+    }
+
+    result.broker = strip(result.broker);
+    result.town   = strip(result.town);
+    result.prov   = strip(result.prov);
+    result.title  = strip(result.title);
+
+    return result;
+  }
+
+  // ── Toast ────────────────────────────────────────────────────────────────────
+  function showToast(msg, color = '#2E7D32', duration = 3000) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = [
+      'position:fixed', 'bottom:130px', 'right:16px', 'z-index:2147483647',
+      `background:${color}`, 'color:#fff', 'border-radius:8px',
+      'padding:10px 16px', 'font:600 12px system-ui,sans-serif',
+      'box-shadow:0 4px 12px rgba(0,0,0,.3)', 'max-width:280px',
+      'line-height:1.4', 'transition:opacity .3s'
+    ].join(';');
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, duration);
+  }
+
+})();
