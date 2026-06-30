@@ -437,7 +437,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
         <div class="tile-field"><label>Broker Name</label><input type="text" id="add-broker" placeholder="Agent name" autocomplete="off"></div>
         <div class="tile-field"><label>Broker Phone</label><input type="tel" id="add-phone" placeholder="+39 …" autocomplete="off"></div>
       </div>
-      <div class="tile-field"><label>Agency URL//label><input type="url" id="add-realtorUrl" placeholder="https://www.idealista.it/pro/…" autocomplete="off"></div>
+      <div class="tile-field"><label>Agency URL</label><input type="url" id="add-realtorUrl" placeholder="https://www.idealista.it/pro/…" autocomplete="off"></div>
       <div class="tile-field"><label>Notes</label><textarea id="add-notes" rows="3" style="width:100%;resize:vertical;font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px"></textarea></div>
       <div id="add-note" style="font-size:11px;color:var(--text3)"></div>
     </div>
@@ -750,7 +750,7 @@ function _loadLocal() {
   if (local) state.props = JSON.parse(local).map(initProp);
 }
 
-anync function saveToStorage() {
+async function saveToStorage() {
   localStorage.setItem(LS_KEY, JSON.stringify(state.props));
   const el = document.getElementById('save-notice');
   if (el) { el.style.opacity='1'; setTimeout(()=>el.style.opacity='0', 2000); }
@@ -1855,7 +1855,7 @@ function renderAirportsList() {
 
 function addAirport() {
   const abbr=(document.getElementById('apt-abbr')?.value||'').trim().toUpperCase();
-  const name=(document.getElementById('apt-name',)?.value||'').trim();
+  const name=(document.getElementById('apt-name')?.value||'').trim();
   const lat=parseFloat(document.getElementById('apt-lat')?.value);
   const lng=parseFloat(document.getElementById('apt-lng')?.value);
   if(!abbr||!name||isNaN(lat)||isNaN(lng)){alert('All fields required.');return;}
@@ -1887,7 +1887,7 @@ function performReset() {
   if(!checked.length){alert('Select at least one base.');return;}
   if(!confirm(`Reset ${checked.length} base(s)? IFL-master logic applies.`))return;
   state.props.forEach(p => {
-    if(!checked.includes(p.grp)return;
+    if(!checked.includes(p.grp))return;
     if(IFL_RESET_ELIM.has(p.status)) p.status='Reset';
     else if(p.status==='Deleted') p.status='Reset';
     // New/Working/ReachedOut/Replied/etc stay unchanged per IFL-master spec
