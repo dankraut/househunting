@@ -1990,4 +1990,105 @@ function renderTemplateEditor() {
     <textarea id="tpl-txt-${i}" rows="6" style="margin-top:3px;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;background:var(--bg);color:var(--text);resize:vertical">${escHtml(t)}</textarea></div>`).join('');
 }
 
-function saveTemplat
+function saveTemplatesFromEditor() {
+  const tpls=[0,1,2].map(i=>(document.getElementById('tpl-txt-'+i)||{value:''}).value);
+  saveTemplates(tpls); alert('Templates saved.');
+}
+
+// ─── Extension bridge ─────────────────────────────────────────────────────────
+function stripD(s) {
+  if (!s) return '';
+  try { return s.normalize('NFD').replace(/[̀-ͯ]/g,''); } catch(e) { return s; }
+}
+
+window.addEventListener('message', evt => {
+  if (!evt.data) return;
+  if (evt.data.type==='HOUSEHUNT_RELOAD') { loadFromStorage(); return; }
+  if (evt.data.type==='HOUSEHUNT_IFL_ADD') {
+    const {props, baseGrp, iflToken} = evt.data;
+    if (!Array.isArray(props)) return;
+    let added=0;
+    for (const p of props) {
+      if (state.props.find(x=>String(x.id)===String(p.id))) {
+        // IFL-master: property in IFL + SPA - handle resets
+        const existing = state.props.find(x=>String(x.id)===String(p.id));
+        if (IFL_RESET_ELIM.has(existing.status)) existing.status='Reset';
+        continue;
+      }
+      // In IFL but not SPA → ingest as New
+      const np = initProp({
+        id:parseInt(p.id), name:stripD(p.title||('IFL-'+p.id)),
+        commune:stripD(p.commune||''), town:stripD(p.town||''),
+        prov:(p.prov||'').toUpperCase(), price:p.price||0,
+        rooms:p.rooms||0, size:p.size||0,
+        grp:baseGrp||state_bases[0]?.abbr||'',
+        url:`https://www.idealista.it/immobile/${p.id}/`,
+        lat:p.lat||null, lng:p.lng||null,
+        sourceIfl:iflToken||'none', status:'New', _custom:true
+      });
+      state.props.push(np); added++;
+    }
+    // In SPA but not IFL (for this base) → Deleted-Idealista
+    if (baseGrp && iflToken) {
+      const iflIds = new Set(props.map(p=>String(p.id)));
+      state.props.forEach(p => {
+        if (p.grp===baseGrp && p.sourceIfl===iflToken && !iflIds.has(String(p.id))) {
+          if (!ELIM_STATUSES.has(p.status)) p.status='Deleted-Idealista';
+        }
+      });
+    }
+    saveToStorage(); renderProps();
+    showExtToast(`Sync complete: ${added} new, ${props.length} checked`, 'ok');
+    return;
+  }
+  if (evt.data.type !== 'HOUSEHUNT_BROKER') return;
+  let {idealistaId,broker,phone,location,price,rooms,size,town,prov,title,realtorUrl,commune,firmName,firmPhone} = evt.data;
+  if (!idealistaId) return;
+  broker=stripD(broker); town=stripD(town); prov=(prov||'').toUpperCase();
+  title=stripD(title); commune=stripD(commune);
+  const pid=parseInt(idealistaId);
+  const p=getProp(pid);
+  if (!p) {
+    showExtToast(`Property ${pid} not in list. Use + Add to add it.`,'warn');
+    openAddModal({id:pid,url:`https://www.idealista.it/immobile/${pid}/`,
+      title,commune,town,prov,price,rooms,size,broker,phone,location,realtorUrl});
+    return;
+  }
+  const updated=[];
+  if (commune&&commune.trim()){p.commune=commune.trim();updated.push('commune');}
+  if (broker&&broker.trim()){p.broker=broker.trim();updated.push('broker');}
+  if (phone&&phone.trim()){p.brokerPhone=phone.trim();updated.push('phone');}
+  if (firmName&&firmName.trim()){p.firmName=firmName.trim();updated.push('firm');}
+  if (firmPhone&&firmPhone.trim()){p.firmPhone=firmPhone.trim();updated.push('firmPhone');}
+  if (location&&location.trim()){
+    p.location=location.trim();
+    const [lat,lng]=parseGPS(location);
+    if(lat){p.lat=lat;p.lng=lng;}
+    updated.push('location');
+  }
+  if (realtorUrl&&realtorUrl.trim()){p.realtorUrl=realtorUrl.trim();updated.push('realtorUrl');}
+  if (updated.length) {
+    saveToStorage(); showTab('props'); renderProps();
+    showExtToast(`✓ Updated ${p.name}: ${updated.join(', ')}`, 'ok');
+    setTimeout(()=>document.getElementById('tile-'+pid)?.scrollIntoView({behavior:'smooth',block:'center'}),250);
+    // Auto-recalc if location updated
+    if (updated.includes('location')) recalcDriveTimes(p).then(ok=>{ if(ok) saveToStorage(); });
+  } else {
+    showExtToast(`${p.name}: no new data extracted.`,'warn');
+  }
+});
+
+function showExtToast(msg, type='ok') {
+  const colors={ok:'#2E7D32',err:'#C0392B',warn:'#E65100'};
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText=`position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:${colors[type]||colors.ok};color:#fff;padding:10px 18px;border-radius:6px;font-size:12px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.3);max-width:90vw;text-align:center;pointer-events:none;`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+loadFromStorage();
+</script>
+</body>
+</html>
