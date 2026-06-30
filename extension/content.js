@@ -1,4 +1,4 @@
-// content.js — House Hunt Chrome Extension v1.5.1
+// content.js — House Hunt Chrome Extension v1.5.2
 // Runs on idealista.it/immobile/* and idealista.it/en/immobile/* pages
 
 (function() {
@@ -66,7 +66,7 @@
   function extractData() {
     const result = {
       idealistaId: null, broker: null, phone: null, location: null,
-      price: null, rooms: null, size: null, town: null, prov: null, title: null, realtorUrl: null
+      price: null, rooms: null, size: null, commune: null, town: null, prov: null, title: null, realtorUrl: null
     };
     const strip = s => s ? s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim() : s;
 
@@ -162,12 +162,22 @@
     const sizeM = bodyText.match(/(\d+)\s*m[²2]/i);
     if (sizeM) result.size = parseInt(sizeM[1]);
 
-    // ── Town / province ────────────────────────────────────────────────────────
+    // ── Commune / Town / province ──────────────────────────────────────────────
+    // Idealista title-minor shows "Comune, Town" or just "Town"
+    // Rule: if comma present → before = Comune, after = Town; no comma → all = Town
+    function parseLocaleLine(txt) {
+      const ci = txt.indexOf(',');
+      if (ci >= 0) {
+        return { commune: txt.slice(0, ci).trim(), town: txt.slice(ci + 1).trim() };
+      }
+      return { commune: null, town: txt.trim() };
+    }
+
     const titleMinor = document.querySelector('.main-info__title-minor,[class*="title-minor"]');
     if (titleMinor) {
-      const txt = titleMinor.textContent.trim();
-      const ci = txt.lastIndexOf(',');
-      result.town = ci >= 0 ? txt.slice(ci + 1).trim() : txt;
+      const parsed = parseLocaleLine(titleMinor.textContent.trim());
+      result.commune = parsed.commune;
+      result.town = parsed.town;
     }
     if (!result.town) {
       const breadcrumb = document.querySelector('[class*="breadcrumb"],[class*="Breadcrumb"]');
@@ -179,9 +189,9 @@
     if (!result.town) {
       const subtitle = document.querySelector('span[class*="location"],p[class*="location"],[class*="subtitle"]');
       if (subtitle) {
-        const txt = subtitle.textContent.trim();
-        const ci = txt.lastIndexOf(',');
-        result.town = ci >= 0 ? txt.slice(ci + 1).trim() : txt;
+        const parsed = parseLocaleLine(subtitle.textContent.trim());
+        result.commune = result.commune || parsed.commune;
+        result.town = parsed.town;
       }
     }
     const provM = bodyText.match(/\(([A-Z]{2})\)/);
@@ -200,10 +210,11 @@
       if (!result.broker) result.broker = null;
     }
 
-    result.broker = strip(result.broker);
-    result.town   = strip(result.town);
-    result.prov   = strip(result.prov);
-    result.title  = strip(result.title);
+    result.broker  = strip(result.broker);
+    result.commune = strip(result.commune);
+    result.town    = strip(result.town);
+    result.prov    = strip(result.prov);
+    result.title   = strip(result.title);
 
     return result;
   }
@@ -213,14 +224,4 @@
     const t = document.createElement('div');
     t.textContent = msg;
     t.style.cssText = [
-      'position:fixed', 'bottom:130px', 'right:16px', 'z-index:2147483647',
-      `background:${color}`, 'color:#fff', 'border-radius:8px',
-      'padding:10px 16px', 'font:600 12px system-ui,sans-serif',
-      'box-shadow:0 4px 12px rgba(0,0,0,.3)', 'max-width:280px',
-      'line-height:1.4', 'transition:opacity .3s'
-    ].join(';');
-    document.body.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, duration);
-  }
-
-})();
+      'position:fixed', 'bottom:130px'
