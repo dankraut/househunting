@@ -141,18 +141,24 @@
     }
 
     // ── Price ──────────────────────────────────────────────────────────────
-    const priceEl = document.querySelector('[class*="price"],.price,h2.price,[class*="Price"]');
-    if (priceEl) {
-      const pm = priceEl.textContent.match(/([\d.,]+)\s*€|€\s*([\d.,]+)/);
-      if (pm) {
-        const raw = (pm[1] || pm[2]).replace(/[.,]/g, '');
-        result.price = Math.round(parseInt(raw) / 1000); // to €k
-      }
+    function parseItalianPrice(txt) {
+      // Handles "870.000 €", "870,000 €", "1.200.000 €", "870 000 €"
+      const m = txt.match(/([\d][0-9.,\s]*)\s*€/);
+      if (!m) return null;
+      const raw = m[1].replace(/[.,\s]/g, '');
+      const val = parseInt(raw);
+      if (!val || val < 10) return null;
+      return val >= 1000 ? Math.round(val / 1000) : val; // already in k if < 1000
+    }
+    // Try price-specific elements first
+    for (const sel of ['[class*="price-header"]','[class*="Price"]','.price','h2.price','[class*="price"]']) {
+      const el = document.querySelector(sel);
+      if (el) { const p = parseItalianPrice(el.textContent); if (p) { result.price = p; break; } }
     }
     if (!result.price) {
-      const bodyText = document.body.innerText;
-      const pm = bodyText.match(/([\d.]+\.[\d]+|[\d]{3,7})\s*€/);
-      if (pm) result.price = Math.round(parseFloat(pm[1].replace('.','')) / 1000);
+      // Scan all text for a price pattern near €
+      const m = document.body.innerText.match(/([\d][0-9.,\s]{2,12})\s*€/);
+      if (m) { const p = parseItalianPrice(m[0]); if (p) result.price = p; }
     }
 
     // ── Rooms / size ───────────────────────────────────────────────────────────
@@ -219,19 +225,4 @@
     return result;
   }
 
-  // ── Toast ────────────────────────────────────────────────────────────────────
-  function showToast(msg, color = '#2E7D32', duration = 3000) {
-    const t = document.createElement('div');
-    t.textContent = msg;
-    t.style.cssText = [
-      'position:fixed', 'bottom:130px', 'right:16px', 'z-index:2147483647',
-      `background:${color}`, 'color:#fff', 'border-radius:8px',
-      'padding:10px 16px', 'font:600 12px system-ui,sans-serif',
-      'box-shadow:0 4px 12px rgba(0,0,0,.3)', 'max-width:280px',
-      'line-height:1.4', 'transition:opacity .3s'
-    ].join(';');
-    document.body.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, duration);
-  }
-
-})();
+  // ── Toast ───────────�
