@@ -225,7 +225,7 @@
     return result;
   }
 
-  // ── Toast ───────────�
+  // ── Toast ────────────
 // ── Auto-discard: check pending queue on page load ──────────────────────────
 (function checkPendingDiscard() {
   const idMatch = location.pathname.match(/\/immobile\/(\d+)/);
