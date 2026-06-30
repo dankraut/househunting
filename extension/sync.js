@@ -1,4 +1,4 @@
-// sync.js — House Hunt IFL Sync v1.6.5
+// sync.js — House Hunt IFL Sync v1.6.7
 // Handles Idealista Favorites List sync for all bases
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -225,7 +225,7 @@ async function syncBase(base, setStatus) {
     const r = await fetch(apiBase + '/ifl-sync', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ baseGrp: base.grp, iflToken: base.iflToken, properties })
+      body: JSON.stringify({ baseGrp: base.abbr, iflToken: base.iflToken, properties })
     });
     syncResult = await r.json();
   } catch (e) {
@@ -235,11 +235,11 @@ async function syncBase(base, setStatus) {
   const spaFrag = await getSpaUrlFrag();
   const spaTab = allTabs.find(t => t.url && t.url.includes(spaFrag));
 
-  if (spaTab && syncResult.toAdd && syncResult.toAdd.length > 0) {
+  if (spaTab && properties.length > 0) {
     await chrome.scripting.executeScript({
       target: { tabId: spaTab.id },
       func: payload => window.postMessage({ type: 'HOUSEHUNT_IFL_ADD', ...payload }, '*'),
-      args: [{ props: syncResult.toAdd, baseGrp: base.grp, iflToken: base.iflToken }]
+      args: [{ props: properties, baseGrp: base.abbr, iflToken: base.iflToken }]
     });
   }
 
@@ -283,3 +283,4 @@ async function loadBases() {
   } catch (e) {}
   return [];
 }
+                              

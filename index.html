@@ -544,16 +544,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
       </div>
     </div>
 
-    <!-- Reset Base -->
-    <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
-      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">Reset Base</div>
-      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Sets active properties to "Reset" status. Use the extension Sync IFL afterward to pull fresh properties.</p>
-      <div id="reset-bases-list" style="margin-bottom:8px;font-size:12px"></div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);margin-bottom:6px"><input type="checkbox" id="reset-all-chk" onchange="toggleResetAll(this.checked)"> All bases</label>
-      <button class="io-btn" onclick="performReset()" style="background:var(--terra);color:#fff;border-color:var(--terra)">↺ Reset Selected</button>
-    </div>
-
-    <!-- Templates -->
+        <!-- Templates -->
     <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
       <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">Message Templates</div>
       <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Parameters: [Property URL] [Idealista ID] [base name] [base airport] [base from date] {"- "[base to date]} [Property Name] [Town] [Price] [Rooms] [Broker] [Airport Distance]</p>
@@ -609,7 +600,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 
 <script>
 // ═══ SPA v3.4.4 ══════════════════════════════════════════════════════════════
-const SPA_VERSION = 'v3.4.4';
+const SPA_VERSION = 'v3.4.5';
 const API_BASE = '/api';
 const GEMINI_KEY = 'AIzaSyBmBWSxxAvawMG4noiDA7ulzm6hHtYtCAc';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`;
@@ -619,7 +610,6 @@ const STATUS_OPTS = ['New','Working','Reset','Reached Out','Replied','Info Suppl
   'Duplicate','Deleted','Deleted-Idealista'];
 const ELIM_STATUSES = new Set(['Unavailable','Unresponsive','Rejected','Duplicate','Deleted','Deleted-Idealista']);
 const ACTIVE_ELIM = new Set(['Unavailable','Unresponsive','Rejected','Duplicate']); // shown under Eliminated filter but not soft-deleted
-const IFL_RESET_ELIM = new Set(['Unresponsive','Rejected','Deleted']); // set to Reset on IFL master sync
 const DRIVE_CAP = 120, VIEWING_MIN = 45, DAY_END = 19.0;
 
 // Base color palette (index → border color)
@@ -1243,6 +1233,7 @@ function openAddModal(prefill = {}) {
     _sv('add-broker', prefill.broker || '');
     _sv('add-phone', prefill.phone || '');
     _sv('add-realtorUrl', prefill.realtorUrl || '');
+    if (prefill.grp) { const gs=document.getElementById('add-grp'); if(gs) gs.value=prefill.grp; }
   }
   document.getElementById('add-modal').style.display = 'flex';
 }
@@ -1860,7 +1851,6 @@ function openSettingsModal() {
   document.getElementById('settings-modal').style.display = 'flex';
   renderAirportsList();
   loadBasesIntoSettings();
-  renderResetBasesList();
   renderTemplateEditor();
 }
 function closeSettingsModal() { document.getElementById('settings-modal').style.display='none'; closeBaseForm(); }
@@ -1958,11 +1948,17 @@ async function saveBaseForm() {
   const tm = iflUrl.match(/join-favorites-list\/([^?&#\/]+)/) || iflUrl.match(/[?&]favoritesListId=(\d+)/);
   if (tm) iflToken=tm[1];
 
+  // IFL uniqueness: one IFL per base
+  if (iflToken) {
+    const conflict = state_bases.find(b => b.iflToken === iflToken && b.abbr !== origAbbr);
+    if (conflict) { alert(`This IFL is already linked to "${conflict.name}" (${conflict.abbr}). Each IFL can only be assigned to one base.`); return; }
+  }
+
   const existing = state_bases.find(b=>b.abbr===origAbbr);
   if (existing) {
-    Object.assign(existing, {name,abbr,visitFrom,visitTo,lat,lng,desc,airport,iflToken,iflName:existing.iflName||null});
+    Object.assign(existing, {name,abbr,visitFrom,visitTo,lat,lng,desc,airport,iflToken:iflToken||null,iflName:existing.iflName||null});
   } else {
-    state_bases.push({abbr,name,visitFrom,visitTo,lat,lng,desc,airport,iflToken,iflName:null,active:true});
+    state_bases.push({abbr,name,visitFrom,visitTo,lat,lng,desc,airport,iflToken:iflToken||null,iflName:null,active:true});
   }
   try {
     await fetch(API_BASE+'/bases',{method:'PUT',headers:_apiHdr(),body:JSON.stringify(state_bases)});
@@ -2017,31 +2013,6 @@ function deleteAirport(abbr) {
   renderAirportsList();
 }
 
-function renderResetBasesList() {
-  const el=document.getElementById('reset-bases-list'); if(!el) return;
-  el.innerHTML=state_bases.map(b=>`<label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:12px">
-    <input type="checkbox" class="reset-base-chk" value="${b.abbr}"> ${b.name} (${state.props.filter(p=>p.grp===b.abbr&&!ELIM_STATUSES.has(p.status)).length} active)
-  </label>`).join('');
-}
-
-function toggleResetAll(checked) { document.querySelectorAll('.reset-base-chk').forEach(c=>c.checked=checked); }
-
-function performReset() {
-  const checked=[...document.querySelectorAll('.reset-base-chk:checked')].map(c=>c.value);
-  if(!checked.length){alert('Select at least one base.');return;}
-  if(!confirm(`Reset ${checked.length} base(s)? IFL-master logic applies.`))return;
-  state.props.forEach(p => {
-    if(!checked.includes(p.grp))return;
-    if(IFL_RESET_ELIM.has(p.status)) p.status='Reset';
-    else if(p.status==='Deleted') p.status='Reset';
-    // New/Working/ReachedOut/Replied/etc stay unchanged per IFL-master spec
-  });
-  document.getElementById('reset-all-chk').checked=false;
-  document.querySelectorAll('.reset-base-chk').forEach(c=>c.checked=false);
-  saveToStorage(); renderProps(); renderSchedule();
-  alert('Reset complete. Use Sync IFL in the extension to pull new properties.');
-}
-
 function renderTemplateEditor() {
   const el=document.getElementById('tpl-editor'); if(!el) return;
   const tpls=getTemplates();
@@ -2065,30 +2036,40 @@ window.addEventListener('message', evt => {
   if (evt.data.type==='HOUSEHUNT_RELOAD') { loadFromStorage(); return; }
   if (evt.data.type==='HOUSEHUNT_IFL_ADD') {
     const {props, baseGrp, iflToken} = evt.data;
-    if (!Array.isArray(props)) return;
-    let added=0;
+    if (!Array.isArray(props) || !baseGrp) return;
+    let added=0, updated=0;
     for (const p of props) {
-      if (state.props.find(x=>String(x.id)===String(p.id))) {
-        // IFL-master: property in IFL + SPA - handle resets
-        const existing = state.props.find(x=>String(x.id)===String(p.id));
-        if (IFL_RESET_ELIM.has(existing.status)) existing.status='Reset';
-        continue;
+      const existing = state.props.find(x=>String(x.id)===String(p.id));
+      if (existing) {
+        // Update Idealista fields; preserve status, GPS coords, notes, schedule
+        if (p.title||p.name) existing.name = stripD(p.title||p.name);
+        if (p.price) existing.price = p.price;
+        if (p.rooms) existing.rooms = p.rooms;
+        if (p.size) existing.size = p.size;
+        if (p.commune) existing.commune = stripD(p.commune);
+        if (p.town) existing.town = stripD(p.town);
+        if (p.prov) existing.prov = (p.prov||'').toUpperCase();
+        if (p.broker) existing.broker = stripD(p.broker);
+        if (p.realtorUrl) existing.realtorUrl = p.realtorUrl;
+        existing.grp = baseGrp; // base is always most recent assignment
+        existing.sourceIfl = iflToken||existing.sourceIfl;
+        updated++;
+      } else {
+        // New property from IFL
+        const np = initProp({
+          id:parseInt(p.id), name:stripD(p.title||p.name||('IFL-'+p.id)),
+          commune:stripD(p.commune||''), town:stripD(p.town||''),
+          prov:(p.prov||'').toUpperCase(), price:p.price||0,
+          rooms:p.rooms||0, size:p.size||0, grp:baseGrp,
+          url:`https://www.idealista.it/immobile/${p.id}/`,
+          lat:p.lat||null, lng:p.lng||null,
+          sourceIfl:iflToken||'none', status:'New', _custom:true
+        });
+        state.props.push(np); added++;
       }
-      // In IFL but not SPA → ingest as New
-      const np = initProp({
-        id:parseInt(p.id), name:stripD(p.title||('IFL-'+p.id)),
-        commune:stripD(p.commune||''), town:stripD(p.town||''),
-        prov:(p.prov||'').toUpperCase(), price:p.price||0,
-        rooms:p.rooms||0, size:p.size||0,
-        grp:baseGrp||state_bases[0]?.abbr||'',
-        url:`https://www.idealista.it/immobile/${p.id}/`,
-        lat:p.lat||null, lng:p.lng||null,
-        sourceIfl:iflToken||'none', status:'New', _custom:true
-      });
-      state.props.push(np); added++;
     }
-    // In SPA but not IFL (for this base) → Deleted-Idealista
-    if (baseGrp && iflToken) {
+    // In SPA (this base+IFL) but not in IFL → Deleted-Idealista
+    if (iflToken) {
       const iflIds = new Set(props.map(p=>String(p.id)));
       state.props.forEach(p => {
         if (p.grp===baseGrp && p.sourceIfl===iflToken && !iflIds.has(String(p.id))) {
@@ -2097,7 +2078,7 @@ window.addEventListener('message', evt => {
       });
     }
     saveToStorage(); renderProps();
-    showExtToast(`Sync complete: ${added} new, ${props.length} checked`, 'ok');
+    showExtToast(`Sync: +${added} new · ${updated} updated · ${props.length} in IFL`, 'ok');
     return;
   }
   if (evt.data.type !== 'HOUSEHUNT_BROKER') return;
@@ -2110,7 +2091,7 @@ window.addEventListener('message', evt => {
   if (!p) {
     showExtToast(`Property ${pid} not in list. Use + Add to add it.`,'warn');
     openAddModal({id:pid,url:`https://www.idealista.it/immobile/${pid}/`,
-      title,commune,town,prov,price,rooms,size,broker,phone,location,realtorUrl});
+      title,commune,town,prov,price,rooms,size,broker,phone,location,realtorUrl,grp:evt.data.grp||''});
     return;
   }
   const updated=[];
