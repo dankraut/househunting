@@ -1736,4 +1736,366 @@ function exportJSON() {
   const data = JSON.stringify({ version: SPA_VERSION, props: state.props, bases: state_bases, exported: new Date().toISOString() }, null, 2);
   const a = document.createElement('a');
   a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(data);
-  a.download = `househunt_${new Date().toISOString().slice(0
+  a.download = `househunt_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importJSON(evt) {
+  const file = evt.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      const props = d.props || d; // handle both formats
+      if (!Array.isArray(props)) { alert('Invalid JSON format.'); return; }
+      if (!confirm(`Import ${props.length} properties? This will overwrite current data.`)) return;
+      state.props = props.map(initProp);
+      if (d.bases) { state_bases = d.bases; localStorage.setItem(LS_BASES, JSON.stringify(state_bases)); }
+      saveToStorage(); refreshBaseFilters(); renderProps();
+    } catch(er) { alert('Import failed: ' + er.message); }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+
+// ─── Snapshots ───────────────────────────────────────────────────────────────
+function openSnapshotModal() { document.getElementById('snapshot-modal').style.display='flex'; loadSnapshots(); }
+function closeSnapshotModal() { document.getElementById('snapshot-modal').style.display='none'; }
+
+async function loadSnapshots() {
+  const el = document.getElementById('snapshot-list'); if (!el) return;
+  try {
+    const r = await fetch(API_BASE+'/snapshots', { headers:_apiHdr() });
+    if (!r.ok) { el.textContent='Failed to load snapshots.'; return; }
+    const list = await r.json();
+    if (!list.length) { el.textContent='No snapshots yet.'; return; }
+    el.innerHTML = list.map(s => `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-size:12px;font-weight:500">${s.label||s.id}</div><div style="font-size:10px;color:var(--text3)">${s.ts||''}</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="io-btn" style="font-size:10px" onclick="restoreSnapshot('${s.id}')">Restore</button>
+        <button class="io-btn danger" style="font-size:10px" onclick="deleteSnapshot('${s.id}')">✕</button>
+      </div>
+    </div>`).join('');
+  } catch(e) { el.textContent='Error: '+e.message; }
+}
+
+async function saveSnapshot() {
+  const label = document.getElementById('snapshot-label')?.value.trim() || '';
+  try {
+    await fetch(API_BASE+'/snapshots', { method:'POST', headers:_apiHdr(),
+      body: JSON.stringify({ label, data: state.props }) });
+    loadSnapshots();
+    document.getElementById('snapshot-label').value = '';
+  } catch(e) { alert('Snapshot save failed.'); }
+}
+
+async function restoreSnapshot(id) {
+  if (!confirm('Restore this snapshot? Current data will be overwritten.')) return;
+  try {
+    const r = await fetch(API_BASE+'/snapshots/restore', { method:'POST', headers:_apiHdr(), body:JSON.stringify({id}) });
+    if (r.ok) { const d=await r.json(); if(d.data){state.props=d.data.map(initProp);saveToStorage();renderProps();closeSnapshotModal();} }
+  } catch(e) { alert('Restore failed.'); }
+}
+
+async function deleteSnapshot(id) {
+  if (!confirm('Delete this snapshot?')) return;
+  try { await fetch(API_BASE+'/snapshots/'+id, {method:'DELETE',headers:_apiHdr()}); loadSnapshots(); } catch(e){}
+}
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+function openSettingsModal() {
+  const km = document.getElementById('settings-key');
+  if (km) km.value = getApiToken();
+  document.getElementById('settings-modal').style.display = 'flex';
+  renderAirportsList();
+  loadBasesIntoSettings();
+  renderResetBasesList();
+  renderTemplateEditor();
+}
+function closeSettingsModal() { document.getElementById('settings-modal').style.display='none'; closeBaseForm(); }
+
+function saveSettingsKey() {
+  const key = (document.getElementById('settings-key')?.value||'').trim();
+  localStorage.setItem('hh_api_key', key);
+  const el = document.getElementById('settings-key-status');
+  if (el) { el.textContent='Key saved ✓'; el.style.color='var(--olive)'; }
+  loadFromStorage();
+}
+
+async function loadBasesIntoSettings() {
+  try {
+    const r = await fetch(API_BASE+'/bases', {headers:_apiHdr()});
+    if (r.ok) { const sb=await r.json(); if(Array.isArray(sb)&&sb.length){state_bases=sb;localStorage.setItem(LS_BASES,JSON.stringify(sb));} }
+  } catch(e) {}
+  renderBasesList();
+}
+
+function renderBasesList() {
+  const el = document.getElementById('bases-list'); if (!el) return;
+  if (!state_bases.length) { el.innerHTML='<p style="font-size:11px;color:var(--text3)">No bases yet.</p>'; return; }
+  el.innerHTML = state_bases.map((b,i) => {
+    const color = BASE_COLORS[i % BASE_COLORS.length];
+    const dateRange = b.visitFrom ? `${b.visitFrom}${b.visitTo&&b.visitTo!==b.visitFrom?' – '+b.visitTo:''}` : 'No dates';
+    const propCount = state.props.filter(p=>p.grp===b.abbr&&!ELIM_STATUSES.has(p.status)).length;
+    return `<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="width:4px;height:40px;background:${color};border-radius:2px;flex-shrink:0;margin-top:2px"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:12px;color:var(--text1)">${b.name} <span style="color:var(--text3);font-weight:400">(${b.abbr} · ✈${b.airport||'?'} · ${propCount} props)</span></div>
+        <div style="font-size:10px;color:var(--adriat);margin-top:1px">${dateRange}${b.lat?` · ${b.lat.toFixed(4)},${b.lng.toFixed(4)}`:''}</div>
+        ${b.iflToken?`<div style="font-size:10px;color:var(--text3)">IFL: <code>${b.iflToken}</code></div>`:''}
+        ${b.desc?`<div style="font-size:10px;color:var(--text3)">${escHtml(b.desc)}</div>`:''}
+      </div>
+      <button class="io-btn" onclick="editBase('${b.abbr}')" style="font-size:10px">Edit</button>
+      <button class="io-btn" onclick="toggleBaseActive('${b.abbr}')" style="font-size:10px;${b.active===false?'color:var(--terra)':''}">${b.active===false?'▶ Activate':'⏸ Pause'}</button>
+      <button class="io-btn danger" onclick="deleteBase('${b.abbr}')" style="font-size:10px">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function _populateAirportSelect(selId, selectedAbbr) {
+  const sel = document.getElementById(selId); if (!sel) return;
+  sel.innerHTML = state_airports.map(a=>`<option value="${a.abbr}"${a.abbr===selectedAbbr?' selected':''}>${a.abbr} — ${a.name}</option>`).join('');
+}
+
+function openAddBaseForm() {
+  ['base-form-abbr-orig','base-form-name','base-form-abbr','base-form-from','base-form-to',
+   'base-form-lat','base-form-lng','base-form-ifl','base-form-desc'].forEach(id => {
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  _populateAirportSelect('base-form-airport','FCO');
+  document.getElementById('base-form-title').textContent='Add Base';
+  document.getElementById('base-form').style.display='block';
+}
+
+function editBase(abbr) {
+  const b = getBase(abbr); if (!b) return;
+  document.getElementById('base-form-abbr-orig').value = b.abbr;
+  document.getElementById('base-form-name').value = b.name||'';
+  document.getElementById('base-form-abbr').value = b.abbr||'';
+  document.getElementById('base-form-from').value = b.visitFrom||'';
+  document.getElementById('base-form-to').value = b.visitTo||'';
+  document.getElementById('base-form-lat').value = b.lat||'';
+  document.getElementById('base-form-lng').value = b.lng||'';
+  document.getElementById('base-form-desc').value = b.desc||'';
+  let iflUrl='';
+  if (b.iflToken) iflUrl = /^\d+$/.test(b.iflToken)
+    ? `https://www.idealista.it/en/utente/preferiti/?favoritesListId=${b.iflToken}`
+    : `https://www.idealista.it/join-favorites-list/${b.iflToken}`;
+  document.getElementById('base-form-ifl').value = iflUrl;
+  _populateAirportSelect('base-form-airport', b.airport||'FCO');
+  document.getElementById('base-form-title').textContent='Edit Base';
+  document.getElementById('base-form').style.display='block';
+}
+
+function closeBaseForm() { const el=document.getElementById('base-form'); if(el) el.style.display='none'; }
+
+async function saveBaseForm() {
+  const origAbbr = document.getElementById('base-form-abbr-orig').value.trim();
+  const name = document.getElementById('base-form-name').value.trim();
+  const abbr = document.getElementById('base-form-abbr').value.trim().toUpperCase();
+  const visitFrom = document.getElementById('base-form-from').value.trim();
+  const visitTo = document.getElementById('base-form-to').value.trim();
+  const lat = parseFloat(document.getElementById('base-form-lat').value)||0;
+  const lng = parseFloat(document.getElementById('base-form-lng').value)||0;
+  const iflUrl = document.getElementById('base-form-ifl').value.trim();
+  const desc = document.getElementById('base-form-desc').value.trim();
+  const airport = document.getElementById('base-form-airport')?.value||'FCO';
+  if (!name||!abbr) { alert('Name and abbreviation required.'); return; }
+
+  let iflToken=null;
+  const tm = iflUrl.match(/join-favorites-list\/([^?&#\/]+)/) || iflUrl.match(/[?&]favoritesListId=(\d+)/);
+  if (tm) iflToken=tm[1];
+
+  const existing = state_bases.find(b=>b.abbr===origAbbr);
+  if (existing) {
+    Object.assign(existing, {name,abbr,visitFrom,visitTo,lat,lng,desc,airport,iflToken,iflName:existing.iflName||null});
+  } else {
+    state_bases.push({abbr,name,visitFrom,visitTo,lat,lng,desc,airport,iflToken,iflName:null,active:true});
+  }
+  try {
+    await fetch(API_BASE+'/bases',{method:'PUT',headers:_apiHdr(),body:JSON.stringify(state_bases)});
+  } catch(e) {}
+  localStorage.setItem(LS_BASES, JSON.stringify(state_bases));
+  closeBaseForm(); renderBasesList(); refreshBaseFilters(); renderSchedule(); populateMapDaySelect();
+}
+
+async function deleteBase(abbr) {
+  if (!confirm('Delete base? Properties remain.')) return;
+  state_bases = state_bases.filter(b=>b.abbr!==abbr);
+  try { await fetch(API_BASE+'/bases',{method:'PUT',headers:_apiHdr(),body:JSON.stringify(state_bases)}); } catch(e) {}
+  localStorage.setItem(LS_BASES,JSON.stringify(state_bases));
+  renderBasesList(); refreshBaseFilters();
+}
+
+async function toggleBaseActive(abbr) {
+  const b=getBase(abbr); if(!b) return;
+  b.active=(b.active===false)?true:false;
+  try{await fetch(API_BASE+'/bases',{method:'PUT',headers:_apiHdr(),body:JSON.stringify(state_bases)});}catch(e){}
+  localStorage.setItem(LS_BASES,JSON.stringify(state_bases));
+  renderBasesList(); refreshBaseFilters(); renderProps();
+}
+
+function renderAirportsList() {
+  const el=document.getElementById('airports-list'); if(!el) return;
+  el.innerHTML=state_airports.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px">
+    <code style="font-size:12px;font-weight:600;color:var(--adriat);width:40px">${a.abbr}</code>
+    <span style="flex:1">${a.name}</span>
+    <span style="color:var(--text3);font-family:monospace">${a.lat.toFixed(4)}, ${a.lng.toFixed(4)}</span>
+    ${state_airports.length>2?`<button class="io-btn" onclick="deleteAirport('${a.abbr}')" style="font-size:10px">✕</button>`:''}
+  </div>`).join('');
+}
+
+function addAirport() {
+  const abbr=(document.getElementById('apt-abbr')?.value||'').trim().toUpperCase();
+  const name=(document.getElementById('apt-name')?.value||'').trim();
+  const lat=parseFloat(document.getElementById('apt-lat')?.value);
+  const lng=parseFloat(document.getElementById('apt-lng')?.value);
+  if(!abbr||!name||isNaN(lat)||isNaN(lng)){alert('All fields required.');return;}
+  if(state_airports.find(a=>a.abbr===abbr)){alert(`Airport ${abbr} already exists.`);return;}
+  state_airports.push({abbr,name,lat,lng});
+  localStorage.setItem(LS_AIRPORTS,JSON.stringify(state_airports));
+  ['apt-abbr','apt-name','apt-lat','apt-lng'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderAirportsList();
+}
+
+function deleteAirport(abbr) {
+  if(state_bases.some(b=>b.airport===abbr)){alert(`${abbr} is used by a base.`);return;}
+  state_airports=state_airports.filter(a=>a.abbr!==abbr);
+  localStorage.setItem(LS_AIRPORTS,JSON.stringify(state_airports));
+  renderAirportsList();
+}
+
+function renderResetBasesList() {
+  const el=document.getElementById('reset-bases-list'); if(!el) return;
+  el.innerHTML=state_bases.map(b=>`<label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:12px">
+    <input type="checkbox" class="reset-base-chk" value="${b.abbr}"> ${b.name} (${state.props.filter(p=>p.grp===b.abbr&&!ELIM_STATUSES.has(p.status)).length} active)
+  </label>`).join('');
+}
+
+function toggleResetAll(checked) { document.querySelectorAll('.reset-base-chk').forEach(c=>c.checked=checked); }
+
+function performReset() {
+  const checked=[...document.querySelectorAll('.reset-base-chk:checked')].map(c=>c.value);
+  if(!checked.length){alert('Select at least one base.');return;}
+  if(!confirm(`Reset ${checked.length} base(s)? IFL-master logic applies.`))return;
+  state.props.forEach(p => {
+    if(!checked.includes(p.grp))return;
+    if(IFL_RESET_ELIM.has(p.status)) p.status='Reset';
+    else if(p.status==='Deleted') p.status='Reset';
+    // New/Working/ReachedOut/Replied/etc stay unchanged per IFL-master spec
+  });
+  document.getElementById('reset-all-chk').checked=false;
+  document.querySelectorAll('.reset-base-chk').forEach(c=>c.checked=false);
+  saveToStorage(); renderProps(); renderSchedule();
+  alert('Reset complete. Use Sync IFL in the extension to pull new properties.');
+}
+
+function renderTemplateEditor() {
+  const el=document.getElementById('tpl-editor'); if(!el) return;
+  const tpls=getTemplates();
+  el.innerHTML=tpls.map((t,i)=>`<div><label style="font-size:10px;font-weight:600;color:var(--text3)">Template ${i+1}</label>
+    <textarea id="tpl-txt-${i}" rows="6" style="margin-top:3px;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;background:var(--bg);color:var(--text);resize:vertical">${escHtml(t)}</textarea></div>`).join('');
+}
+
+function saveTemplatesFromEditor() {
+  const tpls=[0,1,2].map(i=>(document.getElementById('tpl-txt-'+i)||{value:''}).value);
+  saveTemplates(tpls); alert('Templates saved.');
+}
+
+// ─── Extension bridge ─────────────────────────────────────────────────────────
+function stripD(s) {
+  if (!s) return '';
+  try { return s.normalize('NFD').replace(/[̀-ͯ]/g,''); } catch(e) { return s; }
+}
+
+window.addEventListener('message', evt => {
+  if (!evt.data) return;
+  if (evt.data.type==='HOUSEHUNT_RELOAD') { loadFromStorage(); return; }
+  if (evt.data.type==='HOUSEHUNT_IFL_ADD') {
+    const {props, baseGrp, iflToken} = evt.data;
+    if (!Array.isArray(props)) return;
+    let added=0;
+    for (const p of props) {
+      if (state.props.find(x=>String(x.id)===String(p.id))) {
+        // IFL-master: property in IFL + SPA - handle resets
+        const existing = state.props.find(x=>String(x.id)===String(p.id));
+        if (IFL_RESET_ELIM.has(existing.status)) existing.status='Reset';
+        continue;
+      }
+      // In IFL but not SPA → ingest as New
+      const np = initProp({
+        id:parseInt(p.id), name:stripD(p.title||('IFL-'+p.id)),
+        commune:stripD(p.commune||''), town:stripD(p.town||''),
+        prov:(p.prov||'').toUpperCase(), price:p.price||0,
+        rooms:p.rooms||0, size:p.size||0,
+        grp:baseGrp||state_bases[0]?.abbr||'',
+        url:`https://www.idealista.it/immobile/${p.id}/`,
+        lat:p.lat||null, lng:p.lng||null,
+        sourceIfl:iflToken||'none', status:'New', _custom:true
+      });
+      state.props.push(np); added++;
+    }
+    // In SPA but not IFL (for this base) → Deleted-Idealista
+    if (baseGrp && iflToken) {
+      const iflIds = new Set(props.map(p=>String(p.id)));
+      state.props.forEach(p => {
+        if (p.grp===baseGrp && p.sourceIfl===iflToken && !iflIds.has(String(p.id))) {
+          if (!ELIM_STATUSES.has(p.status)) p.status='Deleted-Idealista';
+        }
+      });
+    }
+    saveToStorage(); renderProps();
+    showExtToast(`Sync complete: ${added} new, ${props.length} checked`, 'ok');
+    return;
+  }
+  if (evt.data.type !== 'HOUSEHUNT_BROKER') return;
+  let {idealistaId,broker,phone,location,price,rooms,size,town,prov,title,realtorUrl,commune,firmName,firmPhone} = evt.data;
+  if (!idealistaId) return;
+  broker=stripD(broker); town=stripD(town); prov=(prov||'').toUpperCase();
+  title=stripD(title); commune=stripD(commune);
+  const pid=parseInt(idealistaId);
+  const p=getProp(pid);
+  if (!p) {
+    showExtToast(`Property ${pid} not in list. Use + Add to add it.`,'warn');
+    openAddModal({id:pid,url:`https://www.idealista.it/immobile/${pid}/`,
+      title,commune,town,prov,price,rooms,size,broker,phone,location,realtorUrl});
+    return;
+  }
+  const updated=[];
+  if (commune&&commune.trim()){p.commune=commune.trim();updated.push('commune');}
+  if (broker&&broker.trim()){p.broker=broker.trim();updated.push('broker');}
+  if (phone&&phone.trim()){p.brokerPhone=phone.trim();updated.push('phone');}
+  if (firmName&&firmName.trim()){p.firmName=firmName.trim();updated.push('firm');}
+  if (firmPhone&&firmPhone.trim()){p.firmPhone=firmPhone.trim();updated.push('firmPhone');}
+  if (location&&location.trim()){
+    p.location=location.trim();
+    const [lat,lng]=parseGPS(location);
+    if(lat){p.lat=lat;p.lng=lng;}
+    updated.push('location');
+  }
+  if (realtorUrl&&realtorUrl.trim()){p.realtorUrl=realtorUrl.trim();updated.push('realtorUrl');}
+  if (updated.length) {
+    saveToStorage(); showTab('props'); renderProps();
+    showExtToast(`✓ Updated ${p.name}: ${updated.join(', ')}`, 'ok');
+    setTimeout(()=>document.getElementById('tile-'+pid)?.scrollIntoView({behavior:'smooth',block:'center'}),250);
+    // Auto-recalc if location updated
+    if (updated.includes('location')) recalcDriveTimes(p).then(ok=>{ if(ok) saveToStorage(); });
+  } else {
+    showExtToast(`${p.name}: no new data extracted.`,'warn');
+  }
+});
+
+function showExtToast(msg, type='ok') {
+  const colors={ok:'#2E7D32',err:'#C0392B',warn:'#E65100'};
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText=`position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:${colors[type]||colors.ok};color:#fff;padding:10px 18px;border-radius:6px;font-size:12px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.3);max-width:90vw;text-align:center;pointer-events:none;`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+loadFromStorage();
+</script>
+</body>
+</html>
