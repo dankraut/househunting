@@ -226,3 +226,31 @@
   }
 
   // ── Toast ───────────�
+// ── Auto-discard: check pending queue on page load ──────────────────────────
+(function checkPendingDiscard() {
+  const idMatch = location.pathname.match(/\/immobile\/(\d+)/);
+  if (!idMatch) return;
+  const pageId = idMatch[1];
+
+  chrome.storage.local.get({ pendingDiscards: [] }, ({ pendingDiscards }) => {
+    if (!pendingDiscards.includes(pageId)) return;
+
+    // Wait for page to render, then click Discard
+    const tryDiscard = (attempts = 0) => {
+      const btn = [...document.querySelectorAll('button, a')]
+        .find(el => /^discard$|^scarta$/i.test(el.textContent.trim()));
+      if (btn) {
+        btn.click();
+        // Remove from queue
+        chrome.storage.local.get({ pendingDiscards: [] }, ({ pendingDiscards: q }) => {
+          chrome.storage.local.set({ pendingDiscards: q.filter(id => id !== pageId) });
+        });
+        showToast('✓ Discarded on Idealista', '#2E7D32', 3000);
+      } else if (attempts < 12) {
+        setTimeout(() => tryDiscard(attempts + 1), 800);
+      }
+    };
+
+    setTimeout(() => tryDiscard(), 2000);
+  });
+})();

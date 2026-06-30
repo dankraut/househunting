@@ -1069,6 +1069,9 @@ function quickStatus(id, status) {
   p.status = status;
   saveToStorage();
   renderProps();
+  if (new Set(['Rejected','Unavailable','Duplicate','Deleted']).has(status) && p.id) {
+    window.postMessage({type:'HOUSEHUNT_DISCARD',idealistaId:p.id},'*');
+  }
 }
 
 // ─── Property Detail Modal ────────────────────────────────────────────────────
@@ -1186,6 +1189,7 @@ function saveDetailModal() {
   p.broker = document.getElementById('dm-broker')?.value.trim() || '';
   p.brokerPhone = document.getElementById('dm-broker-phone')?.value.trim() || '';
   p.brokerEmail = document.getElementById('dm-broker-email')?.value.trim() || '';
+  const _prevStatus = p.status;
   p.status = document.getElementById('dm-status')?.value || p.status;
   p.grp = document.getElementById('dm-grp')?.value || p.grp;
   p.userPlannedDate = document.getElementById('dm-planned-date')?.value || '';
@@ -1200,6 +1204,10 @@ function saveDetailModal() {
   document.getElementById('dm-status-msg').textContent = 'Saved ✓';
   saveToStorage();
   renderProps();
+  if (new Set(['Rejected','Unavailable','Duplicate','Deleted']).has(p.status) &&
+      !new Set(['Rejected','Unavailable','Duplicate','Deleted']).has(_prevStatus||'') && p.id) {
+    window.postMessage({type:'HOUSEHUNT_DISCARD',idealistaId:p.id},'*');
+  }
 }
 
 function closeDetailModal() {
@@ -2041,20 +2049,24 @@ window.addEventListener('message', evt => {
     for (const p of props) {
       const existing = state.props.find(x=>String(x.id)===String(p.id));
       if (existing) {
-        // Update Idealista fields; preserve status, GPS coords, notes, schedule
-        if (p.title||p.name) existing.name = stripD(p.title||p.name);
-        if (p.price) existing.price = p.price;
-        if (p.rooms) existing.rooms = p.rooms;
-        if (p.size) existing.size = p.size;
-        if (p.commune) existing.commune = stripD(p.commune);
-        if (p.town) existing.town = stripD(p.town);
-        if (p.prov) existing.prov = (p.prov||'').toUpperCase();
-        if (p.broker) existing.broker = stripD(p.broker);
-        if (p.realtorUrl) existing.realtorUrl = p.realtorUrl;
-        existing.grp = baseGrp; // base is always most recent assignment
-        existing.sourceIfl = iflToken||existing.sourceIfl;
-        updated++;
-      } else {
+        if (p.discarded) {
+          if (!ELIM_STATUSES.has(existing.status)) existing.status = 'Deleted-Idealista';
+        } else {
+          // Update Idealista fields; preserve status, GPS coords, notes, schedule
+          if (p.title||p.name) existing.name = stripD(p.title||p.name);
+          if (p.price) existing.price = p.price;
+          if (p.rooms) existing.rooms = p.rooms;
+          if (p.size) existing.size = p.size;
+          if (p.commune) existing.commune = stripD(p.commune);
+          if (p.town) existing.town = stripD(p.town);
+          if (p.prov) existing.prov = (p.prov||'').toUpperCase();
+          if (p.broker) existing.broker = stripD(p.broker);
+          if (p.realtorUrl) existing.realtorUrl = p.realtorUrl;
+          existing.grp = baseGrp; // base is always most recent assignment
+          existing.sourceIfl = iflToken||existing.sourceIfl;
+          updated++;
+        }
+      } else if (!p.discarded) {
         // New property from IFL
         const np = initProp({
           id:parseInt(p.id), name:stripD(p.title||p.name||('IFL-'+p.id)),

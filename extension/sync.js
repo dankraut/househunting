@@ -1,4 +1,4 @@
-// sync.js — House Hunt IFL Sync v1.6.7
+// sync.js — House Hunt IFL Sync v1.6.8
 // Handles Idealista Favorites List sync for all bases
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -27,13 +27,11 @@ function waitForTabLoad(tabId, timeout = 15000) {
 
 // ── Scrape IFL page ─────────────────────────────────────────────────────────
 function _scrapeIflPage() {
-  // Scroll to bottom to trigger any infinite scroll
   window.scrollTo(0, document.body.scrollHeight);
 
   const results = [];
   const seen = new Set();
 
-  // Collect all property links
   const links = document.querySelectorAll('a[href*="/immobile/"]');
   for (const link of links) {
     const m = link.href.match(/\/immobile\/(\d+)/);
@@ -41,25 +39,28 @@ function _scrapeIflPage() {
     const id = m[1];
     seen.add(id);
 
-    // Walk up to find the property card container
     let card = link.closest('article') ||
                 link.closest('[class*="item-info"]') ||
                 link.closest('[class*="list-item"]') ||
                 link.parentElement;
 
-    // Drill up a bit to get full card context
     for (let i = 0; i < 4 && card && !card.querySelector('[class*="price"]'); i++) {
       card = card.parentElement;
     }
 
     const text = card ? card.textContent : link.textContent;
 
-    // Title: prefer the direct link text or a heading
+    // Detect discarded state on the favorites list page
+    const isDiscarded = text.toLowerCase().includes('discarded this listing') ||
+                        text.toLowerCase().includes('scartato') ||
+                        !!card?.querySelector('a[href*="recover"]') ||
+                        !!card?.querySelector('[class*="recover"]') ||
+                        !!card?.querySelector('[data-action*="recover"]');
+
     let title = '';
     const titleEl = card && (card.querySelector('a.item-link, h2 a, h3 a, [class*="title"] a, [class*="name"] a') || link);
     if (titleEl) title = titleEl.textContent.trim().slice(0, 120);
 
-    // Price
     let price = 0;
     const priceEl = card && card.querySelector('[class*="price"], .price');
     if (priceEl) {
@@ -67,18 +68,17 @@ function _scrapeIflPage() {
       if (pm) price = Math.round(parseInt(pm[1]) / 1000);
     }
 
-    // Rooms & size from text
     const roomsM = text.match(/(\d+)\s*locali/i);
     const sizeM  = text.match(/(\d+)\s*m[²2]/i);
 
-    // Town: last comma-part of title
     let town = '';
     const ci = title.lastIndexOf(',');
     if (ci >= 0) town = title.slice(ci + 1).trim();
 
     results.push({ id, price, title, town,
       rooms: roomsM ? parseInt(roomsM[1]) : 0,
-      size:  sizeM  ? parseInt(sizeM[1]) : 0 });
+      size:  sizeM  ? parseInt(sizeM[1]) : 0,
+      discarded: isDiscarded });
   }
   return results;
 }
@@ -176,7 +176,7 @@ async function syncBase(base, setStatus) {
   const token = await getApiToken();
   const apiBase = 'https://househunt.pages.dev/api';
 
-  setStatus('Navigating to Idealista favorites…', 'loading');
+  setStatus(`Syncing ${base.name} (${base.abbr}) — navigating to Idealista…`, 'loading');
 
   const allTabs = await new Promise(res => chrome.tabs.query({}, res));
   let idealistaTab = allTabs.find(t => t.url && t.url.includes('idealista.it') && (t.url.includes('/preferiti') || t.url.includes('/utente/')));
@@ -206,7 +206,7 @@ async function syncBase(base, setStatus) {
     await sleep(1500);
   }
 
-  setStatus('Scraping property list…', 'loading');
+  setStatus(`Scraping ${base.name} IFL properties…`, 'loading');
   const [scrapeResult] = await chrome.scripting.executeScript({
     target: { tabId: idealistaTab.id },
     func: _scrapeIflPage
@@ -218,37 +218,35 @@ async function syncBase(base, setStatus) {
     return;
   }
 
-  setStatus(`Found ${properties.length} properties. Syncing with server…`, 'loading');
+  const discardedOnIdealista = properties.filter(p => p.discarded);
+  const activeProperties = properties.filter(p => !p.discarded);
+  setStatus(`Found ${properties.length} properties (${discardedOnIdealista.length} discarded). Sending to SPA…`, 'loading');
 
-  let syncResult;
+  // Send ALL properties to SPA — IFL_ADD handler updates existing, adds new, marks missing as Deleted
+  const spaFrag = await getSpaUrlFrag();
+  const spaTab = allTabs.find(t => t.url && t.url.includes(spaFrag));
+
+  if (!spaTab) {
+    setStatus(`SPA tab not found (looking for URL containing "${spaFrag}"). Open the SPA first.`, 'err');
+    return;
+  }
+
+  await chrome.scripting.executeScript({
+    target: { tabId: spaTab.id },
+    func: payload => window.postMessage({ type: 'HOUSEHUNT_IFL_ADD', ...payload }, '*'),
+    args: [{ props: properties, baseGrp: base.abbr, iflToken: base.iflToken }]
+  });
+
+  // Server sync (for write-back tracking)
+  let syncResult = { toAdd: [], markedDeleted: [], updated: [], writeBackQueue: [] };
   try {
     const r = await fetch(apiBase + '/ifl-sync', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ baseGrp: base.abbr, iflToken: base.iflToken, properties })
     });
-    syncResult = await r.json();
-  } catch (e) {
-    setStatus('Server sync failed: ' + e.message, 'err'); return;
-  }
-
-  const spaFrag = await getSpaUrlFrag();
-  const spaTab = allTabs.find(t => t.url && t.url.includes(spaFrag));
-
-  if (spaTab && properties.length > 0) {
-    await chrome.scripting.executeScript({
-      target: { tabId: spaTab.id },
-      func: payload => window.postMessage({ type: 'HOUSEHUNT_IFL_ADD', ...payload }, '*'),
-      args: [{ props: properties, baseGrp: base.abbr, iflToken: base.iflToken }]
-    });
-  }
-
-  if (spaTab) {
-    await chrome.scripting.executeScript({
-      target: { tabId: spaTab.id },
-      func: () => window.postMessage({ type: 'HOUSEHUNT_RELOAD' }, '*')
-    });
-  }
+    if (r.ok) syncResult = await r.json();
+  } catch (e) { /* non-fatal — SPA already updated */ }
 
   let writeBackNote = '';
   if (syncResult.writeBackQueue && syncResult.writeBackQueue.length > 0) {
@@ -260,16 +258,16 @@ async function syncBase(base, setStatus) {
       args: [wbIds]
     });
     const wb = wbResult.result || {};
-    writeBackNote = ` | write-back: ${(wb.success||[]).length} ok, ${(wb.failed||[]).length} failed, ${(wb.notFound||[]).length} not found`;
+    writeBackNote = `\nWrite-back: ${(wb.success||[]).length} ok · ${(wb.failed||[]).length} failed · ${(wb.notFound||[]).length} not found`;
   }
 
-  const added = (syncResult.toAdd || []).length;
-  const deleted = (syncResult.markedDeleted || []).length;
-  const updated = (syncResult.updated || []).length;
-  setStatus(
-    `✓ Sync done: +${added} added · ${deleted} marked Deleted-Idealista · ${updated} prices updated${writeBackNote}`,
-    'ok'
-  );
+  showSyncModal({
+    base: base.name,
+    abbr: base.abbr,
+    total: properties.length,
+    discarded: discardedOnIdealista.length,
+    writeBackNote
+  });
 }
 
 // ── Load bases from server ──────────────────────────────────────────────────
@@ -283,4 +281,3 @@ async function loadBases() {
   } catch (e) {}
   return [];
 }
-                              
