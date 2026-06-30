@@ -224,4 +224,14 @@
     const t = document.createElement('div');
     t.textContent = msg;
     t.style.cssText = [
-      'position:fixed', 'bottom:130px'
+      'position:fixed', 'bottom:130px', 'right:16px', 'z-index:2147483647',
+      `background:${color}`, 'color:#fff', 'border-radius:8px',
+      'padding:10px 16px', 'font:600 12px system-ui,sans-serif',
+      'box-shadow:0 4px 12px rgba(0,0,0,.3)', 'max-width:280px',
+      'line-height:1.4', 'transition:opacity .3s'
+    ].join(';');
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, duration);
+  }
+
+})();
