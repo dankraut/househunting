@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Italy House Hunting</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<style>
+:root{
+  --bg:#FAF7F2;--bg2:#F2EDE4;--bg3:#E8E0D2;
+  --border:#D4C9B5;--border2:#C0B09A;
+  --text:#2E2A25;--text1:#2E2A25;--text2:#5A5248;--text3:#9A9088;
+  --terra:#C0603A;--terra-dk:#9A4328;--terra-lt:#E07050;
+  --olive:#5B7232;--olive-lt:#7A9548;--olive-bg:#EAF2DD;
+  --adriat:#2C5F7A;--adriat-lt:#4A7F9A;--adriat-bg:#E3EFF5;
+  --amber:#F5A623;--amber-bg:#FFF8E1;--amber-bdr:#FFD54F;
+  --red:#C0392B;--red-bg:#FDECEA;--red-bdr:#EF9A9A;
+  --green:#2E7D32;--green-bg:#E8F5E9;--green-bdr:#81C784;
+  --purple:#7B1FA2;--purple-bg:#F3E5F5;
+  --radius:6px;--shadow:0 1px 3px rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:13px;line-height:1.4;overflow-x:hidden;min-height:100vh}
+a{color:var(--adriat);text-decoration:none}a:hover{text-decoration:underline}
+button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
+input,select,textarea{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:2px 6px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-lt);box-shadow:0 0 0 2px rgba(44,95,122,.15)}
+#app{display:flex;flex-direction:column;height:100vh}
+#header{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px}
+#header h1{font-size:15px;font-weight:700;color:var(--terra-dk)}
+#header .sub{font-size:11px;color:var(--text3);margin-top:1px}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
+#tabs{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;flex-shrink:0;overflow-x:auto}
+.tab{padding:9px 14px;font-size:12px;font-weight:500;color:var(--text3);border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab.active{color:var(--terra);border-bottom-color:var(--terra);font-weight:600}
+.tab:hover:not(.active){color:var(--text2);border-bottom-color:var(--border2)}
+#content{flex:1;overflow:hidden;position:relative}
+.tab-panel{position:absolute;inset:0;overflow-y:auto;display:none;padding:0 12px 12px}
+.tab-panel.active{display:block}
+#tab-map.active{display:flex;flex-direction:column;padding:8px 12px 0;overflow:hidden}
+/* Toolbar */
+#props-toolbar{position:sticky;top:0;margin:0 -12px 0;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10}
+.toolbar-inner{display:flex;align-items:center;gap:6px;padding:7px 12px;overflow-x:auto;white-space:nowrap}
+.tb-lbl{font-size:11px;font-weight:500;color:var(--text2);display:flex;align-items:center;gap:3px;flex-shrink:0}
+.tb-lbl select{font-size:11px;padding:3px 6px;height:26px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1)}
+.tb-sep{color:var(--border);flex-shrink:0;margin:0 2px}
+#f-search{font-size:11px;padding:3px 6px;height:26px;width:120px;flex-shrink:0;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1)}
+.io-btn{padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);font-size:11px;font-weight:500}
+.io-btn:hover{border-color:var(--adriat);color:var(--adriat)}
+.io-btn.danger:hover{border-color:var(--red);color:var(--red)}
+.io-saved{font-size:11px;color:var(--olive);opacity:0;transition:opacity .3s}
+/* Tiles */
+.tiles-grid{display:grid;grid-template-columns:1fr;gap:8px;padding-top:8px}
+@media(min-width:640px){.tiles-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:1024px){.tiles-grid{grid-template-columns:1fr 1fr 1fr}}
+.tile{border-radius:var(--radius);border:1px solid var(--border);border-left:3px solid var(--border2);background:#fff;box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .15s}
+.tile:hover{box-shadow:0 3px 10px rgba(0,0,0,.14)}
+.tile.st-reached{background:#EDF5FF}
+.tile.st-replied{background:#EDFAEF}
+.tile.st-info{background:#FFFBEE}
+.tile.st-tbs{background:#F3E5F5}
+.tile.st-proposed{background:#FFF8E1}
+.tile.st-scheduled{background:var(--green-bg)}
+.tile.st-unavailable{background:#F5F5F5;opacity:.7}
+.tile.st-unresponsive{background:#FFF8F0;opacity:.75}
+.tile.st-rejected{background:#FEE;opacity:.65}
+.tile.st-deleted-idealista{background:#F5EAF7;opacity:.7}
+.tile.st-deleted{background:#ECEFF1;opacity:.8}
+.tile.st-duplicate{background:#FFF3E0;opacity:.8}
+.tile-top{display:flex;align-items:flex-start;gap:8px;padding:10px 12px 6px}
+.tile-body{padding:0 12px 8px;display:flex;flex-direction:column;gap:4px}
+.tile-name{font-weight:600;font-size:13px;line-height:1.3}
+.tile-name a{color:var(--text)}
+.tile-name a:hover{color:var(--adriat)}
+.tile-sub{font-size:11px;color:var(--text3)}
+.tile-status-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px}
+.tile-date-chip{font-size:10px;padding:1px 7px;border-radius:8px;font-weight:500}
+.sched-chip{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bdr)}
+.planned-chip{background:var(--adriat-bg);color:var(--adriat);border:1px solid #90CAF9}
+.tile-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.t-btn{font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid;white-space:nowrap;cursor:pointer}
+.t-btn-olive{background:var(--olive-bg);color:var(--olive);border-color:var(--olive-lt)}
+.t-btn-olive:hover{background:var(--olive);color:#fff}
+.t-btn-blue{background:var(--adriat-bg);color:var(--adriat);border-color:var(--adriat-lt)}
+.t-btn-blue:hover{background:var(--adriat);color:#fff}
+.t-btn-terra{background:#FFF0E8;color:var(--terra);border-color:var(--terra-lt)}
+.t-btn-terra:hover{background:var(--terra);color:#fff}
+.t-btn-red{background:#FFF0F0;color:var(--red);border-color:#EF9A9A}
+.t-btn-red:hover{background:var(--red);color:#fff}
+.t-btn-restore{background:#E8F5E9;color:var(--green);border-color:var(--green-bdr)}
+.t-btn-restore:hover{background:var(--green);color:#fff}
+.tile-drive{font-size:10px;color:var(--text3);margin-top:1px}
+.drive-hot{color:var(--terra);font-weight:600}
+.status-sel{font-size:11px;padding:2px 4px;border-radius:4px;width:auto}
+.tiles-section-header{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 4px;padding:4px 0;border-bottom:1px solid var(--border2)}
+/* Modals */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.25);width:100%;max-width:540px;max-height:92vh;overflow-y:auto}
+.modal-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2}
+.modal-header h3{font-size:14px;font-weight:600;color:var(--adriat)}
+.modal-close{font-size:20px;color:var(--text3);padding:0 4px;line-height:1}
+.modal-close:hover{color:var(--red)}
+.modal-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.modal-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:#fff}
+.btn-primary{padding:7px 16px;background:var(--adriat);color:#fff;border-radius:4px;font-size:12px;font-weight:500}
+.btn-primary:hover{background:var(--adriat-lt)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-secondary{padding:7px 16px;border:1px solid var(--border);border-radius:4px;font-size:12px}
+.fetch-status{font-size:11px;padding:4px 8px;border-radius:4px;margin-top:2px}
+.fetch-ok{background:var(--olive-bg);color:var(--olive)}
+.fetch-err{background:var(--red-bg);color:var(--red)}
+.fetch-info{background:var(--adriat-bg);color:var(--adriat)}
+.tile-field{display:flex;flex-direction:column;gap:2px}
+.tile-field label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+.tile-field input,.tile-field select,.tile-field textarea{font-size:12px;width:100%;padding:4px 7px;background:var(--bg);border:1px solid var(--border);border-radius:4px}
+.tile-field-row{display:flex;gap:8px}
+.tile-field-row .tile-field{flex:1}
+.sect-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin:4px 0 2px;padding-top:4px;border-top:1px solid var(--border)}
+/* Schedule */
+.top-legend{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)}
+.legend-dot{width:12px;height:12px;border-radius:3px}
+.sched-filter{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.sched-filter label{font-size:11px;display:flex;align-items:center;gap:4px}
+.days-container{display:flex;flex-direction:column;gap:8px}
+.day-card{border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow)}
+.day-card.has-conflict{border-color:var(--red-bdr)}
+.day-card.has-warning{border-color:var(--amber-bdr)}
+.day-card.collapsed .drop-zone,.day-card.collapsed .return-row,.day-card.collapsed .conflict-msg,.day-card.collapsed .warning-msg{display:none}
+.day-header{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg2);border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.day-label{font-weight:600;font-size:12px}
+.day-base{font-size:11px;color:var(--text3);margin-left:6px}
+.day-note{font-size:10px;color:var(--text3);font-style:italic;margin-left:4px}
+.day-meta{display:flex;align-items:center;gap:8px;font-size:11px}
+.day-drive-total{font-weight:600;padding:1px 6px;border-radius:10px;font-size:10px}
+.drive-ok{background:var(--olive-bg);color:var(--olive)}
+.drive-warn{background:var(--amber-bg);color:var(--amber)}
+.drive-over{background:var(--red-bg);color:var(--red)}
+.drop-zone{min-height:28px;background:#fff}
+.stop-row{display:flex;align-items:center;gap:5px;padding:6px 8px;border-bottom:1px solid rgba(0,0,0,.04);font-size:12px;user-select:none}
+.stop-row.sched-locked{background:var(--green-bg)}
+.stop-row.row-conflict{background:var(--red-bg)}
+.stop-row.row-warn{background:var(--amber-bg)}
+.stop-row.sortable-chosen{opacity:.5;background:var(--adriat-bg)!important}
+.stop-row.sortable-ghost{opacity:.3}
+.drag-handle{color:var(--text3);font-size:16px;cursor:grab;flex-shrink:0;touch-action:none;line-height:1}
+.drag-handle:active{cursor:grabbing}
+.stop-time{font-family:monospace;font-size:11px;color:var(--text3);width:50px;flex-shrink:0}
+.stop-name{flex:1;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sched-badge{font-size:10px;padding:1px 5px;border-radius:8px;background:var(--olive);color:#fff;flex-shrink:0}
+.drive-chip{font-size:10px;padding:2px 5px;border-radius:10px;background:var(--adriat-bg);color:var(--adriat);flex-shrink:0;font-family:monospace;white-space:nowrap}
+.drive-chip-warn{background:var(--amber-bg);color:#C07000}
+.drive-chip-over{background:var(--red-bg);color:var(--red)}
+.mapit-btn{font-size:10px;padding:2px 6px;border-radius:4px;background:#FFF0E8;color:var(--terra);border:1px solid var(--terra-lt);white-space:nowrap;flex-shrink:0;text-decoration:none;display:inline-block}
+.mapit-btn:hover{background:var(--terra);color:#fff}
+.mapit-btn.disabled{opacity:.4;cursor:not-allowed;pointer-events:none;background:var(--bg3);color:var(--text3);border-color:var(--border)}
+.return-row{display:flex;align-items:center;gap:6px;padding:4px 10px 5px;background:var(--bg2);border-top:1px dashed var(--border);font-size:11px;color:var(--text3)}
+.empty-day{padding:8px 12px;font-size:11px;color:var(--text3);font-style:italic}
+.conflict-msg{font-size:10px;padding:3px 8px;background:var(--red-bg);border-top:1px solid var(--red-bdr);color:var(--red)}
+.warning-msg{font-size:10px;padding:3px 8px;background:var(--amber-bg);border-top:1px solid var(--amber-bdr);color:#C07000}
+.zone-card{border-radius:var(--radius);border:2px dashed var(--border2);overflow:hidden;margin-top:4px}
+.zone-card.elim-zone{border-color:var(--red-bdr);opacity:.8}
+.zone-header{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg3);cursor:pointer;user-select:none}
+.zone-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+.zone-drop{min-height:36px;background:#FAFAF8}
+.zone-row{display:flex;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid rgba(0,0,0,.04);font-size:12px;color:var(--text2)}
+.zone-row .stop-name{flex:1}
+/* Map */
+.map-controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:12px;align-items:center;flex-shrink:0}
+.map-controls select{font-size:11px;padding:2px 5px;height:24px}
+#map{flex:1;min-height:200px;border-radius:var(--radius);box-shadow:var(--shadow)}
+.map-legend{flex-shrink:0;padding:6px 0 8px;display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text3)}
+/* Gemini */
+#gemini-panel{border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);background:#fff;overflow:hidden}
+.gem-header{padding:10px 14px;background:var(--adriat-bg);border-bottom:1px solid #90CAF9;display:flex;align-items:center;gap:6px}
+.gem-header h2{font-size:13px;font-weight:600;color:var(--adriat)}
+.gem-history{padding:10px 14px;min-height:80px;max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.gem-user{align-self:flex-end;background:var(--adriat);color:#fff;padding:7px 11px;border-radius:12px 12px 3px 12px;max-width:80%;font-size:12px}
+.gem-ai{align-self:flex-start;background:var(--bg2);padding:7px 11px;border-radius:12px 12px 12px 3px;max-width:85%;font-size:12px;white-space:pre-wrap;word-wrap:break-word}
+.gem-input-row{display:flex;gap:6px;padding:8px 12px;border-top:1px solid var(--border)}
+.gem-input-row input{flex:1;padding:6px 10px}
+.gem-send{padding:6px 14px;background:var(--adriat);color:#fff;border-radius:4px;font-size:12px;font-weight:500}
+.gem-send:hover{background:var(--adriat-lt)}
+.quick-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.quick-btn{padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;text-align:left;font-size:11px}
+.quick-btn:hover{border-color:var(--terra)}
+.quick-btn .qb-title{font-weight:600;color:var(--terra);margin-bottom:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+.gem-usage{margin-top:12px;padding:10px 14px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);font-size:11px;color:var(--text2)}
+.gem-usage h4{font-size:12px;font-weight:600;color:var(--adriat);margin-bottom:6px}
+.gem-usage ul{padding-left:16px;display:flex;flex-direction:column;gap:3px}
+@media(max-width:640px){.quick-btns{grid-template-columns:1fr}#map{min-height:160px}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="header">
+  <div>
+    <h1>Italy House Hunting</h1>
+    <div class="sub" id="header-sub">Loading…</div>
+  </div>
+</div>
+
+<div id="tabs">
+  <button class="tab active" onclick="showTab('props')">Properties</button>
+  <button class="tab" onclick="showTab('schedule')">Schedule</button>
+  <button class="tab" onclick="showTab('map')">Map</button>
+  <button class="tab" onclick="showTab('gemini')">AI Copilot</button>
+  <button class="tab" onclick="openSettingsModal()" style="margin-left:auto">⚙️ Settings</button>
+</div>
+
+<div id="content">
+
+<!-- PROPERTIES TAB -->
+<div id="tab-props" class="tab-panel active">
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+  <div id="props-toolbar">
+    <div class="toolbar-inner">
+      <label class="tb-lbl">Sort&nbsp;<select id="sort-sel" onchange="setSortSel(this.value)">
+        <option value="apt-asc">Airport &#9650;</option><option value="apt-desc">Airport &#9660;</option>
+        <option value="price-asc">Price &#9650;</option><option value="price-desc">Price &#9660;</option>
+        <option value="base-asc">Base &#9650;</option><option value="base-desc">Base &#9660;</option>
+        <option value="planned-asc">Planned &#9650;</option><option value="planned-desc">Planned &#9660;</option>
+        <option value="sched-asc">Sched &#9650;</option><option value="sched-desc">Sched &#9660;</option>
+        <option value="status-asc">Status &#9650;</option><option value="status-desc">Status &#9660;</option>
+      </select></label>
+      <span class="tb-sep">│</span>
+      <label class="tb-lbl">Status&nbsp;<select id="f-status" onchange="renderProps()">
+        <option value="">Active</option><option value="ALL">All</option>
+        <option>New</option><option>Working</option><option>Reset</option>
+        <option>Reached Out</option><option>Replied</option><option>Info Supplied</option>
+        <option>To Be Scheduled</option><option>Proposed</option><option>Scheduled</option>
+        <option value="ELIM">Eliminated</option>
+      </select></label>
+      <label class="tb-lbl">Base&nbsp;<select id="f-base" onchange="renderProps()"><option value="">All</option></select></label>
+      <input type="text" id="f-search" placeholder="search…" oninput="renderProps();document.getElementById('btn-clr-search').style.display=this.value?'inline-block':'none'">
+      <button class="io-btn" id="btn-clr-search" onclick="document.getElementById('f-search').value='';document.getElementById('btn-clr-search').style.display='none';renderProps()" style="display:none;flex-shrink:0">✕</button>
+      <button class="io-btn" onclick="openAddModal()" style="margin-left:auto;background:var(--adriat);color:#fff;border-color:var(--adriat);white-space:nowrap;flex-shrink:0">＋ Add</button>
+      <span class="io-saved" id="save-notice" style="flex-shrink:0">Saved ✓</span>
+    </div>
+    <div id="result-count" style="font-size:11px;color:var(--text3);padding:2px 12px 5px"></div>
+  </div>
+  <div class="tiles-grid" id="tiles-container"></div>
+</div>
+
+<!-- SCHEDULE TAB -->
+<div id="tab-schedule" class="tab-panel">
+  <div class="top-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--olive-bg);border:1px solid var(--olive)"></div>OK</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--amber-bg);border:1px solid var(--amber-bdr)"></div>Warning</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--red-bg);border:1px solid var(--red-bdr)"></div>Conflict</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green-bg);border:1px solid var(--green-bdr)"></div>Scheduled (locked)</div>
+  </div>
+  <div class="sched-filter">
+    <label style="font-size:11px;font-weight:500;color:var(--text2)">Show:</label>
+    <select id="sched-view" onchange="renderSchedule()" style="font-size:11px;padding:3px 6px;height:26px">
+      <option value="all">All</option>
+      <option value="scheduled">Scheduled only</option>
+      <option value="planned">Planned only</option>
+    </select>
+    <label><input type="checkbox" id="sched-show-old" onchange="renderSchedule()"> Show past days</label>
+  </div>
+  <div id="days-container" class="days-container"></div>
+</div>
+
+<!-- MAP TAB -->
+<div id="tab-map" class="tab-panel">
+  <div class="map-controls">
+    <span id="map-grp-filters" style="display:flex;gap:8px;flex-wrap:wrap"></span>
+    <label><input type="checkbox" id="map-sched" onchange="refreshMap()"> Scheduled only</label>
+    <label>Base <select id="map-base" onchange="refreshMap()"><option value="">All</option></select></label>
+    <label>Day <select id="map-day" onchange="refreshMap()"><option value="">All days</option></select></label>
+  </div>
+  <div id="map"></div>
+  <div class="map-legend"><span>★ Bases</span><span style="color:var(--olive)">● Properties</span><span style="color:var(--adriat)">── Day route</span></div>
+</div>
+
+<!-- AI COPILOT TAB -->
+<div id="tab-gemini" class="tab-panel">
+  <div id="gemini-panel">
+    <div class="gem-header">
+      <div style="width:22px;height:22px;border-radius:50%;background:var(--adriat);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">AI</div>
+      <h2>Gemini 2.5 Flash · AI Copilot</h2>
+      <span style="font-size:10px;color:var(--text3);margin-left:auto">Full itinerary loaded</span>
+    </div>
+    <div class="gem-history" id="gem-history"><div class="gem-ai">Properties loaded. Ask about drive times, scheduling, comparisons, or logistics.</div></div>
+    <div class="gem-input-row">
+      <input id="gem-input" type="text" placeholder="Ask about the itinerary…" onkeydown="if(event.key==='Enter')sendGemini()">
+      <button class="gem-send" onclick="sendGemini()">Send</button>
+    </div>
+  </div>
+  <div class="quick-btns">
+    <button class="quick-btn" onclick="geminiQuick('What are the 5 properties closest to the airport under €800k?')"><div class="qb-title">Airport Priority</div>Best value near airport</button>
+    <button class="quick-btn" onclick="geminiQuick('Review scheduled days and flag conflicts or cap violations.')"><div class="qb-title">Schedule Review</div>Check for conflicts</button>
+    <button class="quick-btn" onclick="geminiQuick('Which properties have the most rooms under €850k?')"><div class="qb-title">Best Value</div>Most rooms per euro</button>
+  </div>
+  <div class="gem-usage">
+    <h4>AI Copilot Usage</h4>
+    <ul>
+      <li>The copilot receives your full property list and schedule context automatically.</li>
+      <li>Ask natural questions: "Which properties near Manciano have good value?", "Can I fit 3 more showings on July 5?", "Compare Tuscania vs Vetralla."</li>
+      <li>Use quick buttons above for common queries.</li>
+      <li>Drive time estimates in AI responses are based on stored data — verify with Maps before scheduling.</li>
+      <li>The copilot does not save changes — use the Properties tab to update records.</li>
+    </ul>
+  </div>
+</div>
+
+</div></div>
+
+<!-- PROPERTY DETAIL MODAL -->
+<div id="detail-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeDetailModal()">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <h3 id="detail-modal-title">Property Details</h3>
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tile-field">
+        <label>Idealista URL</label>
+        <a id="dm-url-link" href="#" target="_blank" rel="noopener" style="font-size:12px;word-break:break-all"></a>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Property Name</label><input id="dm-name" type="text" autocomplete="off"></div>
+      </div>
+
+      <div class="sect-label">Location</div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>GPS (lat,lng)</label><input id="dm-location" type="text" placeholder="42.418,11.875" autocomplete="off" oninput="dmMarkDirty()"></div>
+        <div class="tile-field" style="flex:0 0 auto"><button class="io-btn" onclick="dmRecalcDrives()" style="margin-top:14px;font-size:11px" id="dm-recalc-btn">⟳ Drive Times</button></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Commune</label><input id="dm-commune" type="text" autocomplete="off" oninput="dmMarkDirty()"></div>
+        <div class="tile-field"><label>Town</label><input id="dm-town" type="text" autocomplete="off" oninput="dmMarkDirty()"></div>
+        <div class="tile-field" style="flex:0 0 80px"><label>Province</label><input id="dm-prov" type="text" maxlength="2" style="text-transform:uppercase" autocomplete="off" oninput="dmMarkDirty()"></div>
+      </div>
+
+      <div class="sect-label">Property</div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Price (€k)</label><input id="dm-price" type="number" oninput="dmMarkDirty()"></div>
+        <div class="tile-field"><label>Rooms</label><input id="dm-rooms" type="number" oninput="dmMarkDirty()"></div>
+        <div class="tile-field"><label>Size (m²)</label><input id="dm-size" type="number" oninput="dmMarkDirty()"></div>
+      </div>
+
+      <div class="sect-label">Contact — Firm</div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Brokerage Firm</label><input id="dm-firm-name" type="text" autocomplete="off" oninput="dmMarkDirty()"></div>
+        <div class="tile-field"><label>Firm Phone</label><input id="dm-firm-phone" type="tel" autocomplete="off" oninput="dmMarkDirty()"></div>
+      </div>
+      <div class="tile-field"><label>Agency / Realtor URL</label><input id="dm-realtor-url" type="url" autocomplete="off" oninput="dmMarkDirty()"></div>
+
+      <div class="sect-label">Contact — Broker</div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Broker Name</label><input id="dm-broker" type="text" autocomplete="off" oninput="dmMarkDirty()"></div>
+        <div class="tile-field"><label>Individual Phone</label><input id="dm-broker-phone" type="tel" autocomplete="off" oninput="dmMarkDirty()"></div>
+      </div>
+      <div class="tile-field"><label>Broker Email</label><input id="dm-broker-email" type="email" autocomplete="off" oninput="dmMarkDirty()"></div>
+
+      <div class="sect-label">Status &amp; Scheduling</div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Status</label>
+          <select id="dm-status" oninput="dmMarkDirty()"></select>
+        </div>
+        <div class="tile-field"><label>Base (Group)</label>
+          <select id="dm-grp" oninput="dmMarkDirty()"></select>
+        </div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Planned Date</label><input id="dm-planned-date" type="date" oninput="dmMarkDirty()"></div>
+        <div class="tile-field"><label>Planned Time</label><input id="dm-planned-time" type="time" oninput="dmMarkDirty()"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Proposed Date</label><input id="dm-proposed-date" type="date" oninput="dmMarkDirty()"></div>
+        <div class="tile-field"><label>Last Contacted</label><input id="dm-last-contacted" type="date" oninput="dmMarkDirty()"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Scheduled Date</label><input id="dm-sched-date" type="date" oninput="dmMarkDirty()"></div>
+        <div class="tile-field"><label>Scheduled Time</label><input id="dm-sched-time" type="time" oninput="dmMarkDirty()"></div>
+      </div>
+
+      <div class="sect-label">Drive Times</div>
+      <div id="dm-drive-times" style="font-size:11px;color:var(--text2);background:var(--bg2);padding:8px 10px;border-radius:4px;border:1px solid var(--border)">
+        No drive times calculated yet. Enter GPS coordinates and click ⟳ Drive Times.
+      </div>
+
+      <div class="sect-label">Notes</div>
+      <div class="tile-field">
+        <textarea id="dm-notes" rows="4" style="resize:vertical" oninput="dmMarkDirty()"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div id="dm-status-msg" style="font-size:11px;color:var(--text3);margin-right:auto;align-self:center"></div>
+      <button class="btn-secondary" onclick="closeDetailModal()">Close</button>
+      <button class="btn-primary" id="dm-save-btn" onclick="saveDetailModal()" disabled>Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PROPERTY MODAL -->
+<div id="add-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add Property</h3>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tile-field">
+        <label>Listing URL (Idealista or other)</label>
+        <input type="url" id="add-url" placeholder="https://www.idealista.it/immobile/12345678/" oninput="onAddUrlChange()" autocomplete="off">
+        <div id="add-fetch-status" class="fetch-status fetch-info" style="display:none"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Property Name *</label><input type="text" id="add-name" placeholder="e.g. Villa for sale in Via Roma" autocomplete="off"></div>
+        <div class="tile-field"><label>Idealista ID</label><input type="text" id="add-id" placeholder="8-digit number" readonly style="background:var(--bg3)" autocomplete="off"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Commune</label><input type="text" id="add-commune" placeholder="San Carlo - Bustecche" autocomplete="off"></div>
+        <div class="tile-field"><label>Town *</label><input type="text" id="add-town" placeholder="Town name" autocomplete="off"></div>
+        <div class="tile-field" style="flex:0 0 80px"><label>Province</label><input type="text" id="add-prov" placeholder="VT" maxlength="2" style="text-transform:uppercase" autocomplete="off"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Price (€k) *</label><input type="number" id="add-price" placeholder="780" autocomplete="off"></div>
+        <div class="tile-field"><label>Rooms</label><input type="number" id="add-rooms" placeholder="10" autocomplete="off"></div>
+        <div class="tile-field"><label>Size (m²)</label><input type="number" id="add-size" placeholder="300" autocomplete="off"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>GPS (lat,lng)</label><input type="text" id="add-loc" placeholder="42.418,11.875" autocomplete="off"></div>
+        <div class="tile-field"><label>Base</label><select id="add-grp" autocomplete="off"></select></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Brokerage Firm</label><input type="text" id="add-firm-name" placeholder="Firm name" autocomplete="off"></div>
+        <div class="tile-field"><label>Firm Phone</label><input type="tel" id="add-firm-phone" placeholder="+39 …" autocomplete="off"></div>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Broker Name</label><input type="text" id="add-broker" placeholder="Agent name" autocomplete="off"></div>
+        <div class="tile-field"><label>Broker Phone</label><input type="tel" id="add-phone" placeholder="+39 …" autocomplete="off"></div>
+      </div>
+      <div class="tile-field"><label>Agency URL</label><input type="url" id="add-realtorUrl" placeholder="https://www.idealista.it/pro/…" autocomplete="off"></div>
+      <div class="tile-field"><label>Notes</label><textarea id="add-notes" rows="3" style="width:100%;resize:vertical;font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px"></textarea></div>
+      <div id="add-note" style="font-size:11px;color:var(--text3)"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmAddProperty()">Add Property</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10002;align-items:center;justify-content:center">
+  <div style="background:#FAF7F2;border-radius:10px;padding:20px;width:min(580px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="font-size:15px;font-weight:600;color:var(--text1)">⚙️ Settings</h2>
+      <button onclick="closeSettingsModal()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2)">✕</button>
+    </div>
+
+    <!-- Server Key -->
+    <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">Server Key</div>
+      <div style="display:flex;gap:8px">
+        <input id="settings-key" type="password" placeholder="Enter server key…" style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg1);color:var(--text1)">
+        <button class="io-btn" onclick="saveSettingsKey()" style="white-space:nowrap">Save Key</button>
+      </div>
+      <div id="settings-key-status" style="font-size:10px;color:var(--text3);margin-top:4px"></div>
+    </div>
+
+    <!-- Routing Keys -->
+    <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">Drive Time Routing</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Drive times are calculated via Google Maps (server-side proxy) with OSRM as fallback. Enter GPS on a property and click ⟳ Drive Times.</p>
+    </div>
+
+    <!-- Bases -->
+    <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:12px;font-weight:600;color:var(--text2)">Bases</div>
+        <button class="io-btn" onclick="openAddBaseForm()" style="font-size:11px">+ Add Base</button>
+      </div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Each base is a trip location. Set Visit From/To dates to generate schedule days. Link to an Idealista Favorites List to enable sync.</p>
+      <div id="bases-list"></div>
+      <!-- Add/Edit Base Form -->
+      <div id="base-form" style="display:none;margin-top:10px;padding:12px;background:#EEE8DC;border-radius:6px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:8px" id="base-form-title">Add Base</div>
+        <input type="hidden" id="base-form-abbr-orig" value="">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div style="flex:2"><label style="font-size:10px;font-weight:600;color:var(--text3)">Name</label>
+            <input id="base-form-name" type="text" placeholder="Città della Pieve" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
+          <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Abbr</label>
+            <input id="base-form-abbr" type="text" placeholder="CdP" maxlength="5" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Visit From</label>
+            <input id="base-form-from" type="date" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
+          <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Visit To (optional)</label>
+            <input id="base-form-to" type="date" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Base Lat</label>
+            <input id="base-form-lat" type="number" step="any" placeholder="42.9535" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
+          <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Base Lng</label>
+            <input id="base-form-lng" type="number" step="any" placeholder="12.0022" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
+        </div>
+        <div style="margin-bottom:8px"><label style="font-size:10px;font-weight:600;color:var(--text3)">Default Airport</label>
+          <select id="base-form-airport" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></select></div>
+        <div style="margin-bottom:8px"><label style="font-size:10px;font-weight:600;color:var(--text3)">IFL Favorites URL (optional)</label>
+          <input id="base-form-ifl" type="url" placeholder="https://www.idealista.it/join-favorites-list/TOKEN" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
+        <div style="margin-bottom:10px"><label style="font-size:10px;font-weight:600;color:var(--text3)">Notes</label>
+          <textarea id="base-form-desc" rows="2" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;resize:vertical;margin-top:2px"></textarea></div>
+        <div style="display:flex;gap:8px">
+          <button class="io-btn" onclick="saveBaseForm()" style="background:var(--adriat);color:#fff;border-color:var(--adriat)">Save Base</button>
+          <button class="io-btn" onclick="closeBaseForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data -->
+    <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Data</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="io-btn" onclick="exportJSON()">⬇ Export</button>
+        <button class="io-btn" onclick="document.getElementById('import-file').click()">⬆ Import</button>
+        <button class="io-btn" onclick="closeSettingsModal();openSnapshotModal()">💾 Snapshots</button>
+      </div>
+    </div>
+
+    <!-- Airports -->
+    <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Airports</div>
+      <div id="airports-list" style="margin-bottom:8px"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end">
+        <div><label style="font-size:10px;font-weight:600;color:var(--text3)">Code</label><br><input id="apt-abbr" type="text" maxlength="5" placeholder="BLQ" style="width:56px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px"></div>
+        <div><label style="font-size:10px;font-weight:600;color:var(--text3)">Name</label><br><input id="apt-name" type="text" placeholder="Bologna Marconi" style="width:140px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px"></div>
+        <div><label style="font-size:10px;font-weight:600;color:var(--text3)">Lat</label><br><input id="apt-lat" type="number" step="any" placeholder="44.535" style="width:76px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px"></div>
+        <div><label style="font-size:10px;font-weight:600;color:var(--text3)">Lng</label><br><input id="apt-lng" type="number" step="any" placeholder="11.289" style="width:76px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px"></div>
+        <button class="io-btn" onclick="addAirport()">+ Airport</button>
+      </div>
+    </div>
+
+    <!-- Reset Base -->
+    <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">Reset Base</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Sets active properties to "Reset" status. Use the extension Sync IFL afterward to pull fresh properties.</p>
+      <div id="reset-bases-list" style="margin-bottom:8px;font-size:12px"></div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);margin-bottom:6px"><input type="checkbox" id="reset-all-chk" onchange="toggleResetAll(this.checked)"> All bases</label>
+      <button class="io-btn" onclick="performReset()" style="background:var(--terra);color:#fff;border-color:var(--terra)">↺ Reset Selected</button>
+    </div>
+
+    <!-- Templates -->
+    <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">Message Templates</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Parameters: [Property URL] [Idealista ID] [base name] [base airport] [base from date] {"- "[base to date]} [Property Name] [Town] [Price] [Rooms] [Broker] [Airport Distance]</p>
+      <div id="tpl-editor" style="display:flex;flex-direction:column;gap:10px"></div>
+      <button class="io-btn" onclick="saveTemplatesFromEditor()" style="margin-top:8px;background:var(--adriat);color:#fff;border-color:var(--adriat)">Save Templates</button>
+    </div>
+
+    <div style="text-align:right">
+      <button class="io-btn" onclick="closeSettingsModal()" style="background:var(--adriat);color:#fff;border-color:var(--adriat);padding:7px 20px;font-size:12px">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- COPY MSG MODAL -->
+<div id="copy-msg-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10003;align-items:center;justify-content:center">
+  <div style="background:#FAF7F2;border-radius:10px;padding:20px;width:min(480px,92vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+    <div style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:12px">📋 Message Copied</div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Idealista Listing</div>
+      <a id="cpm-link" href="#" target="_blank" rel="noopener" style="font-size:12px;color:var(--adriat);word-break:break-all"></a>
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase">Template</label>
+      <select id="cpm-tpl-sel" style="margin-top:3px;width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg1);color:var(--text1)" onchange="cpmUpdatePreview()"></select>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase">Message</label>
+      <textarea id="cpm-msg-preview" rows="7" style="margin-top:3px;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;background:var(--bg2);color:var(--text1);resize:vertical"></textarea>
+    </div>
+    <div id="cpm-prop-id" data-pid="" style="display:none"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-secondary" onclick="copyMsgCancel()">Cancel</button>
+      <button class="btn-primary" onclick="copyMsgDone()">Done — Mark Reached Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- SNAPSHOT MODAL -->
+<div id="snapshot-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10001;align-items:center;justify-content:center">
+  <div style="background:var(--bg);border-radius:10px;padding:20px;width:min(480px,92vw);max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h2 style="font-size:14px;font-weight:600;color:var(--text1)">Snapshots</h2>
+      <button onclick="closeSnapshotModal()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2)">✕</button>
+    </div>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">Snapshots stored on server. Use Export for offline JSON backup.</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <input id="snapshot-label" type="text" placeholder="Optional label…" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px">
+      <button class="io-btn" onclick="saveSnapshot()" style="background:var(--adriat);color:#fff;border-color:var(--adriat);white-space:nowrap">💾 Save Now</button>
+    </div>
+    <div id="snapshot-list" style="font-size:12px;color:var(--text2)">Loading…</div>
+  </div>
+</div>
+
+<script>
+// ═══ SPA v3.4.0 ══════════════════════════════════════════════════════════════
+const SPA_VERSION = 'v3.4.0';
+const API_BASE = '/api';
+const GEMINI_KEY = 'AIzaSyBmBWSxxAvawMG4noiDA7ulzm6hHtYtCAc';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`;
+
+const STATUS_OPTS = ['New','Working','Reset','Reached Out','Replied','Info Supplied',
+  'To Be Scheduled','Proposed','Scheduled','Unavailable','Unresponsive','Rejected',
+  'Duplicate','Deleted','Deleted-Idealista'];
+const ELIM_STATUSES = new Set(['Unavailable','Unresponsive','Rejected','Duplicate','Deleted','Deleted-Idealista']);
+const ACTIVE_ELIM = new Set(['Unavailable','Unresponsive','Rejected','Duplicate']); // shown under Eliminated filter but not soft-deleted
+const IFL_RESET_ELIM = new Set(['Unresponsive','Rejected','Deleted']); // set to Reset on IFL master sync
+const DRIVE_CAP = 120, VIEWING_MIN = 45, DAY_END = 19.0;
+
+// Base color palette (index → border color)
+const BASE_COLORS = ['#5B7232','#F5A623','#2C5F7A','#C0603A','#8B5CF6','#0891B2','#DC2626','#059669','#92400E','#BE185D'];
+
+const LS_KEY = 'italy_hunt_2026_v34';
+const LS_BASES = 'italy_hunt_bases_v34';
+const LS_AIRPORTS = 'italy_hunt_airports';
+
+const PERSIST_FIELDS = ['status','schedDate','schedTime','proposedDate','lastContacted',
+  'firmName','firmPhone','broker','brokerPhone','brokerEmail',
+  'location','userPlannedDate','userPlannedTime','notes','realtorUrl','sourceIfl','grp',
+  'commune','town','prov','driveTimes','name','price','rooms','size'];
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let state = { props: [], sort: 'apt-asc' };
+let state_bases = [];
+let state_airports = [];
+let _sortSel = 'apt-asc';
+let _mapObj = null, _mapInited = false;
+let _schedSortables = {};
+
+function getDefaultAirports() {
+  return [
+    { abbr:'FCO', name:'Rome Fiumicino', lat:41.8003, lng:12.2388 },
+    { abbr:'MXP', name:'Milan Malpensa',  lat:45.6306, lng:8.7231  },
+    { abbr:'FLR', name:'Florence',         lat:43.8100, lng:11.2051 },
+    { abbr:'PSA', name:'Pisa',             lat:43.6839, lng:10.3927 },
+    { abbr:'NAP', name:'Naples',           lat:40.8860, lng:14.2908 },
+  ];
+}
+
+// ─── API helpers ─────────────────────────────────────────────────────────────
+function getApiToken() { return localStorage.getItem('hh_api_key') || ''; }
+function _apiHdr() { return { 'Authorization':'Bearer '+getApiToken(), 'Content-Type':'application/json' }; }
+
+// ─── Property model ──────────────────────────────────────────────────────────
+function initProp(src = {}) {
+  const dt = src.driveTimes || {};
+  // Migrate legacy drive time fields
+  if (!Object.keys(dt).length) {
+    if (src.fco) dt['FCO'] = src.fco;
+    if (src.cdp) dt['CdP'] = src.cdp;
+    if (src.caf) dt['CaF'] = src.caf;
+    if (src.spo) dt['Spo'] = src.spo;
+    if (src.man) dt['Man'] = src.man;
+  }
+  return {
+    id: src.id || 0,
+    name: src.name || '',
+    commune: src.commune || '',
+    town: src.town || '',
+    prov: (src.prov || '').toUpperCase(),
+    price: src.price || 0,
+    rooms: src.rooms || 0,
+    size: src.size || 0,
+    grp: src.grp || (state_bases[0]?.abbr || ''),
+    url: src.url || (src.id ? `https://www.idealista.it/immobile/${src.id}/` : ''),
+    lat: src.lat != null ? src.lat : null,
+    lng: src.lng != null ? src.lng : null,
+    driveTimes: dt,
+    status: src.status || 'New',
+    schedDate: src.schedDate || '',
+    schedTime: src.schedTime || '',
+    proposedDate: src.proposedDate || '',
+    lastContacted: src.lastContacted || '',
+    firmName: src.firmName || '',
+    firmPhone: src.firmPhone || '',
+    broker: src.broker || '',
+    brokerPhone: src.brokerPhone || '',
+    brokerEmail: src.brokerEmail || '',
+    location: src.location || (src.lat && src.lng ? `${src.lat},${src.lng}` : ''),
+    userPlannedDate: src.userPlannedDate || src.plannedDate || '',
+    userPlannedTime: src.userPlannedTime || src.plannedTime || '',
+    notes: src.notes || '',
+    realtorUrl: src.realtorUrl || '',
+    sourceIfl: src.sourceIfl || '',
+    _custom: src._custom || false,
+  };
+}
+
+function getProp(id) { return state.props.find(p => String(p.id) === String(id)); }
+function getBase(abbr) { return state_bases.find(b => b.abbr === abbr); }
+function getAirport(abbr) { return state_airports.find(a => a.abbr === abbr); }
+function baseColor(abbr) {
+  const idx = state_bases.findIndex(b => b.abbr === abbr);
+  return BASE_COLORS[idx % BASE_COLORS.length] || '#888';
+}
+
+// ─── Storage ─────────────────────────────────────────────────────────────────
+async function loadFromStorage() {
+  // Load airports
+  const savedApts = localStorage.getItem(LS_AIRPORTS);
+  state_airports = savedApts ? JSON.parse(savedApts) : getDefaultAirports();
+
+  // Load bases from server
+  try {
+    const r = await fetch(API_BASE + '/bases', { headers: _apiHdr() });
+    if (r.ok) {
+      const sb = await r.json();
+      if (Array.isArray(sb) && sb.length) {
+        state_bases = sb;
+        localStorage.setItem(LS_BASES, JSON.stringify(state_bases));
+      }
+    }
+  } catch(e) {
+    const local = localStorage.getItem(LS_BASES);
+    if (local) state_bases = JSON.parse(local);
+  }
+
+  // Load props from server
+  try {
+    const r = await fetch(API_BASE + '/data', { headers: _apiHdr() });
+    if (r.ok) {
+      const data = await r.json();
+      const raw = Array.isArray(data) ? data : (data.props || []);
+      if (raw.length) {
+        state.props = raw.map(initProp);
+        localStorage.setItem(LS_KEY, JSON.stringify(state.props));
+      } else {
+        _loadLocal();
+      }
+    } else { _loadLocal(); }
+  } catch(e) { _loadLocal(); }
+
+  refreshBaseFilters();
+  populateMapDaySelect();
+  updateHeader();
+  renderProps();
+  if (_mapInited) refreshMap();
+}
+
+function _loadLocal() {
+  const local = localStorage.getItem(LS_KEY);
+  if (local) state.props = JSON.parse(local).map(initProp);
+}
+
+async function saveToStorage() {
+  localStorage.setItem(LS_KEY, JSON.stringify(state.props));
+  const el = document.getElementById('save-notice');
+  if (el) { el.style.opacity='1'; setTimeout(()=>el.style.opacity='0', 2000); }
+  try {
+    await fetch(API_BASE + '/data', { method:'PUT', headers:_apiHdr(), body:JSON.stringify(state.props) });
+  } catch(e) {}
+  updateHeader();
+}
+
+// ─── Drive time calculation ───────────────────────────────────────────────────
+async function calcDriveTimeMinutes(fromLat, fromLng, toLat, toLng) {
+  if (!fromLat || !fromLng || !toLat || !toLng) return null;
+  // Try server-side Google Maps proxy
+  try {
+    const url = `${API_BASE}/drive-time?fromLat=${fromLat}&fromLng=${fromLng}&toLat=${toLat}&toLng=${toLng}`;
+    const r = await fetch(url, { headers: _apiHdr() });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.minutes != null) return d.minutes;
+    }
+  } catch(e) {}
+  // Fallback: OSRM (free, public, CORS-enabled)
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=false`;
+    const r = await fetch(url);
+    if (r.ok) {
+      const d = await r.json();
+      const dur = d.routes?.[0]?.duration;
+      if (dur != null) return Math.round(dur / 60);
+    }
+  } catch(e) {}
+  return null;
+}
+
+async function recalcDriveTimes(p) {
+  const [pLat, pLng] = parseGPS(p.location);
+  if (!pLat) return false;
+  let changed = false;
+  // Airport drive times
+  for (const apt of state_airports) {
+    const mins = await calcDriveTimeMinutes(apt.lat, apt.lng, pLat, pLng);
+    if (mins != null) { p.driveTimes[apt.abbr] = mins; changed = true; }
+  }
+  // Base drive times
+  for (const base of state_bases) {
+    if (!base.lat || !base.lng) continue;
+    const mins = await calcDriveTimeMinutes(base.lat, base.lng, pLat, pLng);
+    if (mins != null) { p.driveTimes[base.abbr] = mins; changed = true; }
+  }
+  return changed;
+}
+
+function parseGPS(loc) {
+  if (!loc) return [null, null];
+  const m = loc.match(/(-?[\d.]+)[,\s]+(-?[\d.]+)/);
+  return m ? [parseFloat(m[1]), parseFloat(m[2])] : [null, null];
+}
+
+function getPropDriveToBase(p, baseAbbr) {
+  return p.driveTimes?.[baseAbbr] ?? null;
+}
+
+function getPropDriveToAirport(p, airportAbbr) {
+  return p.driveTimes?.[airportAbbr] ?? null;
+}
+
+function getAssignedBaseDrive(p) {
+  return getPropDriveToBase(p, p.grp);
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+function updateHeader() {
+  const total = state.props.length;
+  const elim = state.props.filter(p => ELIM_STATUSES.has(p.status)).length;
+  const active = total - elim;
+  const el = document.getElementById('header-sub');
+  if (el) el.textContent = `${active} of ${total} · ${elim} eliminated · ${SPA_VERSION}`;
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => { p.classList.remove('active'); p.style.display=''; });
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById('tab-'+name);
+  const tabs = document.querySelectorAll('.tab');
+  const idx = ['props','schedule','map','gemini'].indexOf(name);
+  if (panel) { panel.classList.add('active'); }
+  if (idx >= 0 && tabs[idx]) tabs[idx].classList.add('active');
+  if (name === 'schedule') renderSchedule();
+  if (name === 'map') { if (!_mapInited) initMap(); else refreshMap(); }
+  if (name === 'gemini') updateGeminiContext();
+}
+
+// ─── Base filter / sort ───────────────────────────────────────────────────────
+function refreshBaseFilters() {
+  ['f-base','map-base','add-grp','dm-grp'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const isGrp = (id === 'add-grp' || id === 'dm-grp');
+    const cur = el.value;
+    el.innerHTML = (isGrp ? '' : '<option value="">All</option>') +
+      state_bases.map(b => `<option value="${b.abbr}">${b.name} (${b.abbr})</option>`).join('');
+    if (cur) el.value = cur;
+  });
+  renderProps();
+}
+
+function setSortSel(v) { _sortSel = v; renderProps(); }
+
+function _sortProps(arr) {
+  const [field, dir] = _sortSel.split('-');
+  const asc = dir === 'asc' ? 1 : -1;
+  return [...arr].sort((a, b) => {
+    let av, bv;
+    if (field === 'apt') {
+      const base = getBase(a.grp);
+      const apt = base?.airport || 'FCO';
+      av = getPropDriveToAirport(a, apt) ?? 999;
+      bv = getPropDriveToAirport(b, base?.airport || 'FCO') ?? 999;
+    } else if (field === 'price') { av = a.price; bv = b.price; }
+    else if (field === 'base') { av = a.grp; bv = b.grp; }
+    else if (field === 'planned') { av = a.userPlannedDate || 'zzzz'; bv = b.userPlannedDate || 'zzzz'; }
+    else if (field === 'sched') { av = a.schedDate || 'zzzz'; bv = b.schedDate || 'zzzz'; }
+    else if (field === 'status') {
+      av = STATUS_OPTS.indexOf(a.status); bv = STATUS_OPTS.indexOf(b.status);
+    }
+    if (av < bv) return -asc; if (av > bv) return asc; return 0;
+  });
+}
+
+function _filterProps() {
+  const statusF = document.getElementById('f-status')?.value || '';
+  const baseF = document.getElementById('f-base')?.value || '';
+  const searchF = (document.getElementById('f-search')?.value || '').toLowerCase();
+  return state.props.filter(p => {
+    if (statusF === '') {
+      if (ELIM_STATUSES.has(p.status)) return false;
+    } else if (statusF === 'ALL') {
+      // show all
+    } else if (statusF === 'ELIM') {
+      if (!ELIM_STATUSES.has(p.status)) return false;
+    } else {
+      if (p.status !== statusF) return false;
+    }
+    if (baseF && p.grp !== baseF) return false;
+    if (searchF) {
+      const hay = `${p.name} ${p.commune} ${p.town} ${p.prov} ${p.broker} ${p.firmName} ${p.notes}`.toLowerCase();
+      if (!hay.includes(searchF)) return false;
+    }
+    return true;
+  });
+}
+
+// ─── Render tiles ────────────────────────────────────────────────────────────
+function renderProps() {
+  const container = document.getElementById('tiles-container');
+  if (!container) return;
+  const filtered = _filterProps();
+  const sorted = _sortProps(filtered);
+
+  const countEl = document.getElementById('result-count');
+  if (countEl) countEl.textContent = `${sorted.length} of ${state.props.filter(p=>!ELIM_STATUSES.has(p.status)).length} active`;
+
+  // Group by base
+  const groups = {};
+  for (const p of sorted) {
+    if (!groups[p.grp]) groups[p.grp] = [];
+    groups[p.grp].push(p);
+  }
+
+  let html = '';
+  const bases = state_bases.length ? state_bases : [{ abbr:'', name:'Ungrouped' }];
+  const baseOrder = bases.map(b => b.abbr);
+  const groupKeys = [...new Set([...baseOrder, ...Object.keys(groups)])].filter(k => groups[k]);
+
+  for (const grp of groupKeys) {
+    const base = getBase(grp);
+    const props = groups[grp] || [];
+    if (!props.length) continue;
+    html += `<div class="tiles-section-header" style="border-left:3px solid ${baseColor(grp)};padding-left:6px">${base?.name || grp} (${props.length})</div>`;
+    for (const p of props) html += renderTile(p);
+  }
+  // Ungrouped (no matching base)
+  const ungrouped = sorted.filter(p => !groupKeys.includes(p.grp));
+  if (ungrouped.length) {
+    html += `<div class="tiles-section-header">Other (${ungrouped.length})</div>`;
+    for (const p of ungrouped) html += renderTile(p);
+  }
+
+  container.innerHTML = html;
+}
+
+function renderTile(p) {
+  const base = getBase(p.grp);
+  const bColor = baseColor(p.grp);
+  const stCls = {
+    'Reached Out':'st-reached','Replied':'st-replied','Info Supplied':'st-info',
+    'To Be Scheduled':'st-tbs','Proposed':'st-proposed','Scheduled':'st-scheduled',
+    'Unavailable':'st-unavailable','Unresponsive':'st-unresponsive','Rejected':'st-rejected',
+    'Deleted-Idealista':'st-deleted-idealista','Deleted':'st-deleted','Duplicate':'st-duplicate'
+  }[p.status] || '';
+
+  const apt = base?.airport || 'FCO';
+  const aptDrive = getPropDriveToAirport(p, apt);
+  const baseDrive = getPropDriveToBase(p, p.grp);
+  const driveStr = [
+    aptDrive != null ? `✈ ${apt} ${aptDrive}m` : null,
+    baseDrive != null ? `📍 ${p.grp} ${baseDrive}m` : null
+  ].filter(Boolean).join(' · ') || '—';
+
+  const location = p.location || (p.lat && p.lng ? `${p.lat},${p.lng}` : '');
+  const mapUrl = location
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`
+    : (p.town ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.town + (p.prov ? ' ' + p.prov : '') + ' Italy')}` : '');
+
+  const commune = p.commune ? `${p.commune}, ` : '';
+  const locLine = `${commune}${p.town}${p.prov ? ' ('+p.prov+')' : ''}`;
+
+  let chips = '';
+  if (p.schedDate) chips += `<span class="tile-date-chip sched-chip">📅 ${p.schedDate}${p.schedTime ? ' '+p.schedTime : ''}</span>`;
+  else if (p.userPlannedDate) chips += `<span class="tile-date-chip planned-chip">🗓 ${p.userPlannedDate}${p.userPlannedTime ? ' '+p.userPlannedTime : ''}</span>`;
+
+  const priceStr = p.price ? `€${p.price}k` : '€—';
+  const roomsStr = p.rooms ? `${p.rooms} rm` : '';
+  const sizeStr = p.size ? `${p.size}m²` : '';
+  const specs = [priceStr, roomsStr, sizeStr].filter(Boolean).join(' · ');
+
+  return `<div class="tile ${stCls}" style="border-left-color:${bColor}" id="tile-${p.id}">
+  <div class="tile-body">
+    <div class="tile-name"><a href="${p.url||'#'}" target="_blank" rel="noopener">${escHtml(p.name||'Unnamed')}</a>${mapUrl ? ` <a href="${mapUrl}" target="_blank" rel="noopener" title="Map" style="font-size:10px;color:var(--text3)">🗺</a>` : ''}</div>
+    <div class="tile-sub">${escHtml(locLine)}</div>
+    <div class="tile-drive" title="Drive times">${driveStr}</div>
+    <div style="font-size:11px;color:var(--text2);margin-top:1px">${specs}</div>
+    <div class="tile-status-row">
+      <select class="status-sel" onchange="quickStatus(${p.id},this.value)" title="Status">
+        ${STATUS_OPTS.map(s=>`<option${s===p.status?' selected':''}>${s}</option>`).join('')}
+      </select>
+      ${chips}
+    </div>
+    <div class="tile-actions">
+      <button class="t-btn t-btn-blue" onclick="openDetailModal(${p.id})">✏️ Details</button>
+      ${p.url ? `<button class="t-btn t-btn-olive" onclick="openCopyMsg(${p.id})">📋 Msg</button>` : ''}
+      ${ELIM_STATUSES.has(p.status) ? `<button class="t-btn t-btn-restore" onclick="quickStatus(${p.id},'New')">↩ Restore</button>` : `<button class="t-btn t-btn-red" onclick="quickStatus(${p.id},'Deleted')">✕ Delete</button>`}
+    </div>
+  </div>
+</div>`;
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function quickStatus(id, status) {
+  const p = getProp(id);
+  if (!p) return;
+  p.status = status;
+  saveToStorage();
+  renderProps();
+}
+
+// ─── Property Detail Modal ────────────────────────────────────────────────────
+let _dmPropId = null, _dmDirty = false;
+
+function openDetailModal(id) {
+  const p = getProp(id);
+  if (!p) return;
+  _dmPropId = id; _dmDirty = false;
+
+  document.getElementById('detail-modal-title').textContent = p.name || 'Property Details';
+  const urlEl = document.getElementById('dm-url-link');
+  urlEl.href = p.url || '#'; urlEl.textContent = p.url || '—';
+
+  _dv('dm-name', p.name);
+  _dv('dm-location', p.location || (p.lat&&p.lng ? `${p.lat},${p.lng}` : ''));
+  _dv('dm-commune', p.commune);
+  _dv('dm-town', p.town);
+  _dv('dm-prov', p.prov);
+  _dv('dm-price', p.price || '');
+  _dv('dm-rooms', p.rooms || '');
+  _dv('dm-size', p.size || '');
+  _dv('dm-firm-name', p.firmName);
+  _dv('dm-firm-phone', p.firmPhone);
+  _dv('dm-realtor-url', p.realtorUrl);
+  _dv('dm-broker', p.broker);
+  _dv('dm-broker-phone', p.brokerPhone);
+  _dv('dm-broker-email', p.brokerEmail);
+  _dv('dm-planned-date', p.userPlannedDate);
+  _dv('dm-planned-time', p.userPlannedTime);
+  _dv('dm-proposed-date', p.proposedDate);
+  _dv('dm-last-contacted', p.lastContacted);
+  _dv('dm-sched-date', p.schedDate);
+  _dv('dm-sched-time', p.schedTime);
+  _dv('dm-notes', p.notes);
+
+  const stSel = document.getElementById('dm-status');
+  stSel.innerHTML = STATUS_OPTS.map(s=>`<option${s===p.status?' selected':''}>${s}</option>`).join('');
+  const grpSel = document.getElementById('dm-grp');
+  grpSel.innerHTML = state_bases.map(b=>`<option value="${b.abbr}"${b.abbr===p.grp?' selected':''}>${b.name}</option>`).join('');
+
+  renderDmDriveTimes(p);
+  document.getElementById('dm-status-msg').textContent = '';
+  document.getElementById('dm-save-btn').disabled = true;
+  document.getElementById('detail-modal').style.display = 'flex';
+}
+
+function _dv(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val != null ? val : '';
+}
+
+function renderDmDriveTimes(p) {
+  const el = document.getElementById('dm-drive-times');
+  if (!el) return;
+  const dt = p.driveTimes || {};
+  const keys = Object.keys(dt);
+  if (!keys.length) {
+    el.textContent = 'No drive times. Enter GPS and click ⟳ Drive Times.';
+    return;
+  }
+  const pairs = keys.map(k => {
+    const apt = getAirport(k);
+    const base = getBase(k);
+    const label = apt ? `✈ ${k}` : (base ? `📍 ${k}` : k);
+    const mins = dt[k];
+    const cls = mins > DRIVE_CAP ? 'drive-hot' : '';
+    return `<span class="${cls}" style="margin-right:12px">${label}: ${mins}m</span>`;
+  }).join('');
+  el.innerHTML = pairs;
+}
+
+function dmMarkDirty() {
+  if (!_dmDirty) { _dmDirty = true; document.getElementById('dm-save-btn').disabled = false; }
+}
+
+async function dmRecalcDrives() {
+  const p = getProp(_dmPropId);
+  if (!p) return;
+  const locVal = document.getElementById('dm-location')?.value || '';
+  p.location = locVal;
+  const [lat, lng] = parseGPS(locVal);
+  if (!lat) { alert('Enter valid GPS coordinates (lat,lng) first.'); return; }
+  p.lat = lat; p.lng = lng;
+
+  const btn = document.getElementById('dm-recalc-btn');
+  if (btn) btn.textContent = '⟳ Calculating…';
+  const ok = await recalcDriveTimes(p);
+  if (btn) btn.textContent = '⟳ Drive Times';
+  if (ok) {
+    renderDmDriveTimes(p);
+    dmMarkDirty();
+    document.getElementById('dm-status-msg').textContent = 'Drive times updated.';
+  } else {
+    document.getElementById('dm-status-msg').textContent = 'Could not calculate drive times.';
+  }
+}
+
+function saveDetailModal() {
+  const p = getProp(_dmPropId);
+  if (!p) return;
+  p.name = document.getElementById('dm-name')?.value.trim() || p.name;
+  p.location = document.getElementById('dm-location')?.value.trim() || '';
+  const [lat, lng] = parseGPS(p.location);
+  if (lat) { p.lat = lat; p.lng = lng; }
+  p.commune = document.getElementById('dm-commune')?.value.trim() || '';
+  p.town = document.getElementById('dm-town')?.value.trim() || '';
+  p.prov = (document.getElementById('dm-prov')?.value.trim() || '').toUpperCase();
+  p.price = parseFloat(document.getElementById('dm-price')?.value) || 0;
+  p.rooms = parseInt(document.getElementById('dm-rooms')?.value) || 0;
+  p.size = parseInt(document.getElementById('dm-size')?.value) || 0;
+  p.firmName = document.getElementById('dm-firm-name')?.value.trim() || '';
+  p.firmPhone = document.getElementById('dm-firm-phone')?.value.trim() || '';
+  p.realtorUrl = document.getElementById('dm-realtor-url')?.value.trim() || '';
+  p.broker = document.getElementById('dm-broker')?.value.trim() || '';
+  p.brokerPhone = document.getElementById('dm-broker-phone')?.value.trim() || '';
+  p.brokerEmail = document.getElementById('dm-broker-email')?.value.trim() || '';
+  p.status = document.getElementById('dm-status')?.value || p.status;
+  p.grp = document.getElementById('dm-grp')?.value || p.grp;
+  p.userPlannedDate = document.getElementById('dm-planned-date')?.value || '';
+  p.userPlannedTime = document.getElementById('dm-planned-time')?.value || '';
+  p.proposedDate = document.getElementById('dm-proposed-date')?.value || '';
+  p.lastContacted = document.getElementById('dm-last-contacted')?.value || '';
+  p.schedDate = document.getElementById('dm-sched-date')?.value || '';
+  p.schedTime = document.getElementById('dm-sched-time')?.value || '';
+  p.notes = document.getElementById('dm-notes')?.value || '';
+  _dmDirty = false;
+  document.getElementById('dm-save-btn').disabled = true;
+  document.getElementById('dm-status-msg').textContent = 'Saved ✓';
+  saveToStorage();
+  renderProps();
+}
+
+function closeDetailModal() {
+  if (_dmDirty && !confirm('Discard unsaved changes?')) return;
+  document.getElementById('detail-modal').style.display = 'none';
+  _dmPropId = null; _dmDirty = false;
+}
+
+// ─── Add Property Modal ───────────────────────────────────────────────────────
+function openAddModal(prefill = {}) {
+  const grpSel = document.getElementById('add-grp');
+  if (grpSel) grpSel.innerHTML = state_bases.map(b=>`<option value="${b.abbr}">${b.name}</option>`).join('');
+  ['add-url','add-name','add-commune','add-town','add-prov','add-price','add-rooms',
+   'add-size','add-loc','add-broker','add-phone','add-firm-name','add-firm-phone',
+   'add-realtorUrl','add-notes'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('add-note').textContent = '';
+  document.getElementById('add-fetch-status').style.display = 'none';
+  if (prefill.id) {
+    _sv('add-id', prefill.id);
+    _sv('add-url', prefill.url || `https://www.idealista.it/immobile/${prefill.id}/`);
+    _sv('add-name', prefill.title || '');
+    _sv('add-commune', prefill.commune || '');
+    _sv('add-town', prefill.town || '');
+    _sv('add-prov', prefill.prov || '');
+    _sv('add-price', prefill.price || '');
+    _sv('add-rooms', prefill.rooms || '');
+    _sv('add-size', prefill.size || '');
+    _sv('add-loc', prefill.location || '');
+    _sv('add-broker', prefill.broker || '');
+    _sv('add-phone', prefill.phone || '');
+    _sv('add-realtorUrl', prefill.realtorUrl || '');
+  }
+  document.getElementById('add-modal').style.display = 'flex';
+}
+
+function _sv(id, val) { const el=document.getElementById(id); if(el&&val!=null) el.value=val; }
+function closeAddModal() { document.getElementById('add-modal').style.display = 'none'; }
+
+function onAddUrlChange() {
+  const url = (document.getElementById('add-url')?.value || '').trim();
+  const m = url.match(/idealista\.it\/(?:en\/)?immobile\/(\d+)/);
+  if (m) { document.getElementById('add-id').value = m[1]; }
+}
+
+async function confirmAddProperty() {
+  const name = (document.getElementById('add-name')?.value || '').trim();
+  const town = (document.getElementById('add-town')?.value || '').trim();
+  const price = parseFloat(document.getElementById('add-price')?.value) || 0;
+  if (!name) { alert('Property Name is required.'); return; }
+  const url = (document.getElementById('add-url')?.value || '').trim();
+  const idEl = document.getElementById('add-id');
+  let id = parseInt(idEl?.value);
+  if (!id) { id = Math.floor(Date.now() / 1000); }
+  if (getProp(id)) { alert(`Property ${id} already exists.`); return; }
+  const grp = document.getElementById('add-grp')?.value || state_bases[0]?.abbr || '';
+  const loc = (document.getElementById('add-loc')?.value || '').trim();
+  const [lat, lng] = parseGPS(loc);
+  const np = initProp({
+    id, name, url: url || `https://www.idealista.it/immobile/${id}/`,
+    commune: (document.getElementById('add-commune')?.value||'').trim(),
+    town, prov: (document.getElementById('add-prov')?.value||'').toUpperCase(),
+    price, rooms: parseInt(document.getElementById('add-rooms')?.value)||0,
+    size: parseInt(document.getElementById('add-size')?.value)||0,
+    grp, location: loc, lat, lng,
+    firmName: (document.getElementById('add-firm-name')?.value||'').trim(),
+    firmPhone: (document.getElementById('add-firm-phone')?.value||'').trim(),
+    broker: (document.getElementById('add-broker')?.value||'').trim(),
+    brokerPhone: (document.getElementById('add-phone')?.value||'').trim(),
+    realtorUrl: (document.getElementById('add-realtorUrl')?.value||'').trim(),
+    notes: (document.getElementById('add-notes')?.value||'').trim(),
+    _custom: true,
+  });
+  state.props.push(np);
+  closeAddModal();
+  await saveToStorage();
+  renderProps();
+  // Auto-calc drive times if GPS provided
+  if (lat) { await recalcDriveTimes(np); await saveToStorage(); renderProps(); }
+}
+
+// ─── Templates ───────────────────────────────────────────────────────────────
+const DEFAULT_TEMPLATES = [
+`We are looking for a 4+ bedroom, 4+ bathroom casale within a two hour drive of [base airport]. The house should NOT be divided into apartments, though an annex with 1 or 2 bedrooms or a small service apartment in the main house are fine. We would ideally be a 5-minute drive (and no more than a 10-minute drive) to a town with a bar and restaurant. Our budget is 800,000 euros (or a little more if it is in move-in condition with modern, US-like bathrooms).
+
+We will be in [base name] [base from date]{" - "[base to date]} looking at properties. If [Property URL] is available to see, please send a Google Map link or coordinates with the exact property location, as well as a satellite image showing the property boundary.
+
+Please contact us by WhatsApp if you have any questions.
+
+Thank you.
+
+Dan
++39 331 980 5272`, '', ''];
+
+function getTemplates() {
+  try {
+    const s = localStorage.getItem('hh_templates');
+    if (s) { const t = JSON.parse(s); if (Array.isArray(t)) return [...t, ...DEFAULT_TEMPLATES].slice(0,3); }
+  } catch(e) {}
+  return [...DEFAULT_TEMPLATES];
+}
+
+function saveTemplates(tpls) { localStorage.setItem('hh_templates', JSON.stringify(tpls)); }
+
+function _fmtDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { month:'long', day:'numeric' });
+}
+
+function applyTemplate(tpl, p) {
+  const date = p.userPlannedDate || p.schedDate || '';
+  // Find base for this property's planned date, or use assigned base
+  let base = date ? getTripDays().find(d => d.date === date && d.base)?.baseObj : null;
+  if (!base) base = getBase(p.grp);
+  const apt = base?.airport || 'FCO';
+  const bName = base?.name || '';
+  const fromDate = base?.visitFrom ? _fmtDate(base.visitFrom) : '';
+  const toDate = (base?.visitTo && base.visitTo !== base.visitFrom) ? _fmtDate(base.visitTo) : '';
+  const aptDrive = getPropDriveToAirport(p, apt);
+
+  let result = tpl
+    .replace(/\[base airport\]/gi, apt)
+    .replace(/\[base name\]/gi, bName)
+    .replace(/\[base from date\]/gi, fromDate)
+    .replace(/\[Property URL\]/gi, p.url || '')
+    .replace(/\[Idealista ID\]/gi, String(p.id || ''))
+    .replace(/\[Property Name\]/gi, p.name || '')
+    .replace(/\[Town\]/gi, p.town || '')
+    .replace(/\[Price\]/gi, p.price ? `€${p.price}k` : '')
+    .replace(/\[Rooms\]/gi, String(p.rooms || ''))
+    .replace(/\[Broker\]/gi, p.broker || p.firmName || '')
+    .replace(/\[Airport Distance\]/gi, aptDrive ? `${aptDrive}min from ${apt}` : '');
+  // Conditional: {"LITERAL"[base to date]}
+  result = result.replace(/\{"([^"]+)"\[base to date\]\}/g,
+    toDate ? (_, lit) => lit + toDate : () => '');
+  // Also handle {" - "[base to date]} variant without quotes in template
+  result = result.replace(/\{ ?- ?\[base to date\]\}/gi, toDate ? ` - ${toDate}` : '');
+  return result;
+}
+
+// ─── Copy Message Modal ───────────────────────────────────────────────────────
+function openCopyMsg(id) {
+  const p = getProp(id);
+  if (!p) return;
+  const tpls = getTemplates();
+  const linkEl = document.getElementById('cpm-link');
+  linkEl.href = p.url || '#'; linkEl.textContent = p.url || '—';
+  const sel = document.getElementById('cpm-tpl-sel');
+  sel.innerHTML = tpls.map((t,i) => `<option value="${i}">Template ${i+1}${t ? '' : ' (empty)'}</option>`).join('');
+  document.getElementById('cpm-prop-id').dataset.pid = id;
+  cpmUpdatePreview();
+  document.getElementById('copy-msg-modal').style.display = 'flex';
+}
+
+function cpmUpdatePreview() {
+  const pid = document.getElementById('cpm-prop-id').dataset.pid;
+  const p = getProp(pid); if (!p) return;
+  const tpls = getTemplates();
+  const idx = parseInt(document.getElementById('cpm-tpl-sel').value) || 0;
+  const msg = applyTemplate(tpls[idx] || '', p);
+  const ta = document.getElementById('cpm-msg-preview');
+  ta.value = msg;
+  if (msg) { navigator.clipboard?.writeText(msg).catch(()=>{}); }
+}
+
+function copyMsgCancel() { document.getElementById('copy-msg-modal').style.display='none'; }
+
+function copyMsgDone() {
+  const pid = document.getElementById('cpm-prop-id').dataset.pid;
+  const p = getProp(pid);
+  if (p && p.status === 'New') {
+    p.status = 'Reached Out'; p.lastContacted = new Date().toISOString().slice(0,10);
+    saveToStorage(); renderProps();
+  }
+  document.getElementById('copy-msg-modal').style.display='none';
+}
+
+// ─── Schedule ─────────────────────────────────────────────────────────────────
+function getTripDays() {
+  const days = [];
+  const today = new Date().toISOString().slice(0,10);
+  for (const base of state_bases) {
+    if (base.active === false || !base.visitFrom) continue;
+    const start = new Date(base.visitFrom + 'T12:00:00');
+    const end = base.visitTo ? new Date(base.visitTo + 'T12:00:00') : start;
+    let d = new Date(start);
+    while (d <= end) {
+      const dateStr = d.toISOString().slice(0,10);
+      const label = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+      days.push({ date: dateStr, label, base: base.abbr, baseObj: base, startH: 8.5, note: '', isPast: dateStr < today });
+      d.setDate(d.getDate() + 1);
+    }
+  }
+  days.sort((a,b) => a.date.localeCompare(b.date));
+  return days;
+}
+
+function populateMapDaySelect() {
+  const sel = document.getElementById('map-day');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">All days</option>' +
+    getTripDays().map(d => `<option value="${d.date}">${d.label}</option>`).join('');
+}
+
+function renderSchedule() {
+  const container = document.getElementById('days-container');
+  if (!container) return;
+  const view = document.getElementById('sched-view')?.value || 'all';
+  const showOld = document.getElementById('sched-show-old')?.checked || false;
+  const days = getTripDays();
+
+  if (!days.length) {
+    container.innerHTML = '<p style="font-size:12px;color:var(--text3);padding:20px 0">No trip days configured. Add bases with Visit From dates in Settings.</p>';
+    return;
+  }
+
+  // Build per-day property lists
+  const schedByDate = {}, plannedByDate = {};
+  for (const p of state.props) {
+    if (ELIM_STATUSES.has(p.status)) continue;
+    if (p.schedDate) { if (!schedByDate[p.schedDate]) schedByDate[p.schedDate]=[];  schedByDate[p.schedDate].push(p); }
+    if (p.userPlannedDate && !p.schedDate) { if (!plannedByDate[p.userPlannedDate]) plannedByDate[p.userPlannedDate]=[]; plannedByDate[p.userPlannedDate].push(p); }
+  }
+
+  let html = '';
+  for (const day of days) {
+    if (day.isPast && !showOld) continue;
+    const sched = schedByDate[day.date] || [];
+    const planned = plannedByDate[day.date] || [];
+    const combined = view === 'scheduled' ? sched : view === 'planned' ? planned : [...sched, ...planned];
+    if (!combined.length && view !== 'all') continue;
+
+    const base = day.baseObj || getBase(day.base);
+    const bColor = baseColor(day.base);
+    // Calculate total drive time for day (rough estimate)
+    let totalDrive = day.startH * 60;
+    const dayItems = [...sched, ...planned];
+    let hasConflict = false, hasWarning = false;
+    for (const p of dayItems) {
+      const dt = getPropDriveToBase(p, day.base);
+      if (dt && dt > DRIVE_CAP) hasConflict = true;
+      else if (dt && dt > DRIVE_CAP * 0.85) hasWarning = true;
+    }
+
+    const conflictCls = hasConflict ? 'has-conflict' : hasWarning ? 'has-warning' : '';
+    html += `<div class="day-card ${conflictCls}" id="day-${day.date}">
+  <div class="day-header" onclick="this.closest('.day-card').classList.toggle('collapsed')">
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="day-label">${day.label}</span>
+      <span class="day-base" style="color:${bColor}">${base?.name || day.base}</span>
+      ${day.isPast ? '<span style="font-size:9px;color:var(--text3);font-style:italic">past</span>' : ''}
+    </div>
+    <div class="day-meta">
+      <span style="font-size:11px;color:var(--text3)">${dayItems.length} props</span>
+    </div>
+  </div>
+  <div class="drop-zone" id="drop-${day.date}" data-date="${day.date}" data-base="${day.base}">`;
+    if (!dayItems.length) {
+      html += `<div class="empty-day">No properties planned</div>`;
+    }
+    // Sort by time
+    const sortedItems = [...dayItems].sort((a,b) => {
+      const at = a.schedDate===day.date ? a.schedTime : a.userPlannedTime;
+      const bt = b.schedDate===day.date ? b.schedTime : b.userPlannedTime;
+      return (at||'').localeCompare(bt||'');
+    });
+    for (const p of sortedItems) {
+      const isLocked = p.schedDate === day.date;
+      const time = isLocked ? p.schedTime : p.userPlannedTime;
+      const dt = getPropDriveToBase(p, day.base);
+      const driveClass = dt == null ? '' : dt > DRIVE_CAP ? 'drive-chip-over' : dt > DRIVE_CAP * 0.75 ? 'drive-chip-warn' : '';
+      const loc = p.location || (p.lat&&p.lng ? `${p.lat},${p.lng}` : '');
+      const mapUrl = loc
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`
+        : (p.town ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.town+' Italy')}` : '');
+      html += `<div class="stop-row${isLocked?' sched-locked':''}" data-pid="${p.id}">
+    <span class="drag-handle">⠿</span>
+    <span class="stop-time">${time||'—'}</span>
+    <span class="stop-name" title="${escHtml(p.name)}">${escHtml(p.name)}</span>
+    ${isLocked ? '<span class="sched-badge">✓</span>' : ''}
+    ${dt != null ? `<span class="drive-chip ${driveClass}">${dt}m</span>` : ''}
+    ${mapUrl ? `<a href="${mapUrl}" target="_blank" rel="noopener" class="mapit-btn">🗺</a>` : '<span class="mapit-btn disabled">🗺</span>'}
+    <button class="t-btn t-btn-blue" style="font-size:9px;padding:1px 5px" onclick="openDetailModal(${p.id})">✏</button>
+  </div>`;
+    }
+    html += `</div></div>`;
+  }
+
+  // Unscheduled zone
+  const unscheduled = state.props.filter(p => !ELIM_STATUSES.has(p.status) && !p.schedDate && !p.userPlannedDate);
+  if (unscheduled.length) {
+    html += `<div class="zone-card" id="zone-unsched">
+  <div class="zone-header" onclick="this.closest('.zone-card').classList.toggle('collapsed')">
+    <span class="zone-label">Unscheduled (${unscheduled.length})</span><span>▸</span>
+  </div>
+  <div class="zone-drop" id="drop-unscheduled" data-date="" data-base="">
+    ${unscheduled.map(p => `<div class="zone-row" data-pid="${p.id}">
+      <span class="drag-handle">⠿</span>
+      <span class="stop-name">${escHtml(p.name)}</span>
+      <span style="font-size:10px;color:var(--text3)">${p.grp}</span>
+      <button class="t-btn t-btn-blue" style="font-size:9px;padding:1px 5px" onclick="openDetailModal(${p.id})">✏</button>
+    </div>`).join('')}
+  </div>
+</div>`;
+  }
+
+  // Eliminated zone
+  const elim = state.props.filter(p => ELIM_STATUSES.has(p.status));
+  if (elim.length) {
+    html += `<div class="zone-card elim-zone" id="zone-elim">
+  <div class="zone-header" onclick="this.closest('.zone-card').classList.toggle('collapsed')">
+    <span class="zone-label" style="color:var(--red)">Eliminated (${elim.length})</span><span>▸</span>
+  </div>
+  <div class="zone-drop" style="pointer-events:none">
+    ${elim.map(p => `<div class="zone-row" data-pid="${p.id}">
+      <span class="stop-name" style="opacity:.6">${escHtml(p.name)}</span>
+      <span style="font-size:10px;color:var(--red)">${p.status}</span>
+      <button class="t-btn t-btn-restore" style="font-size:9px;padding:1px 5px" onclick="quickStatus(${p.id},'New')">↩</button>
+    </div>`).join('')}
+  </div>
+</div>`;
+  }
+
+  container.innerHTML = html;
+  _initSchedDnd();
+}
+
+function _initSchedDnd() {
+  document.querySelectorAll('.drop-zone').forEach(zone => {
+    const date = zone.dataset.date;
+    const base = zone.dataset.base;
+    if (_schedSortables[zone.id]) { _schedSortables[zone.id].destroy(); }
+    _schedSortables[zone.id] = new Sortable(zone, {
+      group: 'schedule',
+      animation: 150,
+      handle: '.drag-handle',
+      onEnd: evt => {
+        const pid = evt.item.dataset.pid;
+        const toDate = evt.to.dataset.date;
+        const p = getProp(pid);
+        if (!p) return;
+        if (p.schedDate) return; // locked
+        p.userPlannedDate = toDate || '';
+        p.userPlannedTime = '';
+        saveToStorage();
+      }
+    });
+  });
+  const unzone = document.getElementById('drop-unscheduled');
+  if (unzone && !_schedSortables['drop-unscheduled']) {
+    _schedSortables['drop-unscheduled'] = new Sortable(unzone, {
+      group: 'schedule', animation: 150, handle: '.drag-handle',
+      onEnd: evt => {
+        const pid = evt.item.dataset.pid;
+        const p = getProp(pid);
+        if (p && !p.schedDate) { p.userPlannedDate = ''; saveToStorage(); }
+      }
+    });
+  }
+}
+
+// ─── Map ─────────────────────────────────────────────────────────────────────
+function initMap() {
+  if (_mapInited) return;
+  _mapObj = L.map('map').setView([42.85, 12.0], 8);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 18
+  }).addTo(_mapObj);
+  _mapInited = true;
+  // Populate base filter
+  const mapBase = document.getElementById('map-base');
+  if (mapBase) mapBase.innerHTML = '<option value="">All</option>' +
+    state_bases.map(b=>`<option value="${b.abbr}">${b.name}</option>`).join('');
+  refreshMap();
+}
+
+function refreshMap() {
+  if (!_mapInited || !_mapObj) return;
+  _mapObj.eachLayer(l => { if (l instanceof L.Marker || l instanceof L.Polyline) _mapObj.removeLayer(l); });
+
+  const schedOnly = document.getElementById('map-sched')?.checked;
+  const baseF = document.getElementById('map-base')?.value || '';
+  const dayF = document.getElementById('map-day')?.value || '';
+  const grpFilters = document.getElementById('map-grp-filters');
+  if (grpFilters) grpFilters.innerHTML = '';
+
+  // Base markers
+  for (const base of state_bases) {
+    if (!base.lat || !base.lng) continue;
+    const color = baseColor(base.abbr);
+    const icon = L.divIcon({ html:`<div style="background:${color};color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)">${base.abbr}</div>`, iconSize:[28,28], className:'' });
+    L.marker([base.lat, base.lng], { icon }).addTo(_mapObj)
+      .bindPopup(`<b>★ ${base.name}</b><br>${base.visitFrom||''}${base.visitTo&&base.visitTo!==base.visitFrom?' – '+base.visitTo:''}`);
+  }
+
+  // Property markers
+  const props = state.props.filter(p => {
+    if (ELIM_STATUSES.has(p.status)) return false;
+    if (!p.lat && !p.lng) return false;
+    if (baseF && p.grp !== baseF) return false;
+    if (schedOnly && !p.schedDate) return false;
+    if (dayF && p.schedDate !== dayF && p.userPlannedDate !== dayF) return false;
+    return true;
+  });
+
+  const dayRoute = {};
+  for (const p of props) {
+    const [lat, lng] = p.lat ? [p.lat, p.lng] : parseGPS(p.location);
+    if (!lat) continue;
+    const color = baseColor(p.grp);
+    const icon = L.divIcon({
+      html:`<div style="background:${color};border-radius:50%;width:10px;height:10px;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>`,
+      iconSize:[10,10], className:''
+    });
+    const apt = getBase(p.grp)?.airport || 'FCO';
+    const aptDrive = getPropDriveToAirport(p, apt);
+    const baseDrive = getPropDriveToBase(p, p.grp);
+    L.marker([lat,lng],{icon}).addTo(_mapObj).bindPopup(
+      `<b>${escHtml(p.name)}</b><br>${escHtml(p.commune||'')}${p.commune?', ':''}${escHtml(p.town)} (${p.prov})<br>€${p.price}k · ${p.rooms}rm<br>`+
+      `${aptDrive!=null?`✈ ${apt}: ${aptDrive}m<br>`:''}${baseDrive!=null?`📍 ${p.grp}: ${baseDrive}m`:''}`
+    );
+    // Track for day route
+    const routeDate = p.schedDate || p.userPlannedDate;
+    if (routeDate) {
+      if (!dayRoute[routeDate]) dayRoute[routeDate] = [];
+      dayRoute[routeDate].push([lat,lng]);
+    }
+  }
+
+  // Draw routes
+  for (const date of Object.keys(dayRoute)) {
+    if (dayF && date !== dayF) continue;
+    L.polyline(dayRoute[date], { color:'#2C5F7A', weight:2, opacity:.6, dashArray:'5,5' }).addTo(_mapObj);
+  }
+
+  // Fit bounds
+  const allLatLngs = props.map(p => p.lat ? [p.lat,p.lng] : parseGPS(p.location)).filter(ll=>ll[0]);
+  state_bases.filter(b=>b.lat&&b.lng).forEach(b=>allLatLngs.push([b.lat,b.lng]));
+  if (allLatLngs.length > 1) _mapObj.fitBounds(allLatLngs, { padding:[30,30] });
+  else if (allLatLngs.length === 1) _mapObj.setView(allLatLngs[0], 12);
+}
+
+// ─── Gemini ──────────────────────────────────────────────────────────────────
+function updateGeminiContext() {
+  const histEl = document.getElementById('gem-history');
+  if (!histEl) return;
+  const first = histEl.querySelector('.gem-ai');
+  if (first) first.textContent = `${state.props.filter(p=>!ELIM_STATUSES.has(p.status)).length} active properties loaded. Ask about scheduling, drive times, comparisons, or priorities.`;
+}
+
+async function callGemini(prompt, systemContext) {
+  const r = await fetch(GEMINI_URL, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ contents:[{ role:'user', parts:[{ text: systemContext + '\n\n' + prompt }] }] })
+  });
+  if (!r.ok) throw new Error('Gemini error ' + r.status);
+  const d = await r.json();
+  return d.candidates?.[0]?.content?.parts?.[0]?.text || '(no response)';
+}
+
+function _buildGeminiContext() {
+  const activeProps = state.props.filter(p=>!ELIM_STATUSES.has(p.status));
+  const summary = activeProps.map(p => {
+    const apt = getBase(p.grp)?.airport || 'FCO';
+    const aptD = getPropDriveToAirport(p, apt);
+    const baseD = getPropDriveToBase(p, p.grp);
+    return `ID:${p.id} | ${p.name} | ${p.town},${p.prov} | €${p.price}k | ${p.rooms}rm | ` +
+      `Base:${p.grp} | ✈${apt}:${aptD??'?'}m | Base:${baseD??'?'}m | Status:${p.status}`;
+  }).join('\n');
+  const bases = state_bases.map(b => `${b.name}(${b.abbr}) visit:${b.visitFrom||'?'}–${b.visitTo||b.visitFrom||'?'} airport:${b.airport}`).join(', ');
+  return `You are a travel assistant helping plan property viewings in Italy.\nBASES: ${bases}\nPROPERTIES (${activeProps.length}):\n${summary}`;
+}
+
+async function sendGemini() {
+  const input = document.getElementById('gem-input');
+  const msg = (input?.value || '').trim();
+  if (!msg) return;
+  input.value = '';
+  const hist = document.getElementById('gem-history');
+  hist.innerHTML += `<div class="gem-user">${escHtml(msg)}</div>`;
+  hist.innerHTML += `<div class="gem-ai" id="gem-loading">Thinking…</div>`;
+  hist.scrollTop = hist.scrollHeight;
+  try {
+    const resp = await callGemini(msg, _buildGeminiContext());
+    document.getElementById('gem-loading').textContent = resp;
+  } catch(e) {
+    document.getElementById('gem-loading').textContent = 'Error: ' + e.message;
+  }
+  hist.scrollTop = hist.scrollHeight;
+}
+
+function geminiQuick(prompt) {
+  document.getElementById('gem-input').value = prompt;
+  sendGemini();
+}
+
+// ─── Import / Export ──────────────────────────────────────────────────────────
+function exportJSON() {
+  const data = JSON.stringify({ version: SPA_VERSION, props: state.props, bases: state_bases, exported: new Date().toISOString() }, null, 2);
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(data);
+  a.download = `househunt_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importJSON(evt) {
+  const file = evt.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      const props = d.props || d; // handle both formats
+      if (!Array.isArray(props)) { alert('Invalid JSON format.'); return; }
+      if (!confirm(`Import ${props.length} properties? This will overwrite current data.`)) return;
+      state.props = props.map(initProp);
+      if (d.bases) { state_bases = d.bases; localStorage.setItem(LS_BASES, JSON.stringify(state_bases)); }
+      saveToStorage(); refreshBaseFilters(); renderProps();
+    } catch(er) { alert('Import failed: ' + er.message); }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+
+// ─── Snapshots ───────────────────────────────────────────────────────────────
+function openSnapshotModal() { document.getElementById('snapshot-modal').style.display='flex'; loadSnapshots(); }
+function closeSnapshotModal() { document.getElementById('snapshot-modal').style.display='none'; }
+
+async function loadSnapshots() {
+  const el = document.getElementById('snapshot-list'); if (!el) return;
+  try {
+    const r = await fetch(API_BASE+'/snapshots', { headers:_apiHdr() });
+    if (!r.ok) { el.textContent='Failed to load snapshots.'; return; }
+    const list = await r.json();
+    if (!list.length) { el.textContent='No snapshots yet.'; return; }
+    el.innerHTML = list.map(s => `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-size:12px;font-weight:500">${s.label||s.id}</div><div style="font-size:10px;color:var(--text3)">${s.ts||''}</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="io-btn" style="font-size:10px" onclick="restoreSnapshot('${s.id}')">Restore</button>
+        <button class="io-btn danger" style="font-size:10px" onclick="deleteSnapshot('${s.id}')">✕</button>
+      </div>
+    </div>`).join('');
+  } catch(e) { el.textContent='Error: '+e.message; }
+}
+
+async function saveSnapshot() {
+  const label = document.getElementById('snapshot-label')?.value.trim() || '';
+  try {
+    await fetch(API_BASE+'/snapshots', { method:'POST', headers:_apiHdr(),
+      body: JSON.stringify({ label, data: state.props }) });
+    loadSnapshots();
+    document.getElementById('snapshot-label').value = '';
+  } catch(e) { alert('Snapshot save failed.'); }
+}
+
+async function restoreSnapshot(id) {
+  if (!confirm('Restore this snapshot? Current data will be overwritten.')) return;
+  try {
+    const r = await fetch(API_BASE+'/snapshots/restore', { method:'POST', headers:_apiHdr(), body:JSON.stringify({id}) });
+    if (r.ok) { const d=await r.json(); if(d.data){state.props=d.data.map(initProp);saveToStorage();renderProps();closeSnapshotModal();} }
+  } catch(e) { alert('Restore failed.'); }
+}
+
+async function deleteSnapshot(id) {
+  if (!confirm('Delete this snapshot?')) return;
+  try { await fetch(API_BASE+'/snapshots/'+id, {method:'DELETE',headers:_apiHdr()}); loadSnapshots(); } catch(e){}
+}
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+function openSettingsModal() {
+  const km = document.getElementById('settings-key');
+  if (km) km.value = getApiToken();
+  document.getElementById('settings-modal').style.display = 'flex';
+  renderAirportsList();
+  loadBasesIntoSettings();
+  renderResetBasesList();
+  renderTemplateEditor();
+}
+function closeSettingsModal() { document.getElementById('settings-modal').style.display='none'; closeBaseForm(); }
+
+function saveSettingsKey() {
+  const key = (document.getElementById('settings-key')?.value||'').trim();
+  localStorage.setItem('hh_api_key', key);
+  const el = document.getElementById('settings-key-status');
+  if (el) { el.textContent='Key saved ✓'; el.style.color='var(--olive)'; }
+  loadFromStorage();
+}
+
+async function loadBasesIntoSettings() {
+  try {
+    const r = await fetch(API_BASE+'/bases', {headers:_apiHdr()});
+    if (r.ok) { const sb=await r.json(); if(Array.isArray(sb)&&sb.length){state_bases=sb;localStorage.setItem(LS_BASES,JSON.stringify(sb));} }
+  } catch(e) {}
+  renderBasesList();
+}
+
+function renderBasesList() {
+  const el = document.getElementById('bases-list'); if (!el) return;
+  if (!state_bases.length) { el.innerHTML='<p style="font-size:11px;color:var(--text3)">No bases yet.</p>'; return; }
+  el.innerHTML = state_bases.map((b,i) => {
+    const color = BASE_COLORS[i % BASE_COLORS.length];
+    const dateRange = b.visitFrom ? `${b.visitFrom}${b.visitTo&&b.visitTo!==b.visitFrom?' – '+b.visitTo:''}` : 'No dates';
+    const propCount = state.props.filter(p=>p.grp===b.abbr&&!ELIM_STATUSES.has(p.status)).length;
+    return `<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="width:4px;height:40px;background:${color};border-radius:2px;flex-shrink:0;margin-top:2px"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:12px;color:var(--text1)">${b.name} <span style="color:var(--text3);font-weight:400">(${b.abbr} · ✈${b.airport||'?'} · ${propCount} props)</span></div>
+        <div style="font-size:10px;color:var(--adriat);margin-top:1px">${dateRange}${b.lat?` · ${b.lat.toFixed(4)},${b.lng.toFixed(4)}`:''}</div>
+        ${b.iflToken?`<div style="font-size:10px;color:var(--text3)">IFL: <code>${b.iflToken}</code></div>`:''}
+        ${b.desc?`<div style="font-size:10px;color:var(--text3)">${escHtml(b.desc)}</div>`:''}
+      </div>
+      <button class="io-btn" onclick="editBase('${b.abbr}')" style="font-size:10px">Edit</button>
+      <button class="io-btn" onclick="toggleBaseActive('${b.abbr}')" style="font-size:10px;${b.active===false?'color:var(--terra)':''}">${b.active===false?'▶ Activate':'⏸ Pause'}</button>
+      <button class="io-btn danger" onclick="deleteBase('${b.abbr}')" style="font-size:10px">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function _populateAirportSelect(selId, selectedAbbr) {
+  const sel = document.getElementById(selId); if (!sel) return;
+  sel.innerHTML = state_airports.map(a=>`<option value="${a.abbr}"${a.abbr===selectedAbbr?' selected':''}>${a.abbr} — ${a.name}</option>`).join('');
+}
+
+function openAddBaseForm() {
+  ['base-form-abbr-orig','base-form-name','base-form-abbr','base-form-from','base-form-to',
+   'base-form-lat','base-form-lng','base-form-ifl','base-form-desc'].forEach(id => {
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  _populateAirportSelect('base-form-airport','FCO');
+  document.getElementById('base-form-title').textContent='Add Base';
+  document.getElementById('base-form').style.display='block';
+}
+
+function editBase(abbr) {
+  const b = getBase(abbr); if (!b) return;
+  document.getElementById('base-form-abbr-orig').value = b.abbr;
+  document.getElementById('base-form-name').value = b.name||'';
+  document.getElementById('base-form-abbr').value = b.abbr||'';
+  document.getElementById('base-form-from').value = b.visitFrom||'';
+  document.getElementById('base-form-to').value = b.visitTo||'';
+  document.getElementById('base-form-lat').value = b.lat||'';
+  document.getElementById('base-form-lng').value = b.lng||'';
+  document.getElementById('base-form-desc').value = b.desc||'';
+  let iflUrl='';
+  if (b.iflToken) iflUrl = /^\d+$/.test(b.iflToken)
+    ? `https://www.idealista.it/en/utente/preferiti/?favoritesListId=${b.iflToken}`
+    : `https://www.idealista.it/join-favorites-list/${b.iflToken}`;
+  document.getElementById('base-form-ifl').value = iflUrl;
+  _populateAirportSelect('base-form-airport', b.airport||'FCO');
+  document.getElementById('base-form-title').textContent='Edit Base';
+  document.getElementById('base-form').style.display='block';
+}
+
+function closeBaseForm() { const el=document.getElementById('base-form'); if(el) el.style.display='none'; }
+
+async function saveBaseForm() {
+  const origAbbr = document.getElementById('base-form-abbr-orig').value.trim();
+  const name = document.getElementById('base-form-name').value.trim();
+  const abbr = document.getElementById('base-form-abbr').value.trim().toUpperCase();
+  const visitFrom = document.getElementById('base-form-from').value.trim();
+  const visitTo = document.getElementById('base-form-to').value.trim();
+  const lat = parseFloat(document.getElementById('base-form-lat').value)||0;
+  const lng = parseFloat(document.getElementById('base-form-lng').value)||0;
+  const iflUrl = document.getElementById('base-form-ifl').value.trim();
+  const desc = document.getElementById('base-form-desc').value.trim();
+  const airport = document.getElementById('base-form-airport')?.value||'FCO';
+  if (!name||!abbr) { alert('Name and abbreviation required.'); return; }
+
+  let iflToken=null;
+  const tm = iflUrl.match(/join-favorites-list\/([^?&#\/]+)/) || iflUrl.match(/[?&]favoritesListId=(\d+)/);
+  if (tm) iflToken=tm[1];
+
+  const existing = state_bases.find(b=>b.abbr===origAbbr);
+  if (existing) {
+    Object.assign(existing, {name,abbr,visitFrom,visitTo,lat,lng,desc,airport,iflToken,iflName:existing.iflName||null});
+  } else {
+    state_bases.push({abbr,name,visitFrom,visitTo,lat,lng,desc,airport,iflToken,iflName:null,active:true});
+  }
+  try {
+    await fetch(API_BASE+'/bases',{method:'PUT',headers:_apiHdr(),body:JSON.stringify(state_bases)});
+  } catch(e) {}
+  localStorage.setItem(LS_BASES, JSON.stringify(state_bases));
+  closeBaseForm(); renderBasesList(); refreshBaseFilters(); renderSchedule(); populateMapDaySelect();
+}
+
+async function deleteBase(abbr) {
+  if (!confirm('Delete base? Properties remain.')) return;
+  state_bases = state_bases.filter(b=>b.abbr!==abbr);
+  try { await fetch(API_BASE+'/bases',{method:'PUT',headers:_apiHdr(),body:JSON.stringify(state_bases)}); } catch(e) {}
+  localStorage.setItem(LS_BASES,JSON.stringify(state_bases));
+  renderBasesList(); refreshBaseFilters();
+}
+
+async function toggleBaseActive(abbr) {
+  const b=getBase(abbr); if(!b) return;
+  b.active=(b.active===false)?true:false;
+  try{await fetch(API_BASE+'/bases',{method:'PUT',headers:_apiHdr(),body:JSON.stringify(state_bases)});}catch(e){}
+  localStorage.setItem(LS_BASES,JSON.stringify(state_bases));
+  renderBasesList(); refreshBaseFilters(); renderProps();
+}
+
+function renderAirportsList() {
+  const el=document.getElementById('airports-list'); if(!el) return;
+  el.innerHTML=state_airports.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px">
+    <code style="font-size:12px;font-weight:600;color:var(--adriat);width:40px">${a.abbr}</code>
+    <span style="flex:1">${a.name}</span>
+    <span style="color:var(--text3);font-family:monospace">${a.lat.toFixed(4)}, ${a.lng.toFixed(4)}</span>
+    ${state_airports.length>2?`<button class="io-btn" onclick="deleteAirport('${a.abbr}')" style="font-size:10px">✕</button>`:''}
+  </div>`).join('');
+}
+
+function addAirport() {
+  const abbr=(document.getElementById('apt-abbr')?.value||'').trim().toUpperCase();
+  const name=(document.getElementById('apt-name')?.value||'').trim();
+  const lat=parseFloat(document.getElementById('apt-lat')?.value);
+  const lng=parseFloat(document.getElementById('apt-lng')?.value);
+  if(!abbr||!name||isNaN(lat)||isNaN(lng)){alert('All fields required.');return;}
+  if(state_airports.find(a=>a.abbr===abbr)){alert(`Airport ${abbr} already exists.`);return;}
+  state_airports.push({abbr,name,lat,lng});
+  localStorage.setItem(LS_AIRPORTS,JSON.stringify(state_airports));
+  ['apt-abbr','apt-name','apt-lat','apt-lng'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderAirportsList();
+}
+
+function deleteAirport(abbr) {
+  if(state_bases.some(b=>b.airport===abbr)){alert(`${abbr} is used by a base.`);return;}
+  state_airports=state_airports.filter(a=>a.abbr!==abbr);
+  localStorage.setItem(LS_AIRPORTS,JSON.stringify(state_airports));
+  renderAirportsList();
+}
+
+function renderResetBasesList() {
+  const el=document.getElementById('reset-bases-list'); if(!el) return;
+  el.innerHTML=state_bases.map(b=>`<label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:12px">
+    <input type="checkbox" class="reset-base-chk" value="${b.abbr}"> ${b.name} (${state.props.filter(p=>p.grp===b.abbr&&!ELIM_STATUSES.has(p.status)).length} active)
+  </label>`).join('');
+}
+
+function toggleResetAll(checked) { document.querySelectorAll('.reset-base-chk').forEach(c=>c.checked=checked); }
+
+function performReset() {
+  const checked=[...document.querySelectorAll('.reset-base-chk:checked')].map(c=>c.value);
+  if(!checked.length){alert('Select at least one base.');return;}
+  if(!confirm(`Reset ${checked.length} base(s)? IFL-master logic applies.`))return;
+  state.props.forEach(p => {
+    if(!checked.includes(p.grp))return;
+    if(IFL_RESET_ELIM.has(p.status)) p.status='Reset';
+    else if(p.status==='Deleted') p.status='Reset';
+    // New/Working/ReachedOut/Replied/etc stay unchanged per IFL-master spec
+  });
+  document.getElementById('reset-all-chk').checked=false;
+  document.querySelectorAll('.reset-base-chk').forEach(c=>c.checked=false);
+  saveToStorage(); renderProps(); renderSchedule();
+  alert('Reset complete. Use Sync IFL in the extension to pull new properties.');
+}
+
+function renderTemplateEditor() {
+  const el=document.getElementById('tpl-editor'); if(!el) return;
+  const tpls=getTemplates();
+  el.innerHTML=tpls.map((t,i)=>`<div><label style="font-size:10px;font-weight:600;color:var(--text3)">Template ${i+1}</label>
+    <textarea id="tpl-txt-${i}" rows="6" style="margin-top:3px;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;background:var(--bg);color:var(--text);resize:vertical">${escHtml(t)}</textarea></div>`).join('');
+}
+
+function saveTemplatesFromEditor() {
+  const tpls=[0,1,2].map(i=>(document.getElementById('tpl-txt-'+i)||{value:''}).value);
+  saveTemplates(tpls); alert('Templates saved.');
+}
+
+// ─── Extension bridge ─────────────────────────────────────────────────────────
+function stripD(s) {
+  if (!s) return '';
+  try { return s.normalize('NFD').replace(/[̀-ͯ]/g,''); } catch(e) { return s; }
+}
+
+window.addEventListener('message', evt => {
+  if (!evt.data) return;
+  if (evt.data.type==='HOUSEHUNT_RELOAD') { loadFromStorage(); return; }
+  if (evt.data.type==='HOUSEHUNT_IFL_ADD') {
+    const {props, baseGrp, iflToken} = evt.data;
+    if (!Array.isArray(props)) return;
+    let added=0;
+    for (const p of props) {
+      if (state.props.find(x=>String(x.id)===String(p.id))) {
+        // IFL-master: property in IFL + SPA - handle resets
+        const existing = state.props.find(x=>String(x.id)===String(p.id));
+        if (IFL_RESET_ELIM.has(existing.status)) existing.status='Reset';
+        continue;
+      }
+      // In IFL but not SPA → ingest as New
+      const np = initProp({
+        id:parseInt(p.id), name:stripD(p.title||('IFL-'+p.id)),
+        commune:stripD(p.commune||''), town:stripD(p.town||''),
+        prov:(p.prov||'').toUpperCase(), price:p.price||0,
+        rooms:p.rooms||0, size:p.size||0,
+        grp:baseGrp||state_bases[0]?.abbr||'',
+        url:`https://www.idealista.it/immobile/${p.id}/`,
+        lat:p.lat||null, lng:p.lng||null,
+        sourceIfl:iflToken||'none', status:'New', _custom:true
+      });
+      state.props.push(np); added++;
+    }
+    // In SPA but not IFL (for this base) → Deleted-Idealista
+    if (baseGrp && iflToken) {
+      const iflIds = new Set(props.map(p=>String(p.id)));
+      state.props.forEach(p => {
+        if (p.grp===baseGrp && p.sourceIfl===iflToken && !iflIds.has(String(p.id))) {
+          if (!ELIM_STATUSES.has(p.status)) p.status='Deleted-Idealista';
+        }
+      });
+    }
+    saveToStorage(); renderProps();
+    showExtToast(`Sync complete: ${added} new, ${props.length} checked`, 'ok');
+    return;
+  }
+  if (evt.data.type !== 'HOUSEHUNT_BROKER') return;
+  let {idealistaId,broker,phone,location,price,rooms,size,town,prov,title,realtorUrl,commune,firmName,firmPhone} = evt.data;
+  if (!idealistaId) return;
+  broker=stripD(broker); town=stripD(town); prov=(prov||'').toUpperCase();
+  title=stripD(title); commune=stripD(commune);
+  const pid=parseInt(idealistaId);
+  const p=getProp(pid);
+  if (!p) {
+    showExtToast(`Property ${pid} not in list. Use + Add to add it.`,'warn');
+    openAddModal({id:pid,url:`https://www.idealista.it/immobile/${pid}/`,
+      title,commune,town,prov,price,rooms,size,broker,phone,location,realtorUrl});
+    return;
+  }
+  const updated=[];
+  if (commune&&commune.trim()){p.commune=commune.trim();updated.push('commune');}
+  if (broker&&broker.trim()){p.broker=broker.trim();updated.push('broker');}
+  if (phone&&phone.trim()){p.brokerPhone=phone.trim();updated.push('phone');}
+  if (firmName&&firmName.trim()){p.firmName=firmName.trim();updated.push('firm');}
+  if (firmPhone&&firmPhone.trim()){p.firmPhone=firmPhone.trim();updated.push('firmPhone');}
+  if (location&&location.trim()){
+    p.location=location.trim();
+    const [lat,lng]=parseGPS(location);
+    if(lat){p.lat=lat;p.lng=lng;}
+    updated.push('location');
+  }
+  if (realtorUrl&&realtorUrl.trim()){p.realtorUrl=realtorUrl.trim();updated.push('realtorUrl');}
+  if (updated.length) {
+    saveToStorage(); showTab('props'); renderProps();
+    showExtToast(`✓ Updated ${p.name}: ${updated.join(', ')}`, 'ok');
+    setTimeout(()=>document.getElementById('tile-'+pid)?.scrollIntoView({behavior:'smooth',block:'center'}),250);
+    // Auto-recalc if location updated
+    if (updated.includes('location')) recalcDriveTimes(p).then(ok=>{ if(ok) saveToStorage(); });
+  } else {
+    showExtToast(`${p.name}: no new data extracted.`,'warn');
+  }
+});
+
+function showExtToast(msg, type='ok') {
+  const colors={ok:'#2E7D32',err:'#C0392B',warn:'#E65100'};
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText=`position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:${colors[type]||colors.ok};color:#fff;padding:10px 18px;border-radius:6px;font-size:12px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.3);max-width:90vw;text-align:center;pointer-events:none;`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+loadFromStorage();
+</script>
+</body>
+</html>
