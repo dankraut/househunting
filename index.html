@@ -728,8 +728,9 @@ async function loadFromStorage() {
   try {
     const r = await fetch(API_BASE + '/data', { headers: _apiHdr() });
     if (r.ok) {
-      const raw = await r.json();
-      if (Array.isArray(raw) && raw.length) {
+      const data = await r.json();
+      const raw = Array.isArray(data) ? data : (data.props || []);
+      if (raw.length) {
         state.props = raw.map(initProp);
         localStorage.setItem(LS_KEY, JSON.stringify(state.props));
       } else {
