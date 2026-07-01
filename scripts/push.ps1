@@ -17,8 +17,20 @@ function Write-Err([string]$Text) { Write-Host "ERROR: $Text" -ForegroundColor R
 
 function Invoke-GitRead {
     param([Parameter(Mandatory = $true, Position = 0)][string[]]$GitArgs)
-    $out = & git @GitArgs 2>&1
-    return @{ Ok = ($LASTEXITCODE -eq 0); Output = if ($out) { ($out | Out-String).Trim() } else { '' } }
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $out = & git @GitArgs 2>&1
+        $exitCode = $LASTEXITCODE
+        $text = if ($out) {
+            ($out | ForEach-Object {
+                if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.ToString() } else { "$_" }
+            }) -join "`n"
+        } else { '' }
+        return @{ Ok = ($exitCode -eq 0); Output = $text.Trim() }
+    } finally {
+        $ErrorActionPreference = $prevEap
+    }
 }
 
 function Invoke-Git {
