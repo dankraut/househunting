@@ -1,11 +1,13 @@
 /** @module config — shared SPA constants */
-export const SPA_VERSION = 'v3.11.2';
+export const SPA_VERSION = 'v3.12.0';
+export const UNASSIGNED_GRP = 'UNA';
+export const DAY_ROUTE_COLORS = ['#2C5F7A', '#7B1FA2', '#C0603A', '#5B7232', '#0891B2', '#DC2626', '#8B5CF6', '#059669'];
 export const API_BASE = '/api';
 export const GEMINI_KEY = 'AIzaSyBmBWSxxAvawMG4noiDA7ulzm6hHtYtCAc';
 export const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`;
 
 export const STATUS_OPTS = ['New','Working','Reset','Reached Out','Replied','Info Supplied',
-  'To Be Scheduled','Proposed','Scheduled','Unavailable','Unresponsive','Rejected',
+  'To Be Scheduled','Scheduled','Unavailable','Unresponsive','Rejected',
   'Duplicate','Deleted','Deleted-Idealista'];
 export const ELIM_STATUSES = new Set(['Unavailable','Unresponsive','Rejected','Duplicate','Deleted','Deleted-Idealista']);
 export const ACTIVE_ELIM = new Set(['Unavailable','Unresponsive','Rejected','Duplicate']);
@@ -27,10 +29,11 @@ export const LS_ADDR_MIGRATED = 'italy_hunt_addr_migrated_v35';
 export const LS_GPS_AUTH_MIGRATED = 'italy_hunt_gps_authoritative_v310';
 export const LS_ELEV_MIGRATED = 'italy_hunt_elev_migrated_v351';
 export const LS_PLANNED_CLEARED = 'italy_hunt_planned_cleared_v37';
+export const LS_SCHED_STATUS_MIGRATED = 'italy_hunt_sched_status_v312';
 export const LS_CLIENT_ID = 'italy_hunt_client_id';
 export const SYNC_POLL_MS = 3000;
 
-export const PERSIST_FIELDS = ['status','schedDate','schedTime','proposedDate','lastContacted',
+export const PERSIST_FIELDS = ['status','schedDate','schedTime','proposedDate','proposedTime','lastContacted',
   'firmName','firmPhone','broker','brokerPhone','brokerEmail',
   'address','gps','userPlannedDate','userPlannedTime','notes','realtorUrl','sourceIfl','grp',
   'commune','town','prov','driveTimes','name','price','rooms','size','lat','lng','elevation','elevationCoordsKey'];

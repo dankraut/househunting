@@ -199,7 +199,8 @@ function closeSyncModal() {
 function populateBaseSelector() {
   const sel = document.getElementById('f-base-sel');
   if (!sel) return;
-  sel.innerHTML = _bases.map(b => `<option value="${b.abbr}">${b.name} (${b.abbr})</option>`).join('');
+  const active = _bases.filter(b => b.active !== false);
+  sel.innerHTML = active.map(b => `<option value="${b.abbr}">${b.name} (${b.abbr})</option>`).join('');
 }
 
 // ── Tab switching ──────────────────────────────────────────────────────────────
@@ -227,7 +228,7 @@ async function initSyncTab() {
   let bases = [];
   try { bases = await loadBases(); } catch (e) {}
 
-  const iflBases = bases.filter(b => b.iflToken);
+  const iflBases = bases.filter(b => b.iflToken && b.active !== false);
   if (!iflBases.length) {
     el.innerHTML = '<span style="color:#9A9088">No bases with IFL linked.<br>Go to SPA → Settings to add a base with an Idealista Favorites List URL.</span>';
     return;
