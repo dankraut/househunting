@@ -6,12 +6,21 @@ A Cloudflare Pages-hosted SPA + Chrome extension for tracking Idealista property
 
 ```
 househunting/
-├── index.html                    # SPA — auto-deploys to Cloudflare Pages on every push to main
+├── index.html                    # SPA shell + app logic (loads js/ modules)
+├── js/
+│   ├── bootstrap.js              # Module entry — exposes HHApi, HHLoc, HHPropConflict
+│   ├── config.js                 # SPA_VERSION, constants
+│   ├── api-client.js             # REST API wrapper
+│   ├── location.js               # GPS/town sync + field loading/errors
+│   └── property-sync-conflict.js # Remote-edit banner on property modal
+├── deploy.cmd                    # One-command deploy wrapper (Windows)
+├── scripts/
+│   └── deploy.ps1                # Commit → sync → merge to main → push
 ├── functions/
 │   └── api/
 │       └── [[path]].js           # Cloudflare Pages Function (API backend)
 └── extension/                    # Chrome Extension MV3 source
-    ├── manifest.json             # v1.6.5
+    ├── manifest.json             # v1.7.4
     ├── popup.html / popup.js     # Extension popup UI
     ├── content.js                # Injected into Idealista listing pages
     ├── background.js             # Service worker — relays messages to SPA tab
@@ -25,6 +34,32 @@ househunting/
 - **API**: `functions/api/[[path]].js` deploys alongside as a Cloudflare Pages Function
 - **KV**: Cloudflare KV namespace `HH_KV` stores all data (keys: `data`, `bases`, `snapshots-index`, `snapshot:{id}`)
 - **Auth**: Bearer token `jmjk05DK` required on all API calls
+
+### Deploy command (local → GitHub → Cloudflare)
+
+One command commits your work, syncs with GitHub, merges into `main`, and pushes. Cloudflare Pages picks up the `main` push automatically.
+
+| How | Command |
+|-----|---------|
+| **Cursor / VS Code** | `Terminal` → `Run Task` → **Deploy** (or `Ctrl+Shift+B` if build is default) |
+| **PowerShell** | `.\scripts\deploy.ps1` |
+| **Cmd / double-click** | `deploy.cmd` |
+
+**Options** (PowerShell):
+
+```powershell
+.\scripts\deploy.ps1                          # auto commit message from SPA_VERSION
+.\scripts\deploy.ps1 -Message "Fix map pins"  # custom commit message
+.\scripts\deploy.ps1 -DryRun                    # print steps without changing git
+.\scripts\deploy.ps1 -NoReturnToBranch          # stay on main after merge
+```
+
+**Workflow:**
+
+- On **`main`**: fetch → commit (if needed) → pull --rebase → push `main`
+- On a **feature branch** (e.g. `feature/cursor-branch`): commit → push branch → checkout `main` → pull → merge branch → push `main` → return to feature branch
+
+The script refuses to commit obvious secrets (`.env`, `credentials.json`, etc.). Never force-pushes. Stops on merge/rebase conflicts with recovery instructions.
 
 ## API Endpoints
 
@@ -56,6 +91,6 @@ Load unpacked from the `extension/` folder in Chrome. Requires:
 | Component | Version | Notes |
 |-----------|---------|-------|
 | SPA | v3.2.2 | Stable baseline |
-| SPA | v3.3.2 | Current on main |
-| Extension | v1.6.5 | Current — IFL sync, postMessage bridge |
+| SPA | v3.11.0 | ES modules (api/location/sync-conflict), location field UX |
+| Extension | v1.7.4 | IFL sync, postMessage bridge |
 | API | — | Cloudflare Pages Function, KV-backed |

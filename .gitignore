@@ -1,0 +1,8 @@
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+secrets.json
+secrets.yaml
+secrets.yml
