@@ -1,7 +1,6 @@
 @echo off
 setlocal
 REM House Hunt — push main to GitHub (commit if needed). Cloudflare Pages auto-deploys.
-REM Same as push.cmd; kept for compatibility.
 cd /d "%~dp0"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\push.ps1" %*
 set EXITCODE=%ERRORLEVEL%
