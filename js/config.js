@@ -1,5 +1,5 @@
 /** @module config — shared SPA constants */
-export const SPA_VERSION = 'v3.12.2';
+export const SPA_VERSION = 'v3.12.7';
 export const UNASSIGNED_GRP = 'UNA';
 export const DAY_ROUTE_COLORS = ['#2C5F7A', '#7B1FA2', '#C0603A', '#5B7232', '#0891B2', '#DC2626', '#8B5CF6', '#059669'];
 export const API_BASE = '/api';
@@ -30,6 +30,7 @@ export const LS_GPS_AUTH_MIGRATED = 'italy_hunt_gps_authoritative_v310';
 export const LS_ELEV_MIGRATED = 'italy_hunt_elev_migrated_v351';
 export const LS_PLANNED_CLEARED = 'italy_hunt_planned_cleared_v37';
 export const LS_SCHED_STATUS_MIGRATED = 'italy_hunt_sched_status_v312';
+export const LS_SCHED_STALE_CLEANED = 'italy_hunt_sched_stale_v3123';
 export const LS_CLIENT_ID = 'italy_hunt_client_id';
 export const SYNC_POLL_MS = 3000;
 
