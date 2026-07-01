@@ -1,4 +1,4 @@
-// sync.js — House Hunt IFL Sync v1.6.9
+// sync.js — House Hunt IFL Sync v1.7.1
 // Handles Idealista Favorites List sync for all bases
 
 // ── Price parsing (Italian Idealista formats) ───────────────────────────────
@@ -77,13 +77,56 @@ function waitForTabLoad(tabId, timeout = 15000) {
   });
 }
 
-// ── Scrape IFL page ─────────────────────────────────────────────────────────
+// ── Scrape IFL page (MUST be self-contained — injected via executeScript) ─────
 function _scrapeIflPage() {
   window.scrollTo(0, document.body.scrollHeight);
 
+  function parseItalianEuroAmount(raw) {
+    if (!raw) return 0;
+    const s = String(raw).trim();
+    if (/\d\.\d{3}/.test(s)) return parseInt(s.replace(/\./g, ''), 10) || 0;
+    if (/,/.test(s)) return parseInt(s.replace(/,/g, ''), 10) || 0;
+    return parseInt(s.replace(/[^\d]/g, ''), 10) || 0;
+  }
+  function parseIdealistaPrice(text) {
+    if (!text) return 0;
+    const t = String(text).replace(/\s+/g, ' ').trim();
+    let best = 0;
+    for (const re of [/€\s*([\d][\d.\s,]*)/g, /([\d][\d.\s,]*)\s*€/g]) {
+      let m;
+      while ((m = re.exec(t)) !== null) {
+        const euros = parseItalianEuroAmount(m[1]);
+        if (euros >= 30000 && euros <= 20000000) {
+          const k = Math.round(euros / 1000);
+          if (k > best) best = k;
+        }
+      }
+    }
+    if (!best) {
+      const dm = t.match(/(\d{1,3}(?:\.\d{3})+)/);
+      if (dm) {
+        const euros = parseItalianEuroAmount(dm[1]);
+        if (euros >= 30000 && euros <= 20000000) best = Math.round(euros / 1000);
+      }
+    }
+    return best;
+  }
+  function scrapePriceFromCard(card) {
+    if (!card) return 0;
+    for (const sel of ['[class*="item-price"]', '[class*="Item-price"]', '[data-testid*="price"]', '.price', 'span.price', '[class*="price"]']) {
+      for (const el of card.querySelectorAll(sel)) {
+        const txt = el.textContent || '';
+        if (/m[²2]|\/\s*m|sqm|mq|mese|month|affitto|rent/i.test(txt)) continue;
+        const p = parseIdealistaPrice(txt);
+        if (p > 0) return p;
+      }
+    }
+    const sansSize = (card.textContent || '').replace(/\d+\s*m[²2]/gi, '');
+    return parseIdealistaPrice(sansSize);
+  }
+
   const results = [];
   const seen = new Set();
-
   const links = document.querySelectorAll('a[href*="/immobile/"]');
   for (const link of links) {
     const m = link.href.match(/\/immobile\/(\d+)/);
@@ -94,15 +137,15 @@ function _scrapeIflPage() {
     let card = link.closest('article') ||
                 link.closest('[class*="item-info"]') ||
                 link.closest('[class*="list-item"]') ||
+                link.closest('[class*="item"]') ||
                 link.parentElement;
 
-    for (let i = 0; i < 4 && card && !card.querySelector('[class*="price"]'); i++) {
+    for (let i = 0; i < 5 && card && !card.querySelector('[class*="price"], .price'); i++) {
       card = card.parentElement;
     }
 
     const text = card ? card.textContent : link.textContent;
 
-    // Detect discarded state on the favorites list page
     const isDiscarded = text.toLowerCase().includes('discarded this listing') ||
                         text.toLowerCase().includes('scartato') ||
                         !!card?.querySelector('a[href*="recover"]') ||
@@ -130,23 +173,77 @@ function _scrapeIflPage() {
   return results;
 }
 
-// ── Find & click IFL tab on favorites page ──────────────────────────────────
-function _clickListTab(listName) {
-  const nameLower = (listName || '').toLowerCase().slice(0, 10);
-  const candidates = document.querySelectorAll(
-    '[class*="tab"] button, [class*="tab"] a, [class*="list"] button, [class*="list"] a, button, .tab'
-  );
-  for (const el of candidates) {
-    if (el.textContent.toLowerCase().includes(nameLower) && nameLower.length > 3) {
-      el.click(); return 'clicked:' + el.textContent.trim().slice(0, 40);
-    }
+// ── Poll until listing links appear (injected helper — self-contained) ───────
+function _countIflLinks() {
+  return document.querySelectorAll('a[href*="/immobile/"]').length;
+}
+
+function _pageDiagnostics() {
+  const url = location.href;
+  const linkCount = document.querySelectorAll('a[href*="/immobile/"]').length;
+  const bodySnippet = (document.body?.innerText || '').slice(0, 200).replace(/\s+/g, ' ').trim();
+  const isLogin = /login|accedi|sign in/i.test(bodySnippet) || /login|accedi/i.test(url);
+  return { url, linkCount, isLogin, bodySnippet };
+}
+
+function urlsRoughlyMatch(tabUrl, targetUrl) {
+  try {
+    const a = new URL(tabUrl);
+    const b = new URL(targetUrl);
+    return a.hostname === b.hostname &&
+      a.pathname.replace(/\/$/, '') === b.pathname.replace(/\/$/, '') &&
+      a.search === b.search;
+  } catch (e) { return false; }
+}
+
+function buildIflUrl(base) {
+  const tok = base.iflToken ? String(base.iflToken) : '';
+  if (tok && /^\d+$/.test(tok)) {
+    return `https://www.idealista.it/utente/preferiti/?favoritesListId=${tok}`;
   }
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
-  let node;
-  while ((node = walker.nextNode())) {
-    if (node.children.length === 0 && node.textContent.toLowerCase().includes(nameLower) && nameLower.length > 3) {
-      const clickable = node.closest('button, a, [role="tab"]');
-      if (clickable) { clickable.click(); return 'fallback:' + node.textContent.trim().slice(0, 40); }
+  if (tok) {
+    return `https://www.idealista.it/join-favorites-list/${tok}`;
+  }
+  return 'https://www.idealista.it/utente/preferiti/';
+}
+
+async function waitForIflLinks(tabId, setStatus, maxMs = 25000) {
+  const start = Date.now();
+  while (Date.now() - start < maxMs) {
+    try {
+      const [r] = await chrome.scripting.executeScript({
+        target: { tabId },
+        func: _countIflLinks
+      });
+      const n = r?.result || 0;
+      if (n > 0) return n;
+    } catch (e) { /* tab may still be loading */ }
+    setStatus('Waiting for Idealista list to load…', 'loading');
+    await sleep(1000);
+  }
+  return 0;
+}
+
+// ── Find & click IFL tab on favorites page (self-contained for executeScript) ─
+function _clickListTab(listName) {
+  const nameLower = (listName || '').toLowerCase().trim().slice(0, 12);
+  if (nameLower.length < 4) return 'skipped:short-name';
+
+  const roots = [
+    document.querySelector('[class*="favorites"]'),
+    document.querySelector('[class*="preferiti"]'),
+    document.querySelector('main'),
+    document.body
+  ].filter(Boolean);
+
+  for (const root of roots) {
+    const tabs = root.querySelectorAll('[role="tab"], [class*="tab"] button, [class*="tab"] a, [class*="list"] button, [class*="list"] a');
+    for (const el of tabs) {
+      const txt = (el.textContent || '').toLowerCase().trim();
+      if (txt.includes(nameLower)) {
+        el.click();
+        return 'clicked:' + el.textContent.trim().slice(0, 40);
+      }
     }
   }
   return 'not-found';
@@ -226,42 +323,60 @@ async function syncBase(base, setStatus) {
   setStatus(`Syncing ${base.name} (${base.abbr}) — navigating to Idealista…`, 'loading');
 
   const allTabs = await new Promise(res => chrome.tabs.query({}, res));
-  let idealistaTab = allTabs.find(t => t.url && t.url.includes('idealista.it') && (t.url.includes('/preferiti') || t.url.includes('/utente/')));
+  const iflUrl = buildIflUrl(base);
+  let idealistaTab = allTabs.find(t => t.url && t.url.includes('idealista.it') && (t.url.includes('/preferiti') || t.url.includes('/utente/') || t.url.includes('join-favorites-list')));
 
-  if (idealistaTab) {
-    const iflUrl = base.iflToken && /^\d+$/.test(String(base.iflToken))
-      ? `https://www.idealista.it/en/utente/preferiti/?favoritesListId=${base.iflToken}`
-      : 'https://www.idealista.it/en/utente/preferiti/';
+  const needsNav = !idealistaTab || !idealistaTab.url || !urlsRoughlyMatch(idealistaTab.url, iflUrl);
+  if (idealistaTab && needsNav) {
     await new Promise(res => chrome.tabs.update(idealistaTab.id, { url: iflUrl, active: true }, res));
-  } else {
-    const iflUrl = base.iflToken && /^\d+$/.test(String(base.iflToken))
-      ? `https://www.idealista.it/en/utente/preferiti/?favoritesListId=${base.iflToken}`
-      : 'https://www.idealista.it/en/utente/preferiti/';
+  } else if (!idealistaTab) {
     idealistaTab = await new Promise(res => chrome.tabs.create({ url: iflUrl, active: true }, res));
+  } else {
+    await new Promise(res => chrome.tabs.update(idealistaTab.id, { active: true }, res));
   }
 
   try { await waitForTabLoad(idealistaTab.id); } catch (e) { setStatus('Page load timeout — is Idealista open?', 'err'); return; }
-  await sleep(2000);
+  await sleep(1500);
 
-  if (base.iflName) {
+  const linkCount = await waitForIflLinks(idealistaTab.id, setStatus);
+  if (!linkCount && base.iflName) {
     const [clickResult] = await chrome.scripting.executeScript({
       target: { tabId: idealistaTab.id },
       func: _clickListTab,
       args: [base.iflName]
     });
-    setStatus('Finding list tab… ' + (clickResult.result || ''), 'loading');
-    await sleep(1500);
+    setStatus('Finding list tab… ' + (clickResult?.result || ''), 'loading');
+    await sleep(2000);
+    await waitForIflLinks(idealistaTab.id, setStatus, 15000);
   }
 
   setStatus(`Scraping ${base.name} IFL properties…`, 'loading');
-  const [scrapeResult] = await chrome.scripting.executeScript({
-    target: { tabId: idealistaTab.id },
-    func: _scrapeIflPage
-  });
-  const properties = scrapeResult.result || [];
+  let properties = [];
+  try {
+    const [scrapeResult] = await chrome.scripting.executeScript({
+      target: { tabId: idealistaTab.id },
+      func: _scrapeIflPage
+    });
+    properties = scrapeResult?.result || [];
+  } catch (e) {
+    setStatus('Scrape failed: ' + (e.message || 'script error'), 'err');
+    return;
+  }
 
   if (!properties.length) {
-    setStatus('No properties found on page. Make sure you are logged in and the right list is selected.', 'err');
+    let diag = {};
+    try {
+      const [d] = await chrome.scripting.executeScript({
+        target: { tabId: idealistaTab.id },
+        func: _pageDiagnostics
+      });
+      diag = d?.result || {};
+    } catch (e) {}
+    if (diag.isLogin) {
+      setStatus('Idealista login required — sign in on the favorites page, then sync again.', 'err');
+    } else {
+      setStatus(`No properties found (${diag.linkCount ?? 0} links on page). Check IFL URL/token and list selection.`, 'err');
+    }
     return;
   }
 

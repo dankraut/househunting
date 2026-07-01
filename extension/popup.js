@@ -1,4 +1,4 @@
-// popup.js — House Hunt Chrome Extension v1.6.9
+// popup.js — House Hunt Chrome Extension v1.7.0
 // MV3-compliant: no inline event handlers, all listeners via addEventListener
 
 let extracted = null;
@@ -413,6 +413,7 @@ function extractFromPage() {
   result.prov   = strip(result.prov);
   result.title  = strip(result.title);
 
+  if (result.location) result.gps = result.location;
   return result;
 }
 

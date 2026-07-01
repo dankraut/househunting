@@ -1,7 +1,7 @@
-// House Hunt API — Cloudflare Pages Function v1.1
+// House Hunt API — Cloudflare Pages Function v1.3
 // Routes: GET/PUT /api/data, GET/POST /api/snapshots, POST /api/snapshots/restore,
 //         DELETE /api/snapshots/:id, GET/PUT /api/bases, POST /api/ifl-sync,
-//         GET /api/drive-time
+//         GET /api/drive-time, GET /api/geocode, GET /api/directions, GET /api/elevation
 
 const TOKEN = 'jmjk05DK';
 const MAX_SNAPSHOTS = 20;
@@ -29,6 +29,21 @@ function parseProps(raw) {
   if (!raw) return [];
   const d = JSON.parse(raw);
   return Array.isArray(d) ? d : (d.props || []);
+}
+
+function decodePolyline(encoded) {
+  const points = [];
+  let index = 0, lat = 0, lng = 0;
+  while (index < encoded.length) {
+    let b, shift = 0, result = 0;
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    lat += (result & 1) ? ~(result >> 1) : (result >> 1);
+    shift = 0; result = 0;
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    lng += (result & 1) ? ~(result >> 1) : (result >> 1);
+    points.push([lat / 1e5, lng / 1e5]);
+  }
+  return points;
 }
 
 export async function onRequest(context) {
@@ -101,7 +116,91 @@ export async function onRequest(context) {
   // GET /api/drive-time?fromLat=&fromLng=&toLat=&toLng=
   // Proxies Google Maps Distance Matrix. Set GMAPS_KEY in Cloudflare env vars.
   // Returns {minutes, source} or {minutes:null} so client falls back to OSRM.
+  // GET /api/geocode?address=
+  // Requires GMAPS_KEY with Geocoding API enabled.
+  if (path === 'geocode' && request.method === 'GET') {
+    const address = url.searchParams.get('address');
+    if (!address) return json({ error: 'Missing address' }, 400);
+    const gmapsKey = env.GMAPS_KEY || '';
+    if (!gmapsKey)
+      return json({ lat: null, lng: null, source: 'none', note: 'Set GMAPS_KEY in Cloudflare env' });
+    try {
+      const r = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&region=it&key=${gmapsKey}`
+      );
+      const d = await r.json();
+      if (d.status === 'OK' && d.results?.[0]) {
+        const loc = d.results[0].geometry.location;
+        const comps = d.results[0].address_components || [];
+        const prov = comps.find(c => c.types.includes('administrative_area_level_2'))?.short_name || '';
+        return json({
+          lat: loc.lat, lng: loc.lng,
+          formatted: d.results[0].formatted_address,
+          prov, source: 'gmaps',
+        });
+      }
+      return json({ lat: null, lng: null, source: 'gmaps-error', gmStatus: d.status });
+    } catch (e) {
+      return json({ lat: null, lng: null, source: 'error', error: e.message });
+    }
+  }
+
+  // GET /api/directions?fromLat=&fromLng=&toLat=&toLng=
+  // Requires GMAPS_KEY with Directions API enabled.
+  if (path === 'directions' && request.method === 'GET') {
+    const fromLat = url.searchParams.get('fromLat');
+    const fromLng = url.searchParams.get('fromLng');
+    const toLat = url.searchParams.get('toLat');
+    const toLng = url.searchParams.get('toLng');
+    if (!fromLat || !fromLng || !toLat || !toLng)
+      return json({ error: 'Missing params' }, 400);
+    const gmapsKey = env.GMAPS_KEY || '';
+    if (!gmapsKey)
+      return json({ points: null, minutes: null, source: 'none', note: 'Set GMAPS_KEY in Cloudflare env' });
+    try {
+      const r = await fetch(
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&mode=driving&key=${gmapsKey}`
+      );
+      const d = await r.json();
+      if (d.status === 'OK' && d.routes?.[0]?.overview_polyline?.points) {
+        const leg = d.routes[0].legs?.[0];
+        return json({
+          points: decodePolyline(d.routes[0].overview_polyline.points),
+          minutes: leg ? Math.round(leg.duration.value / 60) : null,
+          distanceKm: leg ? Math.round(leg.distance.value / 100) / 10 : null,
+          source: 'gmaps',
+        });
+      }
+      return json({ points: null, minutes: null, source: 'gmaps-error', gmStatus: d.status });
+    } catch (e) {
+      return json({ points: null, minutes: null, source: 'error', error: e.message });
+    }
+  }
+
+  // GET /api/elevation?lat=&lng=
+  // Requires GMAPS_KEY with Elevation API enabled.
+  if (path === 'elevation' && request.method === 'GET') {
+    const lat = url.searchParams.get('lat');
+    const lng = url.searchParams.get('lng');
+    if (!lat || !lng) return json({ error: 'Missing params' }, 400);
+    const gmapsKey = env.GMAPS_KEY || '';
+    if (!gmapsKey)
+      return json({ elevation: null, source: 'none', note: 'Set GMAPS_KEY in Cloudflare env' });
+    try {
+      const r = await fetch(
+        `https://maps.googleapis.com/maps/api/elevation/json?locations=${lat},${lng}&key=${gmapsKey}`
+      );
+      const d = await r.json();
+      if (d.status === 'OK' && d.results?.[0])
+        return json({ elevation: d.results[0].elevation, source: 'gmaps' });
+      return json({ elevation: null, source: 'gmaps-error', gmStatus: d.status });
+    } catch (e) {
+      return json({ elevation: null, source: 'error', error: e.message });
+    }
+  }
+
   if (path === 'drive-time' && request.method === 'GET') {
+
     const fromLat = url.searchParams.get('fromLat');
     const fromLng = url.searchParams.get('fromLng');
     const toLat   = url.searchParams.get('toLat');
