@@ -1,4 +1,4 @@
-# House Hunt — single-command deploy: commit → sync → merge to main → push
+# House Hunt  -  single-command deploy: commit → sync → merge to main → push
 # Cloudflare Pages auto-deploys when main is updated on GitHub.
 param(
     [string]$Message = '',
@@ -9,6 +9,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $MainBranch = 'main'
+$script:SubstMapped = $false
+$script:SubstDrive = $null
 
 function Write-Step([string]$Text) {
     Write-Host "`n==> $Text" -ForegroundColor Cyan
@@ -70,6 +72,13 @@ function Test-SensitivePaths {
 
 function Get-DefaultCommitMessage {
     param([string]$Root)
+    $configPath = Join-Path $Root 'js\config.js'
+    if (Test-Path -LiteralPath $configPath) {
+        $content = Get-Content -LiteralPath $configPath -Raw -ErrorAction SilentlyContinue
+        if ($content -match "SPA_VERSION\s*=\s*'([^']+)'") {
+            return "Deploy $($Matches[1])"
+        }
+    }
     $indexPath = Join-Path $Root 'index.html'
     if (Test-Path -LiteralPath $indexPath) {
         $content = Get-Content -LiteralPath $indexPath -Raw -ErrorAction SilentlyContinue
@@ -90,6 +99,32 @@ function Ensure-CleanMerge {
             'Or abort with: git merge --abort / git rebase --abort'
         ) -join ' '
     }
+}
+
+function Initialize-SubstDrive {
+    param([string]$Path)
+    if ($Path -notmatch "'") { return $Path }
+    $used = @(Get-PSDrive -PSProvider FileSystem).Name
+    foreach ($letter in @('Z', 'Y', 'X', 'W', 'V', 'U', 'T', 'S')) {
+        if ($letter -in $used) { continue }
+        $drive = "${letter}:"
+        $null = & subst $drive $Path 2>&1
+        if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $drive)) {
+            $script:SubstMapped = $true
+            $script:SubstDrive = $drive
+            Write-Host "    subst $drive -> $Path" -ForegroundColor DarkGray
+            return $drive
+        }
+    }
+    Write-Host "WARNING: Could not map subst drive; continuing with literal path." -ForegroundColor Yellow
+    return $Path
+}
+
+function Remove-SubstDrive {
+    if (-not $script:SubstMapped -or -not $script:SubstDrive) { return }
+    $null = & subst $script:SubstDrive /d 2>&1
+    $script:SubstMapped = $false
+    $script:SubstDrive = $null
 }
 
 # Resolve repo root from script location (avoids hardcoding paths with apostrophes).
@@ -121,7 +156,7 @@ Write-Host "    origin: $originUrl"
 
 $currentBranch = (Invoke-GitRead @('branch', '--show-current')).Output.Trim()
 if (-not $currentBranch) {
-    Write-Err 'Detached HEAD — checkout a branch before deploying.'
+    Write-Err 'Detached HEAD  -  checkout a branch before deploying.'
     exit 1
 }
 Write-Host "    branch: $currentBranch"
@@ -145,7 +180,7 @@ if ($hasChanges) {
 
     $sensitive = Test-SensitivePaths -Paths $allChanged
     if ($sensitive.Count -gt 0 -and -not $ForceSecrets) {
-        Write-Err "Refusing to commit — potentially sensitive files detected:"
+        Write-Err "Refusing to commit  -  potentially sensitive files detected:"
         $sensitive | ForEach-Object { Write-Host "  - $_" -ForegroundColor Yellow }
         Write-Host "Remove them from the commit, add to .gitignore, or re-run with -ForceSecrets if intentional." -ForegroundColor Yellow
         exit 1
@@ -189,7 +224,7 @@ function Sync-Branch {
         }
         Ensure-CleanMerge -Context "rebase on $Branch"
     } elseif (Test-Path -LiteralPath ".git/refs/remotes/origin/$Branch") {
-        Write-Host "    No upstream — will push with -u" -ForegroundColor DarkGray
+        Write-Host "    No upstream  -  will push with -u" -ForegroundColor DarkGray
     }
 
     $pushArgs = @('push', 'origin', $Branch)
@@ -223,8 +258,8 @@ try {
 
     Write-Host ''
     Write-Ok 'Deploy complete.'
-    Write-Host "  main is on GitHub — Cloudflare Pages will deploy to https://househunt.pages.dev"
-    Write-Host "  (usually within 1–2 minutes; check the Cloudflare dashboard for build status)"
+    Write-Host "  main is on GitHub  -  Cloudflare Pages will deploy to https://househunt.pages.dev"
+    Write-Host "  (usually within 1-2 minutes; check the Cloudflare dashboard for build status)"
     if ($DryRun) {
         Write-Host '  [dry-run] No git changes were made.' -ForegroundColor DarkGray
     }
