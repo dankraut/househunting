@@ -1,5 +1,57 @@
-// sync.js — House Hunt IFL Sync v1.6.8
+// sync.js — House Hunt IFL Sync v1.6.9
 // Handles Idealista Favorites List sync for all bases
+
+// ── Price parsing (Italian Idealista formats) ───────────────────────────────
+function parseItalianEuroAmount(raw) {
+  if (!raw) return 0;
+  const s = String(raw).trim();
+  if (/\d\.\d{3}/.test(s)) return parseInt(s.replace(/\./g, ''), 10) || 0;
+  if (/,/.test(s)) return parseInt(s.replace(/,/g, ''), 10) || 0;
+  return parseInt(s.replace(/[^\d]/g, ''), 10) || 0;
+}
+
+function parseIdealistaPrice(text) {
+  if (!text) return 0;
+  const t = String(text).replace(/\s+/g, ' ').trim();
+  let best = 0;
+  const euroPatterns = [/€\s*([\d][\d.\s,]*)/g, /([\d][\d.\s,]*)\s*€/g];
+  for (const re of euroPatterns) {
+    let m;
+    while ((m = re.exec(t)) !== null) {
+      const euros = parseItalianEuroAmount(m[1]);
+      if (euros >= 30000 && euros <= 20000000) {
+        const k = Math.round(euros / 1000);
+        if (k > best) best = k;
+      }
+    }
+  }
+  if (!best) {
+    const dm = t.match(/(\d{1,3}(?:\.\d{3})+)/);
+    if (dm) {
+      const euros = parseItalianEuroAmount(dm[1]);
+      if (euros >= 30000 && euros <= 20000000) best = Math.round(euros / 1000);
+    }
+  }
+  return best;
+}
+
+function scrapePriceFromCard(card) {
+  if (!card) return 0;
+  const priceSelectors = [
+    '[class*="item-price"]', '[class*="Item-price"]', '[data-testid*="price"]',
+    '.price', 'span.price', '[class*="price"]'
+  ];
+  for (const sel of priceSelectors) {
+    for (const el of card.querySelectorAll(sel)) {
+      const txt = el.textContent || '';
+      if (/m[²2]|\/\s*m|sqm|mq|mese|month|affitto|rent/i.test(txt)) continue;
+      const p = parseIdealistaPrice(txt);
+      if (p > 0) return p;
+    }
+  }
+  const sansSize = (card.textContent || '').replace(/\d+\s*m[²2]/gi, '');
+  return parseIdealistaPrice(sansSize);
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getApiToken() {
@@ -61,12 +113,7 @@ function _scrapeIflPage() {
     const titleEl = card && (card.querySelector('a.item-link, h2 a, h3 a, [class*="title"] a, [class*="name"] a') || link);
     if (titleEl) title = titleEl.textContent.trim().slice(0, 120);
 
-    let price = 0;
-    const priceEl = card && card.querySelector('[class*="price"], .price');
-    if (priceEl) {
-      const pm = priceEl.textContent.replace(/\./g,'').match(/(\d{3,})/);
-      if (pm) price = Math.round(parseInt(pm[1]) / 1000);
-    }
+    const price = scrapePriceFromCard(card);
 
     const roomsM = text.match(/(\d+)\s*locali/i);
     const sizeM  = text.match(/(\d+)\s*m[²2]/i);
@@ -231,11 +278,14 @@ async function syncBase(base, setStatus) {
     return;
   }
 
-  await chrome.scripting.executeScript({
-    target: { tabId: spaTab.id },
-    func: payload => window.postMessage({ type: 'HOUSEHUNT_IFL_ADD', ...payload }, '*'),
-    args: [{ props: properties, baseGrp: base.abbr, iflToken: base.iflToken }]
-  });
+  const syncPayload = {
+    props: properties,
+    baseGrp: base.abbr,
+    baseName: base.name,
+    iflToken: base.iflToken,
+    discardedCount: discardedOnIdealista.length,
+    serverResult: null
+  };
 
   // Server sync (for write-back tracking)
   let syncResult = { toAdd: [], markedDeleted: [], updated: [], writeBackQueue: [] };
@@ -246,7 +296,14 @@ async function syncBase(base, setStatus) {
       body: JSON.stringify({ baseGrp: base.abbr, iflToken: base.iflToken, properties })
     });
     if (r.ok) syncResult = await r.json();
-  } catch (e) { /* non-fatal — SPA already updated */ }
+  } catch (e) { /* non-fatal — SPA update follows */ }
+
+  syncPayload.serverResult = syncResult;
+  await chrome.scripting.executeScript({
+    target: { tabId: spaTab.id },
+    func: payload => window.postMessage({ type: 'HOUSEHUNT_IFL_ADD', ...payload }, '*'),
+    args: [syncPayload]
+  });
 
   let writeBackNote = '';
   if (syncResult.writeBackQueue && syncResult.writeBackQueue.length > 0) {
@@ -265,7 +322,11 @@ async function syncBase(base, setStatus) {
     base: base.name,
     abbr: base.abbr,
     total: properties.length,
+    active: activeProperties.length,
     discarded: discardedOnIdealista.length,
+    added: (syncResult.toAdd || []).length,
+    updated: (syncResult.updated || []).length,
+    markedDeleted: (syncResult.markedDeleted || []).length,
     writeBackNote
   });
 }

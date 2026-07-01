@@ -1,4 +1,4 @@
-// content.js — House Hunt Chrome Extension v1.5.2
+// content.js — House Hunt Chrome Extension v1.6.9
 // Runs on idealista.it/immobile/* and idealista.it/en/immobile/* pages
 
 (function() {
@@ -141,24 +141,47 @@
     }
 
     // ── Price ──────────────────────────────────────────────────────────────
+    function parseItalianEuroAmount(raw) {
+      if (!raw) return 0;
+      const s = String(raw).trim();
+      if (/\d\.\d{3}/.test(s)) return parseInt(s.replace(/\./g, ''), 10) || 0;
+      if (/,/.test(s)) return parseInt(s.replace(/,/g, ''), 10) || 0;
+      return parseInt(s.replace(/[^\d]/g, ''), 10) || 0;
+    }
     function parseItalianPrice(txt) {
-      // Handles "870.000 €", "870,000 €", "1.200.000 €", "870 000 €"
-      const m = txt.match(/([\d][0-9.,\s]*)\s*€/);
-      if (!m) return null;
-      const raw = m[1].replace(/[.,\s]/g, '');
-      const val = parseInt(raw);
-      if (!val || val < 10) return null;
-      return val >= 1000 ? Math.round(val / 1000) : val; // already in k if < 1000
+      if (!txt) return null;
+      const t = String(txt).replace(/\d+\s*m[²2]/gi, '');
+      let best = 0;
+      for (const re of [/€\s*([\d][\d.\s,]*)/g, /([\d][\d.\s,]*)\s*€/g]) {
+        let m;
+        while ((m = re.exec(t)) !== null) {
+          const euros = parseItalianEuroAmount(m[1]);
+          if (euros >= 30000 && euros <= 20000000) {
+            const k = Math.round(euros / 1000);
+            if (k > best) best = k;
+          }
+        }
+      }
+      if (!best) {
+        const dm = t.match(/(\d{1,3}(?:\.\d{3})+)/);
+        if (dm) {
+          const euros = parseItalianEuroAmount(dm[1]);
+          if (euros >= 30000) best = Math.round(euros / 1000);
+        }
+      }
+      return best > 0 ? best : null;
     }
     // Try price-specific elements first
-    for (const sel of ['[class*="price-header"]','[class*="Price"]','.price','h2.price','[class*="price"]']) {
+    for (const sel of ['[class*="price-header"]','[class*="item-price"]','[class*="Price"]','.price','h2.price','[class*="price"]']) {
       const el = document.querySelector(sel);
-      if (el) { const p = parseItalianPrice(el.textContent); if (p) { result.price = p; break; } }
+      if (el && !/m[²2]|\/\s*m|sqm|mq/i.test(el.textContent)) {
+        const p = parseItalianPrice(el.textContent);
+        if (p) { result.price = p; break; }
+      }
     }
     if (!result.price) {
-      // Scan all text for a price pattern near €
-      const m = document.body.innerText.match(/([\d][0-9.,\s]{2,12})\s*€/);
-      if (m) { const p = parseItalianPrice(m[0]); if (p) result.price = p; }
+      const p = parseItalianPrice(document.body.innerText);
+      if (p) result.price = p;
     }
 
     // ── Rooms / size ───────────────────────────────────────────────────────────

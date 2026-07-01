@@ -314,11 +314,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 </div></div>
 
 <!-- PROPERTY DETAIL MODAL -->
-<div id="detail-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeDetailModal()">
+<div id="detail-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)requestCloseDetailModal()">
   <div class="modal" style="max-width:580px">
     <div class="modal-header">
       <h3 id="detail-modal-title">Property Details</h3>
-      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+      <button class="modal-close" onclick="requestCloseDetailModal()">✕</button>
     </div>
     <div class="modal-body">
       <div class="tile-field">
@@ -398,8 +398,33 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
     <div class="modal-footer">
       <div id="dm-status-msg" style="font-size:11px;color:var(--text3);margin-right:auto;align-self:center"></div>
       <button class="btn-secondary" onclick="addToCalendar(_dmPropId)" title="Add scheduled visit to Google Calendar" style="font-size:11px">📅 +Cal</button>
-      <button class="btn-secondary" onclick="closeDetailModal()">Close</button>
+      <button class="btn-secondary" onclick="requestCloseDetailModal()">Close</button>
       <button class="btn-primary" id="dm-save-btn" onclick="saveDetailModal()" disabled>Save Changes</button>
+    </div>
+  </div>
+  <div id="dm-unsaved-prompt" class="modal-overlay" style="display:none;z-index:110;background:rgba(0,0,0,.35)" onclick="if(event.target===this)hideDmUnsavedPrompt()">
+    <div class="modal" style="max-width:360px" onclick="event.stopPropagation()">
+      <div class="modal-header"><h3>Unsaved changes</h3></div>
+      <div class="modal-body" style="font-size:12px;color:var(--text2)">You have unsaved edits. Save before closing?</div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="dmDiscardAndClose()">Don't save</button>
+        <button class="btn-secondary" onclick="hideDmUnsavedPrompt()">Keep editing</button>
+        <button class="btn-primary" onclick="dmSaveAndClose()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- IFL SYNC RESULT MODAL -->
+<div id="ifl-sync-modal" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>IFL Sync Complete</h3>
+      <button class="modal-close" onclick="closeIflSyncModal()">✕</button>
+    </div>
+    <div class="modal-body" id="ifl-sync-modal-body" style="font-size:12px;line-height:1.7;color:var(--text2);white-space:pre-line"></div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="closeIflSyncModal()">Dismiss</button>
     </div>
   </div>
 </div>
@@ -599,8 +624,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--adriat-l
 </div>
 
 <script>
-// ═══ SPA v3.4.4 ══════════════════════════════════════════════════════════════
-const SPA_VERSION = 'v3.4.5';
+// ═══ SPA v3.4.6 ══════════════════════════════════════════════════════════════
+const SPA_VERSION = 'v3.4.6';
 const API_BASE = '/api';
 const GEMINI_KEY = 'AIzaSyBmBWSxxAvawMG4noiDA7ulzm6hHtYtCAc';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`;
@@ -729,6 +754,17 @@ function initProp(src = {}) {
 function getProp(id) { return state.props.find(p => String(p.id) === String(id)); }
 function getBase(abbr) { return state_bases.find(b => b.abbr === abbr); }
 function getAirport(abbr) { return state_airports.find(a => a.abbr === abbr); }
+function normalizePropGrp(p) {
+  if (!p) return;
+  if (typeof p.grp === 'number' && p.grp > 0) {
+    p.grp = state_bases[p.grp - 1]?.abbr || state_bases[0]?.abbr || '';
+  }
+}
+function formatPrice(priceK) {
+  if (!priceK || priceK <= 0) return '€—';
+  return '€' + Math.round(priceK * 1000).toLocaleString('en-GB');
+}
+function isValidScrapedPrice(k) { return k >= 30 && k <= 10000; }
 function baseColor(abbr) {
   const idx = state_bases.findIndex(b => b.abbr === abbr);
   return BASE_COLORS[idx % BASE_COLORS.length] || '#888';
@@ -772,6 +808,7 @@ async function loadFromStorage() {
   } catch(e) { _loadLocal(); }
 
   refreshBaseFilters();
+  state.props.forEach(normalizePropGrp);
   populateMapDaySelect();
   updateHeader();
   renderProps();
@@ -969,8 +1006,12 @@ function _filterProps() {
     }
     if (baseF && p.grp !== baseF) return false;
     if (searchF) {
-      const hay = `${p.name} ${p.commune} ${p.town} ${p.prov} ${p.broker} ${p.firmName} ${p.notes} ${p.price}`.toLowerCase();
-      if (!hay.includes(searchF)) return false;
+      const idStr = String(p.id);
+      if (idStr === searchF || idStr.includes(searchF)) { /* match */ }
+      else {
+        const hay = `${p.id} ${p.url} ${p.name} ${p.commune} ${p.town} ${p.prov} ${p.broker} ${p.firmName} ${p.notes} ${p.price} ${p.grp}`.toLowerCase();
+        if (!hay.includes(searchF)) return false;
+      }
     }
     return true;
   });
@@ -1003,6 +1044,7 @@ function renderProps() {
 }
 
 function renderTile(p) {
+  normalizePropGrp(p);
   const base = getBase(p.grp);
   const bColor = baseColor(p.grp);
   const stCls = {
@@ -1032,15 +1074,17 @@ function renderTile(p) {
   if (p.schedDate) chips += `<span class="tile-date-chip sched-chip">📅 ${p.schedDate}${p.schedTime ? ' '+p.schedTime : ''}</span>`;
   else if (p.userPlannedDate) chips += `<span class="tile-date-chip planned-chip">🗓 ${p.userPlannedDate}${p.userPlannedTime ? ' '+p.userPlannedTime : ''}</span>`;
 
-  const priceStr = p.price ? `€${p.price}k` : '€—';
+  const priceStr = formatPrice(p.price);
   const roomsStr = p.rooms ? `${p.rooms} rm` : '';
   const sizeStr = p.size ? `${p.size}m²` : '';
   const specs = [priceStr, roomsStr, sizeStr].filter(Boolean).join(' · ');
+  const baseLbl = base ? `${base.abbr} · ${base.name}` : (p.grp ? String(p.grp) : '—');
 
   return `<div class="tile ${stCls}" style="border-left-color:${bColor}" id="tile-${p.id}">
   <div class="tile-body">
     <div class="tile-name"><a href="${p.url||'#'}" target="_blank" rel="noopener">${escHtml(p.name||'Unnamed')}</a></div>
     <div class="tile-sub">${escHtml(locLine)}</div>
+    <div class="tile-base" style="font-size:10px;font-weight:600;color:${bColor}">📍 ${escHtml(baseLbl)}</div>
     <div class="tile-drive" title="Drive times">${driveStr}</div>
     <div style="font-size:11px;color:var(--text2);margin-top:1px">${specs}</div>
     <div class="tile-status-row">
@@ -1075,7 +1119,35 @@ function quickStatus(id, status) {
 }
 
 // ─── Property Detail Modal ────────────────────────────────────────────────────
-let _dmPropId = null, _dmDirty = false;
+let _dmPropId = null, _dmDirty = false, _dmEscPrompt = false;
+
+function requestCloseDetailModal() {
+  if (!_dmDirty) { closeDetailModal(true); return; }
+  showDmUnsavedPrompt();
+}
+
+function showDmUnsavedPrompt() {
+  _dmEscPrompt = true;
+  const el = document.getElementById('dm-unsaved-prompt');
+  if (el) el.style.display = 'flex';
+}
+
+function hideDmUnsavedPrompt() {
+  _dmEscPrompt = false;
+  const el = document.getElementById('dm-unsaved-prompt');
+  if (el) el.style.display = 'none';
+}
+
+function dmDiscardAndClose() {
+  hideDmUnsavedPrompt();
+  closeDetailModal(true);
+}
+
+function dmSaveAndClose() {
+  saveDetailModal();
+  hideDmUnsavedPrompt();
+  closeDetailModal(true);
+}
 
 function openDetailModal(id) {
   const p = getProp(id);
@@ -1210,11 +1282,32 @@ function saveDetailModal() {
   }
 }
 
-function closeDetailModal() {
-  if (_dmDirty && !confirm('Discard unsaved changes?')) return;
+function closeDetailModal(force) {
+  if (!force && _dmDirty) { showDmUnsavedPrompt(); return; }
+  hideDmUnsavedPrompt();
   document.getElementById('detail-modal').style.display = 'none';
   _dmPropId = null; _dmDirty = false;
 }
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const syncModal = document.getElementById('ifl-sync-modal');
+  if (syncModal && syncModal.style.display === 'flex') {
+    e.preventDefault();
+    closeIflSyncModal();
+    return;
+  }
+  if (_dmEscPrompt) {
+    e.preventDefault();
+    hideDmUnsavedPrompt();
+    return;
+  }
+  const detailModal = document.getElementById('detail-modal');
+  if (detailModal && detailModal.style.display === 'flex') {
+    e.preventDefault();
+    requestCloseDetailModal();
+  }
+});
 
 // ─── Add Property Modal ───────────────────────────────────────────────────────
 function openAddModal(prefill = {}) {
@@ -1357,7 +1450,7 @@ function applyTemplate(tpl, p) {
     .replace(/\[Idealista ID\]/gi, String(p.id || ''))
     .replace(/\[Property Name\]/gi, p.name || '')
     .replace(/\[Town\]/gi, p.town || '')
-    .replace(/\[Price\]/gi, p.price ? `€${p.price}k` : '')
+    .replace(/\[Price\]/gi, p.price ? formatPrice(p.price) : '')
     .replace(/\[Rooms\]/gi, String(p.rooms || ''))
     .replace(/\[Broker\]/gi, p.broker || p.firmName || '')
     .replace(/\[Airport Distance\]/gi, aptDrive ? `${aptDrive}min from ${apt}` : '');
@@ -1647,7 +1740,7 @@ function refreshMap() {
     const aptDrive = getPropDriveToAirport(p, apt);
     const baseDrive = getPropDriveToBase(p, p.grp);
     L.marker([lat,lng],{icon}).addTo(_mapObj).bindPopup(
-      `<b>${escHtml(p.name)}</b><br>${escHtml(p.commune||'')}${p.commune?', ':''}${escHtml(p.town)} (${p.prov})<br>€${p.price}k · ${p.rooms}rm<br>`+
+      `<b>${escHtml(p.name)}</b><br>${escHtml(p.commune||'')}${p.commune?', ':''}${escHtml(p.town)} (${p.prov})<br>${formatPrice(p.price)} · ${p.rooms}rm<br>`+
       `${aptDrive!=null?`✈ ${apt}: ${aptDrive}m<br>`:''}${baseDrive!=null?`📍 ${p.grp}: ${baseDrive}m`:''}`
     );
     // Track for day route
@@ -1741,7 +1834,7 @@ function addToCalendar(id) {
   const apt = getBase(p.grp)?.airport || 'FCO';
   const aptDrive = getPropDriveToAirport(p, apt);
   const title = encodeURIComponent(`House viewing: ${p.name} (${p.town}${p.prov?', '+p.prov:''})`);
-  const det = encodeURIComponent(`${p.url}\n${apt}: ${aptDrive??'?'}min | €${p.price}k | ${p.rooms} rooms`);
+  const det = encodeURIComponent(`${p.url}\n${apt}: ${aptDrive??'?'}min | ${formatPrice(p.price)} | ${p.rooms} rooms`);
   window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(s)}/${fmt(e)}&details=${det}`,'_blank');
 }
 
@@ -1751,7 +1844,7 @@ function _buildGeminiContext() {
     const apt = getBase(p.grp)?.airport || 'FCO';
     const aptD = getPropDriveToAirport(p, apt);
     const baseD = getPropDriveToBase(p, p.grp);
-    return `ID:${p.id} | ${p.name} | ${p.town},${p.prov} | €${p.price}k | ${p.rooms}rm | ` +
+    return `ID:${p.id} | ${p.name} | ${p.town},${p.prov} | ${formatPrice(p.price)} | ${p.rooms}rm | ` +
       `Base:${p.grp} | ✈${apt}:${aptD??'?'}m | Base:${baseD??'?'}m | Status:${p.status}`;
   }).join('\n');
   const bases = state_bases.map(b => `${b.name}(${b.abbr}) visit:${b.visitFrom||'?'}–${b.visitTo||b.visitFrom||'?'} airport:${b.airport}`).join(', ');
@@ -2043,18 +2136,21 @@ window.addEventListener('message', evt => {
   if (!evt.data) return;
   if (evt.data.type==='HOUSEHUNT_RELOAD') { loadFromStorage(); return; }
   if (evt.data.type==='HOUSEHUNT_IFL_ADD') {
-    const {props, baseGrp, iflToken} = evt.data;
+    const {props, baseGrp, baseName, iflToken, discardedCount, serverResult} = evt.data;
     if (!Array.isArray(props) || !baseGrp) return;
-    let added=0, updated=0;
+    let added=0, updated=0, priceFixed=0;
     for (const p of props) {
       const existing = state.props.find(x=>String(x.id)===String(p.id));
+      const scrapedPrice = Number(p.price) || 0;
       if (existing) {
         if (p.discarded) {
           if (!ELIM_STATUSES.has(existing.status)) existing.status = 'Deleted-Idealista';
         } else {
-          // Update Idealista fields; preserve status, GPS coords, notes, schedule
           if (p.title||p.name) existing.name = stripD(p.title||p.name);
-          if (p.price) existing.price = p.price;
+          if (isValidScrapedPrice(scrapedPrice)) {
+            if (existing.price !== scrapedPrice) priceFixed++;
+            existing.price = scrapedPrice;
+          }
           if (p.rooms) existing.rooms = p.rooms;
           if (p.size) existing.size = p.size;
           if (p.commune) existing.commune = stripD(p.commune);
@@ -2062,35 +2158,47 @@ window.addEventListener('message', evt => {
           if (p.prov) existing.prov = (p.prov||'').toUpperCase();
           if (p.broker) existing.broker = stripD(p.broker);
           if (p.realtorUrl) existing.realtorUrl = p.realtorUrl;
-          existing.grp = baseGrp; // base is always most recent assignment
-          existing.sourceIfl = iflToken||existing.sourceIfl;
+          existing.grp = baseGrp;
+          existing.sourceIfl = iflToken || existing.sourceIfl || 'none';
+          normalizePropGrp(existing);
           updated++;
         }
       } else if (!p.discarded) {
-        // New property from IFL
         const np = initProp({
           id:parseInt(p.id), name:stripD(p.title||p.name||('IFL-'+p.id)),
           commune:stripD(p.commune||''), town:stripD(p.town||''),
-          prov:(p.prov||'').toUpperCase(), price:p.price||0,
+          prov:(p.prov||'').toUpperCase(), price:isValidScrapedPrice(scrapedPrice)?scrapedPrice:0,
           rooms:p.rooms||0, size:p.size||0, grp:baseGrp,
           url:`https://www.idealista.it/immobile/${p.id}/`,
           lat:p.lat||null, lng:p.lng||null,
           sourceIfl:iflToken||'none', status:'New', _custom:true
         });
+        normalizePropGrp(np);
         state.props.push(np); added++;
       }
     }
-    // In SPA (this base+IFL) but not in IFL → Deleted-Idealista
+    let markedDeleted = 0;
     if (iflToken) {
       const iflIds = new Set(props.map(p=>String(p.id)));
       state.props.forEach(p => {
         if (p.grp===baseGrp && p.sourceIfl===iflToken && !iflIds.has(String(p.id))) {
-          if (!ELIM_STATUSES.has(p.status)) p.status='Deleted-Idealista';
+          if (!ELIM_STATUSES.has(p.status)) { p.status='Deleted-Idealista'; markedDeleted++; }
         }
       });
     }
     saveToStorage(); renderProps();
-    showExtToast(`Sync: +${added} new · ${updated} updated · ${props.length} in IFL`, 'ok');
+    const base = getBase(baseGrp);
+    showIflSyncModal({
+      baseName: baseName || base?.name || baseGrp,
+      baseAbbr: baseGrp,
+      total: props.length,
+      added,
+      updated,
+      priceFixed,
+      discarded: discardedCount || props.filter(p=>p.discarded).length,
+      markedDeleted,
+      serverUpdated: (serverResult?.updated || []).length
+    });
     return;
   }
   if (evt.data.type !== 'HOUSEHUNT_BROKER') return;
@@ -2129,6 +2237,28 @@ window.addEventListener('message', evt => {
     showExtToast(`${p.name}: no new data extracted.`,'warn');
   }
 });
+
+function showIflSyncModal({ baseName, baseAbbr, total, added, updated, priceFixed, discarded, markedDeleted, serverUpdated }) {
+  const body = document.getElementById('ifl-sync-modal-body');
+  const modal = document.getElementById('ifl-sync-modal');
+  if (!body || !modal) return;
+  body.textContent = [
+    `Base: ${baseName} (${baseAbbr})`,
+    `Properties in IFL: ${total}`,
+    added ? `New properties added: ${added}` : null,
+    updated ? `Existing properties updated: ${updated}` : null,
+    priceFixed ? `Prices refreshed: ${priceFixed}` : null,
+    markedDeleted ? `Marked Deleted-Idealista: ${markedDeleted}` : null,
+    discarded ? `Discarded on Idealista: ${discarded}` : null,
+    serverUpdated ? `Server-side updates: ${serverUpdated}` : null,
+  ].filter(Boolean).join('\n');
+  modal.style.display = 'flex';
+}
+
+function closeIflSyncModal() {
+  const modal = document.getElementById('ifl-sync-modal');
+  if (modal) modal.style.display = 'none';
+}
 
 function showExtToast(msg, type='ok') {
   const colors={ok:'#2E7D32',err:'#C0392B',warn:'#E65100'};

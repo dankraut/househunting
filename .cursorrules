@@ -1,0 +1,18 @@
+# Cursor Rules & Project Context
+
+## Codebase Boundaries & Constraints
+- NEVER read, modify, or reference any files in any directory or sub-directory labeled "zArchive".
+- You operate entirely on the local files in this workspace. Do not attempt to use external browser tools unless explicitly requested. You can suggest using external browser tools when you feel they are needed or materially beneficial.
+
+## Workflow & State Management
+- CRITICAL: Always read the `PROJECT_STATE` file before analyzing the codebase or suggesting any code changes. This is the source of truth for the current development phase.
+- When applying changes, modify the local files directly. Do not assume or attempt external Git operations unless using Agent mode under explicit instruction.
+
+## Versioning & Deployment Rules
+- Always update both the SPA and Chrome Extension version numbers in their respective configuration/manifest files whenever creating new files or implementing feature enhancements.
+- After successfully writing code modifications to the workspace, print a summary message that clearly lists the new version numbers for both the SPA and the Extension so I can track them for the upcoming Git commit.
+
+## Code Style & Tech Stack Context
+- Frontend: Single Page Application (SPA) deployed on Cloudflare Pages. Keep bundle sizes optimized and use efficient asset routing.
+- Extension: Chrome Extension architecture. Ensure compliance with Manifest V3 rules, background service worker lifecycle, and secure content security policies (CSP).
+- Backend: Cloudflare Workers and Cloudflare KV. Use KV asynchronously and design with execution limits/edge environment constraints in mind.
