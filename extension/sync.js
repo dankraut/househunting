@@ -453,7 +453,10 @@ async function loadBases() {
     const r = await fetch('https://househunt.pages.dev/api/bases', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
-    if (r.ok) return await r.json();
+    if (r.ok) {
+      const d = await r.json();
+      return Array.isArray(d) ? d : (d.bases || []);
+    }
   } catch (e) {}
   return [];
 }

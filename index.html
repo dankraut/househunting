@@ -178,6 +178,15 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 .map-controls select{font-size:11px;padding:2px 5px;height:24px}
 #map{flex:1;min-height:200px;border-radius:var(--radius);box-shadow:var(--shadow)}
 .map-legend{flex-shrink:0;padding:6px 0 8px;display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text3)}
+.map-day-wrap{position:relative;display:inline-flex;align-items:center;gap:4px}
+.map-day-wrap .io-btn{font-size:11px;padding:2px 8px;height:24px;min-width:120px;text-align:left}
+.map-day-dropdown{position:absolute;top:100%;left:0;z-index:1000;margin-top:2px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:6px 0;min-width:200px;max-height:220px;overflow-y:auto}
+.map-day-opt{display:flex;align-items:center;gap:6px;padding:4px 10px;font-size:11px;cursor:pointer;white-space:nowrap}
+.map-day-opt:hover{background:var(--bg2)}
+#map-status{font-size:11px;color:var(--adriat);min-width:80px}
+.dp-drag-handle{cursor:grab;color:var(--text3);font-size:14px;flex-shrink:0;padding:0 2px;user-select:none}
+.dp-leg.dp-stop:hover{background:var(--bg2)}
+.dp-actions{display:flex;gap:4px;flex-shrink:0}
 /* Day Planning */
 .dp-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px;flex-shrink:0;font-size:12px}
 .dp-summary{padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;font-size:11px;flex-shrink:0}
@@ -211,6 +220,28 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 .gem-usage{margin-top:12px;padding:10px 14px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);font-size:11px;color:var(--text2)}
 .gem-usage h4{font-size:12px;font-weight:600;color:var(--adriat);margin-bottom:6px}
 .gem-usage ul{padding-left:16px;display:flex;flex-direction:column;gap:3px}
+/* 24h time picker */
+.hh-time-field{display:flex;gap:4px;align-items:center}
+.hh-time-field input.hh-time-input{flex:1;font-family:monospace;letter-spacing:.5px;min-width:72px}
+.hh-time-pick-btn{padding:4px 8px;font-size:14px;line-height:1;border:1px solid var(--border);border-radius:4px;background:var(--bg2);cursor:pointer}
+.hh-time-pick-btn:hover{border-color:var(--adriat);background:#fff}
+.hh-time-picker-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:10050;display:flex;align-items:center;justify-content:center;padding:12px}
+.hh-time-picker-panel{background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.25);padding:14px 16px 12px;width:min(320px,92vw)}
+.hh-time-picker-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px}
+.hh-time-picker-header #hh-tp-preview{font-family:monospace;font-size:20px;font-weight:700;color:var(--adriat)}
+.hh-time-dial-wrap{position:relative;width:260px;height:260px;margin:0 auto 10px}
+.hh-time-dial{position:relative;width:100%;height:100%;border-radius:50%;background:var(--bg2);border:1px solid var(--border)}
+.hh-time-dial::before{content:'';position:absolute;inset:22%;border-radius:50%;border:1px dashed rgba(0,0,0,.08);pointer-events:none}
+.hh-tp-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:monospace;font-size:18px;font-weight:700;color:var(--adriat);pointer-events:none;z-index:2}
+.hh-tp-cell{position:absolute;transform:translate(-50%,-50%);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:monospace;font-weight:600;padding:0;z-index:1}
+.hh-tp-cell.hh-tp-outer{width:28px;height:28px;font-size:11px;background:#fff;border:2px solid var(--olive);color:var(--olive)}
+.hh-tp-cell.hh-tp-inner{width:22px;height:22px;font-size:9px;background:#fff;border:1px solid var(--adriat);color:var(--adriat)}
+.hh-tp-cell.hh-tp-min{width:18px;height:18px;font-size:8px;background:#fff;border:1px solid var(--border2);color:var(--text2)}
+.hh-tp-cell.hh-tp-min.hh-tp-min-major{width:24px;height:24px;font-size:9px;font-weight:700;border-color:var(--adriat);color:var(--adriat)}
+.hh-tp-cell:hover,.hh-tp-cell.hh-tp-selected{background:var(--adriat);color:#fff;border-color:var(--adriat)}
+.hh-time-picker-actions{display:flex;gap:6px;justify-content:flex-end}
+.hh-time-picker-actions button{font-size:11px;padding:5px 12px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);cursor:pointer}
+.hh-time-picker-actions button.hh-tp-ok{background:var(--adriat);color:#fff;border-color:var(--adriat)}
 @media(max-width:640px){.quick-btns{grid-template-columns:1fr}#map{min-height:160px}}
 </style>
 </head>
@@ -222,6 +253,7 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
     <h1>Italy House Hunting</h1>
     <div class="sub" id="header-sub">Loading…</div>
   </div>
+  <span id="sync-status" style="font-size:10px;color:var(--text3);white-space:nowrap" title="Multi-user sync">…</span>
 </div>
 
 <div id="tabs">
@@ -307,16 +339,21 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
   <div class="map-controls">
     <span id="map-grp-filters" style="display:flex;gap:8px;flex-wrap:wrap"></span>
     <label><input type="checkbox" id="map-sched" onchange="refreshMap()"> Scheduled only</label>
-    <label>Base <select id="map-base" onchange="refreshMap()"><option value="">All</option></select></label>
-    <label>Day <select id="map-day" onchange="onMapDayChange()"><option value="">All days</option></select></label>
-    <label>Route <select id="map-route-mode" onchange="refreshMap()" disabled title="Select a day first">
+    <label>Base <select id="map-base" onchange="onMapBaseChange()"><option value="">All bases</option></select></label>
+    <span class="map-day-wrap" id="map-day-wrap">
+      <label>Days</label>
+      <button type="button" id="map-day-btn" class="io-btn" onclick="toggleMapDayDropdown()" disabled>Select a base first</button>
+      <div id="map-day-dropdown" class="map-day-dropdown" style="display:none"></div>
+    </span>
+    <label>Route <select id="map-route-mode" onchange="refreshMap()" disabled title="Select one day for route">
       <option value="timed">Timed (scheduled/planned)</option>
       <option value="suggested">Suggested (max stops)</option>
     </select></label>
+    <span id="map-status"></span>
     <span id="map-route-info" style="font-size:11px;color:var(--text3)"></span>
   </div>
   <div id="map"></div>
-  <div class="map-legend"><span>★ Stay bases</span><span>⇄ Transit routes</span><span style="color:var(--olive)">● On route</span><span style="color:var(--red)">● No time / skipped</span><span style="color:var(--amber)">● Budget skip</span><span style="color:var(--adriat)">── Day route</span><span style="color:#7B1FA2">- - Suggested alt</span></div>
+  <div class="map-legend"><span>★ Stay bases</span><span>⇄ Transit routes</span><span>🟢 Scheduled ring</span><span>🟡 Planned ring</span><span style="color:var(--olive)">● On route</span><span style="color:var(--red)">● No time / skipped</span><span style="color:var(--amber)">● Budget skip</span><span style="color:var(--adriat)">── Day route</span><span style="color:#7B1FA2">- - Suggested route</span></div>
 </div>
 
 <!-- AI COPILOT TAB -->
@@ -370,14 +407,14 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 
       <div class="sect-label">Location</div>
       <div class="tile-field">
-        <label>Address</label>
-        <input id="dm-address" type="text" placeholder="Town, Province, Italy" autocomplete="off" oninput="dmMarkDirty()">
-        <div class="field-hint">Required if no GPS. Unambiguous Italian town (include province if needed).</div>
+        <label>Town / location</label>
+        <input id="dm-address" type="text" placeholder="e.g. Gubbio, PG" autocomplete="off" oninput="dmMarkDirty()" onblur="dmSyncLocation('address')">
+        <div class="field-hint">Required if no GPS. Use an unambiguous Italian town (include province if needed).</div>
       </div>
       <div class="tile-field-row">
         <div class="tile-field"><label>GPS coordinates</label>
-          <input id="dm-gps" type="text" placeholder="42.418, 11.875" autocomplete="off" oninput="dmMarkDirty()">
-          <div class="field-hint">Optional. Decimal or degrees (e.g. 42°25′N 11°52′E).</div>
+          <input id="dm-gps" type="text" placeholder="42.418, 11.875" autocomplete="off" oninput="dmMarkDirty()" onblur="dmSyncLocation('gps')">
+          <div class="field-hint">Decimal degrees (lat, lng). Town is looked up when GPS is set.</div>
         </div>
         <div class="tile-field" style="flex:0 0 auto"><button class="io-btn" onclick="dmRecalcDrives()" style="margin-top:14px;font-size:11px" id="dm-recalc-btn">⟳ Drive Times</button></div>
       </div>
@@ -416,7 +453,12 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
       </div>
       <div class="tile-field-row">
         <div class="tile-field"><label>Planned Date</label><input id="dm-planned-date" type="date" oninput="dmMarkDirty()"></div>
-        <div class="tile-field"><label>Planned Time</label><input id="dm-planned-time" type="time" oninput="dmMarkDirty()"></div>
+        <div class="tile-field"><label>Planned Time</label>
+          <div class="hh-time-field">
+            <input id="dm-planned-time" class="hh-time-input" type="text" inputmode="numeric" placeholder="HH:mm" maxlength="5" oninput="dmMarkDirty()">
+            <button type="button" class="hh-time-pick-btn" title="Pick time" onclick="openTimePickerFor('dm-planned-time')">🕐</button>
+          </div>
+        </div>
       </div>
       <div class="tile-field-row">
         <div class="tile-field"><label>Proposed Date</label><input id="dm-proposed-date" type="date" oninput="dmMarkDirty()"></div>
@@ -424,7 +466,12 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
       </div>
       <div class="tile-field-row">
         <div class="tile-field"><label>Scheduled Date</label><input id="dm-sched-date" type="date" oninput="dmMarkDirty()"></div>
-        <div class="tile-field"><label>Scheduled Time</label><input id="dm-sched-time" type="time" oninput="dmMarkDirty()"></div>
+        <div class="tile-field"><label>Scheduled Time</label>
+          <div class="hh-time-field">
+            <input id="dm-sched-time" class="hh-time-input" type="text" inputmode="numeric" placeholder="HH:mm" maxlength="5" oninput="dmMarkDirty()">
+            <button type="button" class="hh-time-pick-btn" title="Pick time" onclick="openTimePickerFor('dm-sched-time')">🕐</button>
+          </div>
+        </div>
       </div>
 
       <div class="sect-label">Drive Times</div>
@@ -489,12 +536,14 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
         <div class="tile-field"><label>Idealista ID</label><input type="text" id="add-id" readonly style="background:var(--bg3)" autocomplete="off"></div>
       </div>
       <div class="tile-field">
-        <label>Address *</label>
-        <input type="text" id="add-address" placeholder="Town, Province, Italy" autocomplete="off">
+        <label>Town / location</label>
+        <input type="text" id="add-address" placeholder="e.g. Gubbio, PG" autocomplete="off" onblur="addFormSyncLocation('address')">
+        <div class="field-hint">Required if no GPS. GPS is added when town is entered.</div>
       </div>
       <div class="tile-field">
         <label>GPS coordinates</label>
-        <input type="text" id="add-gps" placeholder="42.418, 11.875" autocomplete="off">
+        <input type="text" id="add-gps" placeholder="42.418, 11.875" autocomplete="off" onblur="addFormSyncLocation('gps')">
+        <div class="field-hint">Decimal degrees (lat, lng). Town is looked up when GPS is set.</div>
       </div>
       <div class="tile-field-row">
         <div class="tile-field"><label>Price (€k) *</label><input type="number" id="add-price" autocomplete="off"></div>
@@ -570,17 +619,19 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
             </select></div>
         </div>
         <div id="base-stay-fields">
-          <div style="margin-bottom:8px"><label style="font-size:10px;font-weight:600;color:var(--text3)">Location address</label>
-            <input id="base-form-address" type="text" placeholder="Town, Province, Italy" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
+          <div style="margin-bottom:8px"><label style="font-size:10px;font-weight:600;color:var(--text3)">Town / location</label>
+            <input id="base-form-address" type="text" placeholder="e.g. Gubbio, PG" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px" onblur="baseFormSyncLocation('address')">
+            <div class="field-hint">Required if no GPS. GPS is added when town is entered.</div></div>
           <div style="margin-bottom:8px"><label style="font-size:10px;font-weight:600;color:var(--text3)">GPS coordinates</label>
-            <input id="base-form-gps" type="text" placeholder="42.9535, 12.0022" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
+            <input id="base-form-gps" type="text" placeholder="42.9535, 12.0022" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px" onblur="baseFormSyncLocation('gps')">
+            <div class="field-hint">Location is based on GPS. Town is looked up when GPS is set.</div></div>
         </div>
         <div id="base-transit-fields" style="display:none">
           <div style="display:flex;gap:8px;margin-bottom:8px">
             <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Origin Base</label>
-              <select id="base-form-from-base" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></select></div>
+              <select id="base-form-from-base" onchange="onTransitBaseRefsChange()" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></select></div>
             <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Destinate Base</label>
-              <select id="base-form-to-base" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></select></div>
+              <select id="base-form-to-base" onchange="onTransitBaseRefsChange()" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></select></div>
           </div>
           <p style="font-size:10px;color:var(--text3);margin-bottom:8px">Transit days route between two Stay bases. Add Stay bases with locations before creating a Transit base.</p>
         </div>
@@ -592,8 +643,6 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
             <input id="base-form-to" type="date" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px">
             <div class="field-hint">mm/dd/yyyy</div></div>
         </div>
-        <div style="margin-bottom:8px"><label style="font-size:10px;font-weight:600;color:var(--text3)">Default Airport</label>
-          <select id="base-form-airport" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></select></div>
         <div style="margin-bottom:8px"><label style="font-size:10px;font-weight:600;color:var(--text3)">IFL Favorites URL (optional)</label>
           <input id="base-form-ifl" type="url" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
         <div style="margin-bottom:10px"><label style="font-size:10px;font-weight:600;color:var(--text3)">Notes</label>
@@ -631,7 +680,7 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
         <!-- Templates -->
     <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
       <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">Message Templates</div>
-      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Parameters: [Property URL] [Idealista ID] [base name] [base airport] [base from date] {"- "[base to date]} [Property Name] [Town] [Price] [Rooms] [Broker] [Airport Distance]</p>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Parameters: [Property URL] [Idealista ID] [base name] [nearest airport] [base from date] {"- "[base to date]} [Property Name] [Town] [Price] [Rooms] [Broker] [Airport Distance]</p>
       <div id="tpl-editor" style="display:flex;flex-direction:column;gap:10px"></div>
       <button class="io-btn" onclick="saveTemplatesFromEditor()" style="margin-top:8px;background:var(--adriat);color:#fff;border-color:var(--adriat)">Save Templates</button>
     </div>
@@ -682,9 +731,27 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
   </div>
 </div>
 
+<!-- 24h TIME PICKER -->
+<div id="hh-time-picker" class="hh-time-picker-overlay" style="display:none" onclick="if(event.target===this)cancelTimePicker()">
+  <div class="hh-time-picker-panel" onclick="event.stopPropagation()">
+    <div class="hh-time-picker-header">
+      <span id="hh-tp-step">Select hour</span>
+      <span id="hh-tp-preview">--:--</span>
+    </div>
+    <div class="hh-time-dial-wrap">
+      <div class="hh-time-dial" id="hh-tp-dial"></div>
+    </div>
+    <div class="hh-time-picker-actions">
+      <button type="button" onclick="clearTimePicker()">Clear</button>
+      <button type="button" onclick="cancelTimePicker()">Cancel</button>
+      <button type="button" class="hh-tp-ok" onclick="confirmTimePicker()">OK</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ═══ SPA v3.7.1 ══════════════════════════════════════════════════════════════
-const SPA_VERSION = 'v3.7.1';
+// ═══ SPA v3.10.0 ═════════════════════════════════════════════════════════════
+const SPA_VERSION = 'v3.10.0';
 const API_BASE = '/api';
 const GEMINI_KEY = 'AIzaSyBmBWSxxAvawMG4noiDA7ulzm6hHtYtCAc';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`;
@@ -698,7 +765,7 @@ const DRIVE_CAP = 120, VIEWING_MIN = 45, DAY_START = 8.5, DAY_END = 19.0;
 const DAY_START_MIN = Math.round(DAY_START * 60);
 const DAY_END_MIN = Math.round(DAY_END * 60);
 const SUGGESTED_DRIVE_STAY = 180;
-const SUGGESTED_DRIVE_TRANSIT = 120;
+const SUGGESTED_DRIVE_TRANSIT = 120; // max extra drive beyond direct origin→destinate leg
 
 // Base color palette (index → border color)
 const BASE_COLORS = ['#5B7232','#F5A623','#2C5F7A','#C0603A','#8B5CF6','#0891B2','#DC2626','#059669','#92400E','#BE185D'];
@@ -707,8 +774,11 @@ const LS_KEY = 'italy_hunt_2026_v35';
 const LS_BASES = 'italy_hunt_bases_v35';
 const LS_AIRPORTS = 'italy_hunt_airports';
 const LS_ADDR_MIGRATED = 'italy_hunt_addr_migrated_v35';
+const LS_GPS_AUTH_MIGRATED = 'italy_hunt_gps_authoritative_v310';
 const LS_ELEV_MIGRATED = 'italy_hunt_elev_migrated_v351';
 const LS_PLANNED_CLEARED = 'italy_hunt_planned_cleared_v37';
+const LS_CLIENT_ID = 'italy_hunt_client_id';
+const SYNC_POLL_MS = 3000;
 
 const PERSIST_FIELDS = ['status','schedDate','schedTime','proposedDate','lastContacted',
   'firmName','firmPhone','broker','brokerPhone','brokerEmail',
@@ -743,6 +813,7 @@ function _applyLegacyData(savedProps) {
     }
   }
   state.props = Object.values(byId);
+  for (const p of state.props) migratePropLocation(p);
 }
 
 // ─── State ───────────────────────────────────────────────────────────────────
@@ -751,10 +822,21 @@ let state_bases = [];
 let state_airports = [];
 let _sortSel = 'apt-asc';
 let _mapObj = null, _mapInited = false;
+let _mapSelectedDays = new Set();
+let _dpSortable = null;
 let _dpMapObj = null, _dpMapInited = false;
 let _schedSortables = {};
 let _driveLegCache = new Map();
 let _dayPlanCache = {};
+let _serverRev = 0;
+let _basesRev = 0;
+let _clientId = '';
+let _saveInFlight = false;
+let _pendingSave = false;
+let _syncPollTimer = null;
+let _serverLocks = {};
+let _syncStatus = 'loading';
+let _lastDataSig = '';
 
 function getDefaultAirports() {
   return [
@@ -797,8 +879,8 @@ function initProp(src = {}) {
           ? (state_bases[src.grp - 1]?.abbr || state_bases[0]?.abbr || '')
           : (state_bases[0]?.abbr || '')),
     url: src.url || (src.id ? `https://www.idealista.it/immobile/${src.id}/` : ''),
-    lat: src.lat != null ? src.lat : null,
-    lng: src.lng != null ? src.lng : null,
+    lat: null,
+    lng: null,
     driveTimes: dt,
     status: src.status || 'New',
     schedDate: src.schedDate || '',
@@ -811,16 +893,18 @@ function initProp(src = {}) {
     brokerPhone: src.brokerPhone || '',
     brokerEmail: src.brokerEmail || '',
     address: src.address || '',
-    gps: src.gps || src.location || '',
-    // legacy location field → gps
+    gps: (src.gps && String(src.gps).trim()) ? String(src.gps).trim() : '',
     userPlannedDate: src.userPlannedDate || src.plannedDate || '',
     userPlannedTime: src.userPlannedTime || src.plannedTime || '',
     notes: src.notes || '',
     realtorUrl: src.realtorUrl || '',
     sourceIfl: src.sourceIfl || '',
     _custom: src._custom || false,
+    _fts: src._fts || {},
+    _v: src._v || 0,
   };
   migratePropLocation(p);
+  normalizePropTimes(p);
   return p;
 }
 
@@ -843,19 +927,288 @@ function baseColor(abbr) {
   return BASE_COLORS[idx % BASE_COLORS.length] || '#888';
 }
 
-// ─── Storage ─────────────────────────────────────────────────────────────────
+// ─── Storage & multi-user sync ───────────────────────────────────────────────
+function _ensureClientId() {
+  if (_clientId) return _clientId;
+  _clientId = localStorage.getItem(LS_CLIENT_ID);
+  if (!_clientId) {
+    _clientId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : 'c' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    localStorage.setItem(LS_CLIENT_ID, _clientId);
+  }
+  return _clientId;
+}
+
+function touchPropFields(p, fields) {
+  if (!p) return;
+  if (!p._fts) p._fts = {};
+  const now = Date.now();
+  for (const f of fields) p._fts[f] = now;
+  p._v = now;
+}
+
+function _mergePropLocal(local, server) {
+  const out = { ...local };
+  let changed = false;
+  const sTs = server._fts || {};
+  const lTs = local._fts || {};
+  const mergedTs = { ...lTs };
+  for (const field of PERSIST_FIELDS) {
+    const st = sTs[field] || 0;
+    const lt = lTs[field] || 0;
+    if (st > lt && server[field] !== local[field]) {
+      out[field] = server[field];
+      mergedTs[field] = st;
+      changed = true;
+    }
+  }
+  if (changed) {
+    out._fts = mergedTs;
+    out._v = Math.max(local._v || 0, server._v || 0);
+  }
+  return { prop: out, changed };
+}
+
+function _applyServerProps(incoming, opts = {}) {
+  if (!Array.isArray(incoming)) return false;
+  const byId = Object.fromEntries(state.props.map(p => [String(p.id), p]));
+  const incomingIds = new Set(incoming.map(p => String(p.id)));
+  let changed = false;
+
+  for (const sp of incoming) {
+    const sid = String(sp.id);
+    const local = byId[sid];
+    if (!local) {
+      const np = initProp(sp);
+      state.props.push(np);
+      byId[sid] = np;
+      changed = true;
+      continue;
+    }
+    if (opts.fromPoll && _dmPropId === local.id && _dmDirty) continue;
+    const { prop, changed: c } = _mergePropLocal(local, sp);
+    if (c) {
+      Object.assign(local, prop);
+      normalizePropTimes(local);
+      migratePropLocation(local);
+      changed = true;
+    }
+  }
+
+  const removed = state.props.filter(p => !incomingIds.has(String(p.id)));
+  if (removed.length) {
+    state.props = state.props.filter(p => incomingIds.has(String(p.id)));
+    changed = true;
+  }
+
+  if (changed) {
+    localStorage.setItem(LS_KEY, JSON.stringify(state.props));
+    _lastDataSig = _dataSig(state.props);
+    state.props.forEach(normalizePropGrp);
+    renderProps();
+    const schedPanel = document.getElementById('tab-schedule');
+    if (schedPanel?.classList.contains('active')) renderSchedule();
+    const dpPanel = document.getElementById('tab-dayplan');
+    if (dpPanel?.classList.contains('active')) renderDayPlan();
+    if (_mapInited) refreshMap();
+    if (_dmPropId && !_dmDirty) _refreshDetailModalFields();
+    updateHeader();
+    if (!opts.silent) _flashSyncNotice('Updated from server');
+  }
+  return changed;
+}
+
+function _parseDataResponse(data) {
+  if (Array.isArray(data)) return { rev: 0, props: data, locks: {} };
+  return {
+    rev: data.rev || 0,
+    props: Array.isArray(data.props) ? data.props : (Array.isArray(data) ? data : []),
+    locks: data.locks || {},
+  };
+}
+
+function _parseBasesResponse(data) {
+  if (Array.isArray(data)) return { rev: 0, bases: data };
+  return { rev: data.rev || 0, bases: Array.isArray(data.bases) ? data.bases : [] };
+}
+
+function updateSyncStatus() {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  const labels = {
+    loading: '… connecting',
+    ok: '● live',
+    saving: '↑ saving…',
+    syncing: '↻ syncing…',
+    merged: '↻ merged',
+    error: '⚠ sync error',
+    offline: '○ offline',
+  };
+  const colors = {
+    ok: 'var(--olive)', saving: 'var(--adriat)', syncing: 'var(--adriat)',
+    merged: 'var(--amber-bdr)', error: 'var(--red)', offline: 'var(--text3)', loading: 'var(--text3)',
+  };
+  el.textContent = labels[_syncStatus] || labels.ok;
+  el.style.color = colors[_syncStatus] || colors.ok;
+}
+
+function _flashSyncNotice(msg) {
+  const el = document.getElementById('save-notice');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0'; }, 1800);
+}
+
+function isPropLockedByOther(id) {
+  const lock = _serverLocks[String(id)];
+  return !!(lock && lock.clientId !== _ensureClientId() && lock.exp > Date.now());
+}
+
+function getPropLockLabel(id) {
+  const lock = _serverLocks[String(id)];
+  if (!lock || lock.clientId === _ensureClientId() || lock.exp <= Date.now()) return '';
+  return lock.who ? `Editing: ${lock.who}` : 'Being edited by another user';
+}
+
+async function acquirePropLock(id) {
+  try {
+    const r = await fetch(API_BASE + '/lock', {
+      method: 'POST',
+      headers: _apiHdr(),
+      body: JSON.stringify({ id, clientId: _ensureClientId(), ttlSec: 120, who: _clientLabel() }),
+    });
+    if (r.status === 423) {
+      const d = await r.json();
+      if (d.lock) _serverLocks[String(id)] = d.lock;
+      return false;
+    }
+    if (r.ok) {
+      const d = await r.json();
+      if (d.lock) _serverLocks[String(id)] = d.lock;
+      return true;
+    }
+  } catch (e) {}
+  return true;
+}
+
+async function releasePropLock(id) {
+  if (!id) return;
+  try {
+    await fetch(API_BASE + '/lock', {
+      method: 'DELETE',
+      headers: _apiHdr(),
+      body: JSON.stringify({ id, clientId: _ensureClientId() }),
+    });
+    delete _serverLocks[String(id)];
+  } catch (e) {}
+}
+
+function _clientLabel() {
+  const n = localStorage.getItem('hh_user_name');
+  return n || 'User';
+}
+
+function _refreshDetailModalFields() {
+  const p = getProp(_dmPropId);
+  if (!p || _dmDirty) return;
+  document.getElementById('detail-modal-title').textContent = p.name || 'Property Details';
+  const stSel = document.getElementById('dm-status');
+  if (stSel) stSel.innerHTML = STATUS_OPTS.map(s => `<option${s === p.status ? ' selected' : ''}>${s}</option>`).join('');
+  _dv('dm-name', p.name);
+  _dv('dm-planned-date', p.userPlannedDate);
+  _dv('dm-planned-time', formatTimeDisplay(p.userPlannedTime));
+  _dv('dm-sched-date', p.schedDate);
+  _dv('dm-sched-time', formatTimeDisplay(p.schedTime));
+  _dv('dm-notes', p.notes);
+  renderDmDriveTimes(p);
+}
+
+function _dataSig(props) {
+  return props.map(p => `${p.id}:${p._v || 0}:${p.status}:${p.userPlannedDate || ''}`).join('|');
+}
+
+async function pollServerSync() {
+  if (_saveInFlight || document.hidden) return;
+  _syncStatus = 'syncing';
+  updateSyncStatus();
+  try {
+    const r = await fetch(
+      `${API_BASE}/sync?rev=${_serverRev}&basesRev=${_basesRev}`,
+      { headers: _apiHdr() }
+    );
+    if (r.status === 404) {
+      const dr = await fetch(API_BASE + '/data', { headers: _apiHdr() });
+      if (dr.ok) {
+        const parsed = _parseDataResponse(await dr.json());
+        const sig = _dataSig(parsed.props);
+        if (sig !== _lastDataSig) {
+          _applyServerProps(parsed.props, { fromPoll: true, silent: true });
+          _lastDataSig = sig;
+        }
+      }
+      _syncStatus = 'ok';
+      updateSyncStatus();
+      return;
+    }
+    if (!r.ok) throw new Error('sync failed');
+    const d = await r.json();
+    const prevLocksJson = JSON.stringify(_serverLocks);
+    if (d.rev != null) _serverRev = d.rev;
+    if (d.basesRev != null) _basesRev = d.basesRev;
+    _serverLocks = d.locks || {};
+    const locksChanged = JSON.stringify(_serverLocks) !== prevLocksJson;
+
+    let changed = false;
+    if (d.changed && d.props) {
+      changed = _applyServerProps(d.props, { fromPoll: true, silent: false }) || changed;
+    }
+    if (d.basesChanged && Array.isArray(d.bases) && d.bases.length) {
+      state_bases = d.bases;
+      localStorage.setItem(LS_BASES, JSON.stringify(state_bases));
+      for (const b of state_bases) { migrateBaseLocation(b); delete b.airport; syncTransitBaseName(b); }
+      refreshBaseFilters();
+      populateMapDayDropdown();
+      populateDpDaySelect();
+      changed = true;
+    }
+    if (locksChanged) renderProps();
+    _syncStatus = changed ? 'merged' : 'ok';
+    updateSyncStatus();
+    if (changed && _syncStatus === 'merged') {
+      setTimeout(() => { if (_syncStatus === 'merged') { _syncStatus = 'ok'; updateSyncStatus(); } }, 2000);
+    }
+  } catch (e) {
+    _syncStatus = navigator.onLine === false ? 'offline' : 'error';
+    updateSyncStatus();
+  }
+}
+
+function startSyncPoll() {
+  _ensureClientId();
+  if (_syncPollTimer) clearInterval(_syncPollTimer);
+  _syncPollTimer = setInterval(pollServerSync, SYNC_POLL_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) pollServerSync();
+  });
+}
+
 async function loadFromStorage() {
-  // Load airports
+  _ensureClientId();
+  _syncStatus = 'loading';
+  updateSyncStatus();
+
   const savedApts = localStorage.getItem(LS_AIRPORTS);
   state_airports = savedApts ? JSON.parse(savedApts) : getDefaultAirports();
 
-  // Load bases from server
   try {
     const r = await fetch(API_BASE + '/bases', { headers: _apiHdr() });
     if (r.ok) {
-      const sb = await r.json();
-      if (Array.isArray(sb) && sb.length) {
-        state_bases = sb;
+      const parsed = _parseBasesResponse(await r.json());
+      if (parsed.rev) _basesRev = parsed.rev;
+      if (Array.isArray(parsed.bases) && parsed.bases.length) {
+        state_bases = parsed.bases;
         localStorage.setItem(LS_BASES, JSON.stringify(state_bases));
       }
     }
@@ -864,12 +1217,13 @@ async function loadFromStorage() {
     if (local) state_bases = JSON.parse(local);
   }
 
-  // Load props from server
   try {
     const r = await fetch(API_BASE + '/data', { headers: _apiHdr() });
     if (r.ok) {
-      const data = await r.json();
-      const raw = Array.isArray(data) ? data : (data.props || []);
+      const parsed = _parseDataResponse(await r.json());
+      _serverRev = parsed.rev || 0;
+      _serverLocks = parsed.locks || {};
+      const raw = parsed.props;
       if (raw.length) {
         const isLegacy = !raw[0].name && !raw[0]._custom;
         if (isLegacy) { _applyLegacyData(raw); } else { state.props = raw.map(initProp); }
@@ -882,14 +1236,22 @@ async function loadFromStorage() {
 
   refreshBaseFilters();
   state.props.forEach(normalizePropGrp);
+  for (const b of state_bases) { migrateBaseLocation(b); delete b.airport; }
+  await runGpsAuthoritativeMigration();
   await runLocationMigration();
   await runElevationMigration();
   await runPlannedClearMigration();
-  populateMapDaySelect();
+  if (runTimeFormatMigration()) { try { await saveToStorage(); } catch (e) {} }
+  initTimeInputs();
+  populateMapDayDropdown();
   populateDpDaySelect();
   updateHeader();
   renderProps();
   if (_mapInited) refreshMap();
+  _syncStatus = 'ok';
+  updateSyncStatus();
+  _lastDataSig = _dataSig(state.props);
+  startSyncPoll();
 }
 
 function _loadLocal() {
@@ -905,13 +1267,49 @@ function _loadLocal() {
 }
 
 async function saveToStorage() {
+  if (_saveInFlight) { _pendingSave = true; return; }
+  _saveInFlight = true;
+  _syncStatus = 'saving';
+  updateSyncStatus();
   localStorage.setItem(LS_KEY, JSON.stringify(state.props));
   const el = document.getElementById('save-notice');
-  if (el) { el.style.opacity='1'; setTimeout(()=>el.style.opacity='0', 2000); }
+  if (el) { el.textContent = 'Saving…'; el.style.opacity='1'; }
   try {
-    await fetch(API_BASE + '/data', { method:'PUT', headers:_apiHdr(), body:JSON.stringify(state.props) });
-  } catch(e) {}
+    const r = await fetch(API_BASE + '/data', {
+      method: 'PUT',
+      headers: _apiHdr(),
+      body: JSON.stringify({ baseRev: _serverRev, clientId: _ensureClientId(), props: state.props }),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.rev != null) _serverRev = d.rev;
+      if (d.locks) _serverLocks = d.locks;
+      if (d.merged && Array.isArray(d.props)) {
+        _applyServerProps(d.props, { silent: true });
+        _lastDataSig = _dataSig(state.props);
+        _syncStatus = 'merged';
+        if (el) el.textContent = 'Merged ✓';
+      } else if (el) {
+        el.textContent = 'Saved ✓';
+      }
+    } else {
+      _syncStatus = 'error';
+      if (el) el.textContent = 'Save failed';
+      await pollServerSync();
+    }
+  } catch(e) {
+    _syncStatus = 'offline';
+    if (el) el.textContent = 'Offline — saved locally';
+  }
+  if (el) setTimeout(() => el.style.opacity='0', 2000);
+  _saveInFlight = false;
+  _syncStatus = _syncStatus === 'merged' ? 'merged' : (_syncStatus === 'offline' ? 'offline' : 'ok');
+  updateSyncStatus();
   updateHeader();
+  if (_pendingSave) {
+    _pendingSave = false;
+    saveToStorage();
+  }
 }
 
 // ─── Location model ───────────────────────────────────────────────────────────
@@ -929,41 +1327,121 @@ function getPropAddress(p) {
 }
 
 function getPropGps(p) {
-  if (p.gps && p.gps.trim()) return p.gps.trim();
-  if (p.location) {
-    const [lat, lng] = parseGPS(p.location);
-    if (lat) return p.location;
+  return (p.gps && String(p.gps).trim()) ? String(p.gps).trim() : '';
+}
+
+function getBaseGps(b) {
+  return (b && b.gps && String(b.gps).trim()) ? String(b.gps).trim() : '';
+}
+
+function clearEntityCoords(e) {
+  if (!e) return;
+  e.lat = null;
+  e.lng = null;
+}
+
+function normalizeGpsString(raw) {
+  const [lat, lng] = parseGPS(raw);
+  if (lat == null || lng == null) return '';
+  return `${Number(lat.toFixed(6))},${Number(lng.toFixed(6))}`;
+}
+
+function formatItalianLocation(geo) {
+  if (!geo) return '';
+  const town = geo.town || geo.commune || '';
+  const prov = geo.prov ? String(geo.prov).toUpperCase() : '';
+  if (town && prov) return `${town}, ${prov}, Italy`;
+  if (geo.formatted) {
+    let f = geo.formatted.trim();
+    if (!/italy/i.test(f)) f += ', Italy';
+    return f;
   }
-  if (p.lat != null && p.lng != null) return `${p.lat},${p.lng}`;
   return '';
 }
 
+function applyGpsToEntity(entity, gpsStr) {
+  const norm = normalizeGpsString(gpsStr);
+  if (!norm) return false;
+  entity.gps = norm;
+  const [lat, lng] = parseGPS(norm);
+  entity.lat = lat;
+  entity.lng = lng;
+  return true;
+}
+
 function migratePropLocation(p) {
-  if (!p.address) p.address = buildAddressFromParts(p.commune, p.town, p.prov);
-  if (!p.gps) {
-    if (p.location) {
-      const [lat] = parseGPS(p.location);
-      if (lat) p.gps = p.location;
-    } else if (p.lat != null && p.lng != null) {
-      p.gps = `${p.lat},${p.lng}`;
-    }
+  if (!getPropGps(p) && p.location && String(p.location).trim()) {
+    const norm = normalizeGpsString(p.location);
+    if (norm) p.gps = norm;
+    delete p.location;
   }
-  if (p.address && !/italy/i.test(p.address)) p.address += ', Italy';
+  if (!p.address || !p.address.trim()) {
+    const built = buildAddressFromParts(p.commune, p.town, p.prov);
+    if (built) p.address = built;
+  }
+  if (getPropGps(p)) {
+    applyGpsToEntity(p, p.gps);
+  } else {
+    p.gps = '';
+    clearEntityCoords(p);
+  }
 }
 
 function migrateBaseLocation(b) {
   b.baseType = b.baseType || 'stay';
   if (b.baseType === 'stay') {
-    if (!b.gps && b.lat && b.lng) b.gps = `${b.lat},${b.lng}`;
-    if (!b.address && b.name) b.address = b.name + ', Italy';
+    if (getBaseGps(b)) {
+      applyGpsToEntity(b, b.gps);
+    } else {
+      b.gps = '';
+      clearEntityCoords(b);
+    }
   }
   if (!b.fromBase) b.fromBase = '';
   if (!b.toBase) b.toBase = '';
+  if (b.baseType === 'transit' && b.fromBase && b.toBase) syncTransitBaseName(b);
+}
+
+function transitBaseName(fromAbbr, toAbbr) {
+  const fromB = getBase(fromAbbr);
+  const toB = getBase(toAbbr);
+  if (!fromB || !toB) return '';
+  return `${fromB.name} → ${toB.name}`;
+}
+
+function suggestTransitAbbr(fromAbbr, toAbbr) {
+  if (!fromAbbr || !toAbbr) return '';
+  const joined = `${fromAbbr}-${toAbbr}`;
+  if (joined.length <= 5) return joined.toUpperCase();
+  return `${fromAbbr.slice(0, 2)}${toAbbr.slice(0, 2)}`.toUpperCase();
+}
+
+function syncTransitBaseName(b) {
+  if (b.baseType === 'transit' && b.fromBase && b.toBase) {
+    b.name = transitBaseName(b.fromBase, b.toBase);
+  }
+}
+
+function getClosestAirportDrive(p) {
+  let best = null, bestAbbr = null;
+  for (const apt of state_airports) {
+    const m = getPropDriveToAirport(p, apt.abbr);
+    if (m != null && (best == null || m < best)) { best = m; bestAbbr = apt.abbr; }
+  }
+  return bestAbbr ? { abbr: bestAbbr, mins: best } : null;
 }
 
 function migrateAirportLocation(a) {
   if (!a.address && a.name) a.address = a.name + ', Italy';
   if (!a.gps && a.lat && a.lng) a.gps = `${a.lat},${a.lng}`;
+}
+
+async function runGpsAuthoritativeMigration() {
+  if (localStorage.getItem(LS_GPS_AUTH_MIGRATED)) return;
+  for (const p of state.props) migratePropLocation(p);
+  for (const b of state_bases) migrateBaseLocation(b);
+  localStorage.setItem(LS_GPS_AUTH_MIGRATED, '1');
+  try { await saveToStorage(); } catch (e) {}
 }
 
 async function runLocationMigration() {
@@ -1046,40 +1524,220 @@ async function geocodeAddress(query) {
     const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=it`, { headers: { 'Accept-Language': 'en' } });
     if (r.ok) {
       const d = await r.json();
-      if (d?.[0]) return { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon), formatted: d[0].display_name, source: 'nominatim' };
+      if (d?.[0]) {
+        const parts = (d[0].display_name || '').split(',').map(s => s.trim());
+        return {
+          lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon),
+          formatted: d[0].display_name,
+          town: parts[0] || '',
+          prov: parts.length > 2 ? parts[parts.length - 3].slice(0, 2).toUpperCase() : '',
+          source: 'nominatim',
+        };
+      }
     }
   } catch (e) {}
   return null;
 }
 
+async function reverseGeocode(lat, lng) {
+  if (lat == null || lng == null) return null;
+  try {
+    const r = await fetch(`${API_BASE}/reverse-geocode?lat=${lat}&lng=${lng}`, { headers: _apiHdr() });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.lat != null && d.lng != null) return d;
+    }
+  } catch (e) {}
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`, { headers: { 'Accept-Language': 'en' } });
+    if (r.ok) {
+      const d = await r.json();
+      const a = d.address || {};
+      const town = a.village || a.town || a.city || a.municipality || a.hamlet || '';
+      const prov = (a['ISO3166-2-lvl4'] || '').replace('IT-', '') || (a.county || '').slice(0, 2).toUpperCase();
+      return {
+        lat, lng,
+        formatted: d.display_name,
+        town,
+        commune: a.municipality || town,
+        prov,
+        source: 'nominatim',
+      };
+    }
+  } catch (e) {}
+  return null;
+}
+
+async function syncEntityLocation(entity, { gps, address, isBase = false, mode = 'auto' } = {}) {
+  const gpsIn = gps !== undefined ? String(gps).trim() : (isBase ? getBaseGps(entity) : getPropGps(entity));
+  let addrIn = address !== undefined ? String(address).trim() : (isBase ? (entity.address || '').trim() : getPropAddress(entity));
+
+  const applyForward = async () => {
+    if (!/italy/i.test(addrIn)) addrIn += ', Italy';
+    entity.address = addrIn;
+    const geo = await geocodeAddress(addrIn);
+    if (!geo) return { ok: false, error: 'Could not find coordinates for that town' };
+    entity.lat = geo.lat;
+    entity.lng = geo.lng;
+    entity.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
+    const label = formatItalianLocation(geo);
+    if (label) entity.address = label;
+    if (!isBase) {
+      if (geo.town) entity.town = geo.town;
+      if (geo.commune) entity.commune = geo.commune;
+      if (geo.prov) entity.prov = String(geo.prov).toUpperCase();
+    }
+    return { ok: true, source: 'geocode' };
+  };
+
+  const applyReverse = async () => {
+    if (!applyGpsToEntity(entity, gpsIn)) {
+      return { ok: false, error: 'Invalid GPS coordinates' };
+    }
+    const rev = await reverseGeocode(entity.lat, entity.lng);
+    if (rev) {
+      const label = formatItalianLocation(rev);
+      if (label) entity.address = label;
+      if (!isBase) {
+        if (rev.town) entity.town = rev.town;
+        if (rev.commune) entity.commune = rev.commune;
+        if (rev.prov) entity.prov = String(rev.prov).toUpperCase();
+      }
+    }
+    return { ok: true, source: 'gps' };
+  };
+
+  if (mode === 'address') {
+    if (addrIn) return applyForward();
+    entity.gps = '';
+    clearEntityCoords(entity);
+    if (!addrIn && !gpsIn) return { ok: true, source: 'cleared' };
+    if (gpsIn) return applyReverse();
+    return { ok: true, source: 'cleared' };
+  }
+
+  if (mode === 'gps') {
+    if (gpsIn) return applyReverse();
+    entity.gps = '';
+    clearEntityCoords(entity);
+    return { ok: true, source: 'cleared' };
+  }
+
+  if (gpsIn) return applyReverse();
+
+  entity.gps = '';
+  clearEntityCoords(entity);
+  if (!addrIn) return { ok: true, source: 'cleared' };
+  return applyForward();
+}
+
 async function resolvePropCoords(p, forceGeocode = false) {
   const gps = getPropGps(p);
-  let [lat, lng] = parseGPS(gps);
-  if (lat != null && lng != null) {
-    p.lat = lat; p.lng = lng;
-    return { lat, lng };
+  if (gps) {
+    const [lat, lng] = parseGPS(gps);
+    if (lat != null && lng != null) {
+      p.lat = lat;
+      p.lng = lng;
+      return { lat, lng };
+    }
   }
-  if (!forceGeocode && p.lat != null && p.lng != null) return { lat: p.lat, lng: p.lng };
   const addr = getPropAddress(p);
-  if (!addr) return null;
+  if (!addr) {
+    clearEntityCoords(p);
+    return null;
+  }
   const geo = await geocodeAddress(addr);
   if (geo) {
-    p.lat = geo.lat; p.lng = geo.lng;
-    if (geo.prov && !p.prov) p.prov = geo.prov.toUpperCase();
+    p.lat = geo.lat;
+    p.lng = geo.lng;
     return { lat: geo.lat, lng: geo.lng };
   }
+  if (!gps) clearEntityCoords(p);
   return null;
+}
+
+let _locSyncing = false;
+
+async function dmSyncLocation(fromField) {
+  if (_dmReadOnly || _locSyncing) return;
+  const gps = document.getElementById('dm-gps')?.value.trim() || '';
+  const address = document.getElementById('dm-address')?.value.trim() || '';
+  const scratch = { address, gps, town: '', commune: '', prov: '' };
+  _locSyncing = true;
+  const status = document.getElementById('dm-status-msg');
+  try {
+    const mode = fromField === 'gps' ? 'gps' : 'address';
+    const r = await syncEntityLocation(scratch, { gps, address, isBase: false, mode });
+    if (!r.ok) {
+      if (status) status.textContent = r.error || 'Location lookup failed';
+      return;
+    }
+    document.getElementById('dm-address').value = scratch.address || '';
+    document.getElementById('dm-gps').value = scratch.gps || '';
+    if (status) status.textContent = r.source === 'gps' ? 'Town updated from GPS.' : r.source === 'geocode' ? 'GPS updated from town.' : '';
+    dmMarkDirty();
+  } finally {
+    _locSyncing = false;
+  }
+}
+
+async function baseFormSyncLocation(fromField) {
+  if (_locSyncing) return;
+  const gps = document.getElementById('base-form-gps')?.value.trim() || '';
+  const address = document.getElementById('base-form-address')?.value.trim() || '';
+  const scratch = { address, gps };
+  _locSyncing = true;
+  try {
+    const mode = fromField === 'gps' ? 'gps' : 'address';
+    const r = await syncEntityLocation(scratch, { gps, address, isBase: true, mode });
+    if (!r.ok) { alert(r.error || 'Location lookup failed'); return; }
+    document.getElementById('base-form-address').value = scratch.address || '';
+    document.getElementById('base-form-gps').value = scratch.gps || '';
+  } finally {
+    _locSyncing = false;
+  }
+}
+
+async function addFormSyncLocation(fromField) {
+  if (_locSyncing) return;
+  const gps = document.getElementById('add-gps')?.value.trim() || '';
+  const address = document.getElementById('add-address')?.value.trim() || '';
+  const scratch = { address, gps, town: '', commune: '', prov: '' };
+  _locSyncing = true;
+  try {
+    const mode = fromField === 'gps' ? 'gps' : 'address';
+    const r = await syncEntityLocation(scratch, { gps, address, isBase: false, mode });
+    if (!r.ok) { alert(r.error || 'Location lookup failed'); return; }
+    document.getElementById('add-address').value = scratch.address || '';
+    document.getElementById('add-gps').value = scratch.gps || '';
+  } finally {
+    _locSyncing = false;
+  }
 }
 
 async function resolveStayBaseCoords(base) {
   if (!base || base.baseType === 'transit') return null;
-  let [lat, lng] = parseGPS(base.gps || '');
-  if (lat != null) { base.lat = lat; base.lng = lng; return { lat, lng }; }
-  if (base.lat && base.lng) return { lat: base.lat, lng: base.lng };
-  if (base.address) {
-    const g = await geocodeAddress(base.address);
-    if (g) { base.lat = g.lat; base.lng = g.lng; return { lat: g.lat, lng: g.lng }; }
+  const gps = getBaseGps(base);
+  if (gps) {
+    const [lat, lng] = parseGPS(gps);
+    if (lat != null && lng != null) {
+      base.lat = lat;
+      base.lng = lng;
+      return { lat, lng };
+    }
   }
+  const addr = (base.address || '').trim();
+  if (!addr) {
+    clearEntityCoords(base);
+    return null;
+  }
+  const geo = await geocodeAddress(addr);
+  if (geo) {
+    base.lat = geo.lat;
+    base.lng = geo.lng;
+    return { lat: geo.lat, lng: geo.lng };
+  }
+  if (!gps) clearEntityCoords(base);
   return null;
 }
 
@@ -1235,7 +1893,7 @@ function showTab(name) {
 
 // ─── Base filter / sort ───────────────────────────────────────────────────────
 function refreshBaseFilters() {
-  ['f-base','map-base','add-grp','dm-grp'].forEach(id => {
+  ['f-base','add-grp','dm-grp'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const isGrp = (id === 'add-grp' || id === 'dm-grp');
@@ -1244,6 +1902,16 @@ function refreshBaseFilters() {
       state_bases.map(b => `<option value="${b.abbr}">${b.name} (${b.abbr})</option>`).join('');
     if (cur) el.value = cur;
   });
+  const mapBase = document.getElementById('map-base');
+  if (mapBase) {
+    const cur = mapBase.value;
+    mapBase.innerHTML = '<option value="">All bases</option>' +
+      getActiveBases().map(b => `<option value="${b.abbr}">${b.name} (${b.abbr})</option>`).join('');
+    if (cur && getActiveBases().some(b => b.abbr === cur)) mapBase.value = cur;
+    else if (cur) { mapBase.value = ''; _mapSelectedDays.clear(); }
+    populateMapDayDropdown();
+    updateMapRouteModeState();
+  }
   renderProps();
 }
 
@@ -1255,10 +1923,8 @@ function _sortProps(arr) {
   return [...arr].sort((a, b) => {
     let av, bv;
     if (field === 'apt') {
-      const base = getBase(a.grp);
-      const apt = base?.airport || 'FCO';
-      av = getPropDriveToAirport(a, apt) ?? 999;
-      bv = getPropDriveToAirport(b, base?.airport || 'FCO') ?? 999;
+      av = getClosestAirportDrive(a)?.mins ?? 999;
+      bv = getClosestAirportDrive(b)?.mins ?? 999;
     } else if (field === 'price') { av = a.price; bv = b.price; }
     else if (field === 'base') { av = a.grp; bv = b.grp; }
     else if (field === 'planned') { av = a.userPlannedDate || 'zzzz'; bv = b.userPlannedDate || 'zzzz'; }
@@ -1334,11 +2000,10 @@ function renderTile(p) {
     'Deleted-Idealista':'st-deleted-idealista','Deleted':'st-deleted','Duplicate':'st-duplicate'
   }[p.status] || '';
 
-  const apt = base?.airport || 'FCO';
-  const aptDrive = getPropDriveToAirport(p, apt);
+  const closestApt = getClosestAirportDrive(p);
   const baseDrive = getPropDriveToBase(p, p.grp);
   const driveStr = [
-    aptDrive != null ? `✈ ${apt} ${aptDrive}m` : null,
+    closestApt ? `✈ ${closestApt.abbr} ${closestApt.mins}m` : null,
     baseDrive != null ? `📍 ${p.grp} ${baseDrive}m` : null
   ].filter(Boolean).join(' · ') || '—';
 
@@ -1351,8 +2016,8 @@ function renderTile(p) {
   const locLine = getPropAddress(p).replace(/, Italy$/i, '');
 
   let chips = '';
-  if (p.schedDate) chips += `<span class="tile-date-chip sched-chip">📅 ${p.schedDate}${p.schedTime ? ' '+p.schedTime : ''}</span>`;
-  else if (p.userPlannedDate) chips += `<span class="tile-date-chip planned-chip">🗓 ${p.userPlannedDate}${p.userPlannedTime ? ' '+p.userPlannedTime : ''}</span>`;
+  if (p.schedDate) chips += `<span class="tile-date-chip sched-chip">📅 ${p.schedDate}${p.schedTime ? ' ' + formatTimeDisplay(p.schedTime) : ''}</span>`;
+  else if (p.userPlannedDate) chips += `<span class="tile-date-chip planned-chip">🗓 ${p.userPlannedDate}${p.userPlannedTime ? ' ' + formatTimeDisplay(p.userPlannedTime) : ''}</span>`;
 
   const priceStr = formatPrice(p.price);
   const roomsStr = p.rooms ? `${p.rooms} rm` : '';
@@ -1361,9 +2026,12 @@ function renderTile(p) {
   const specs = [priceStr, roomsStr, sizeStr, elevStr].filter(Boolean).join(' · ');
   const baseLbl = base ? `${base.abbr} · ${base.name}` : (p.grp ? String(p.grp) : '—');
 
+  const lockLbl = isPropLockedByOther(p.id)
+    ? `<span style="font-size:9px;color:var(--amber-bdr);margin-left:4px" title="${escHtml(getPropLockLabel(p.id))}">🔒</span>` : '';
+
   return `<div class="tile ${stCls}" style="border-left-color:${bColor}" id="tile-${p.id}">
   <div class="tile-body">
-    <div class="tile-name"><a href="${p.url||'#'}" target="_blank" rel="noopener">${escHtml(p.name||'Unnamed')}</a></div>
+    <div class="tile-name"><a href="${p.url||'#'}" target="_blank" rel="noopener">${escHtml(p.name||'Unnamed')}</a>${lockLbl}</div>
     <div class="tile-sub">${escHtml(locLine)}</div>
     <div class="tile-base" style="font-size:10px;font-weight:600;color:${bColor}">📍 ${escHtml(baseLbl)}</div>
     <div class="tile-drive" title="Drive times">${driveStr}</div>
@@ -1391,7 +2059,9 @@ function escHtml(s) {
 function quickStatus(id, status) {
   const p = getProp(id);
   if (!p) return;
+  if (isPropLockedByOther(id)) { alert(getPropLockLabel(id) || 'Property is being edited by another user.'); renderProps(); return; }
   p.status = status;
+  touchPropFields(p, ['status']);
   saveToStorage();
   renderProps();
   if (new Set(['Rejected','Unavailable','Duplicate','Deleted']).has(status) && p.id) {
@@ -1400,7 +2070,7 @@ function quickStatus(id, status) {
 }
 
 // ─── Property Detail Modal ────────────────────────────────────────────────────
-let _dmPropId = null, _dmDirty = false, _dmEscPrompt = false;
+let _dmPropId = null, _dmDirty = false, _dmEscPrompt = false, _dmReadOnly = false;
 
 function requestCloseDetailModal() {
   if (!_dmDirty) { closeDetailModal(true); return; }
@@ -1433,6 +2103,8 @@ function dmSaveAndClose() {
 function openDetailModal(id) {
   const p = getProp(id);
   if (!p) return;
+  _dmReadOnly = isPropLockedByOther(id);
+  if (!_dmReadOnly) acquirePropLock(id);
   _dmPropId = id; _dmDirty = false;
 
   document.getElementById('detail-modal-title').textContent = p.name || 'Property Details';
@@ -1452,11 +2124,11 @@ function openDetailModal(id) {
   _dv('dm-broker-phone', p.brokerPhone);
   _dv('dm-broker-email', p.brokerEmail);
   _dv('dm-planned-date', p.userPlannedDate);
-  _dv('dm-planned-time', p.userPlannedTime);
+  _dv('dm-planned-time', formatTimeDisplay(p.userPlannedTime));
   _dv('dm-proposed-date', p.proposedDate);
   _dv('dm-last-contacted', p.lastContacted);
   _dv('dm-sched-date', p.schedDate);
-  _dv('dm-sched-time', p.schedTime);
+  _dv('dm-sched-time', formatTimeDisplay(p.schedTime));
   _dv('dm-notes', p.notes);
 
   const stSel = document.getElementById('dm-status');
@@ -1465,9 +2137,16 @@ function openDetailModal(id) {
   grpSel.innerHTML = state_bases.map(b=>`<option value="${b.abbr}"${b.abbr===p.grp?' selected':''}>${b.name}</option>`).join('');
 
   renderDmDriveTimes(p);
-  document.getElementById('dm-status-msg').textContent = '';
+  document.getElementById('dm-status-msg').textContent = _dmReadOnly
+    ? (getPropLockLabel(id) || 'Read-only — another user is editing')
+    : '';
   document.getElementById('dm-save-btn').disabled = true;
+  document.querySelectorAll('#detail-modal input, #detail-modal select, #detail-modal textarea').forEach(el => {
+    if (el.id === 'dm-save-btn' || el.closest('.modal-header')) return;
+    el.disabled = _dmReadOnly;
+  });
   document.getElementById('detail-modal').style.display = 'flex';
+  initTimeInputs();
 }
 
 function _dv(id, val) {
@@ -1496,18 +2175,27 @@ function renderDmDriveTimes(p) {
 }
 
 function dmMarkDirty() {
+  if (_dmReadOnly) return;
   if (!_dmDirty) { _dmDirty = true; document.getElementById('dm-save-btn').disabled = false; }
 }
 
 async function dmRecalcDrives() {
   const p = getProp(_dmPropId);
   if (!p) return;
-  p.address = document.getElementById('dm-address')?.value.trim() || '';
-  p.gps = document.getElementById('dm-gps')?.value.trim() || '';
-  if (!p.gps && !p.address) { alert('Enter an address or GPS coordinates first.'); return; }
+  const gps = document.getElementById('dm-gps')?.value.trim() || '';
+  const address = document.getElementById('dm-address')?.value.trim() || '';
+  if (!gps && !address) { alert('Enter a town or GPS coordinates first.'); return; }
 
   const btn = document.getElementById('dm-recalc-btn');
   if (btn) btn.textContent = '⟳ Calculating…';
+  const loc = await syncEntityLocation(p, { gps, address, isBase: false, mode: gps ? 'gps' : 'address' });
+  if (!loc.ok) {
+    if (btn) btn.textContent = '⟳ Drive Times';
+    alert(loc.error || 'Could not resolve location.');
+    return;
+  }
+  document.getElementById('dm-address').value = p.address || '';
+  document.getElementById('dm-gps').value = p.gps || '';
   const ok = await recalcDriveTimes(p);
   if (btn) btn.textContent = '⟳ Drive Times';
   if (ok) {
@@ -1519,14 +2207,19 @@ async function dmRecalcDrives() {
   }
 }
 
-function saveDetailModal() {
+async function saveDetailModal() {
   const p = getProp(_dmPropId);
-  if (!p) return;
+  if (!p || _dmReadOnly) return;
   const oldAddr = getPropAddress(p);
   const oldGps = getPropGps(p);
   p.name = document.getElementById('dm-name')?.value.trim() || p.name;
-  p.address = document.getElementById('dm-address')?.value.trim() || '';
-  p.gps = document.getElementById('dm-gps')?.value.trim() || '';
+  const gpsIn = document.getElementById('dm-gps')?.value.trim() || '';
+  const addrIn = document.getElementById('dm-address')?.value.trim() || '';
+  const locMode = gpsIn && !addrIn ? 'gps' : 'address';
+  const loc = await syncEntityLocation(p, { gps: gpsIn, address: addrIn, isBase: false, mode: locMode });
+  if (!loc.ok) { alert(loc.error || 'Could not resolve location.'); return; }
+  document.getElementById('dm-address').value = p.address || '';
+  document.getElementById('dm-gps').value = p.gps || '';
   p.price = parseFloat(document.getElementById('dm-price')?.value) || 0;
   p.rooms = parseInt(document.getElementById('dm-rooms')?.value) || 0;
   p.size = parseInt(document.getElementById('dm-size')?.value) || 0;
@@ -1540,14 +2233,19 @@ function saveDetailModal() {
   p.status = document.getElementById('dm-status')?.value || p.status;
   p.grp = document.getElementById('dm-grp')?.value || p.grp;
   p.userPlannedDate = document.getElementById('dm-planned-date')?.value || '';
-  p.userPlannedTime = document.getElementById('dm-planned-time')?.value || '';
+  p.userPlannedTime = normalizeTimeString(document.getElementById('dm-planned-time')?.value || '');
   const plannedErr = validatePropPlannedDate(p, p.userPlannedDate);
   if (plannedErr) { alert(plannedErr); return; }
   p.proposedDate = document.getElementById('dm-proposed-date')?.value || '';
   p.lastContacted = document.getElementById('dm-last-contacted')?.value || '';
   p.schedDate = document.getElementById('dm-sched-date')?.value || '';
-  p.schedTime = document.getElementById('dm-sched-time')?.value || '';
+  p.schedTime = normalizeTimeString(document.getElementById('dm-sched-time')?.value || '');
   p.notes = document.getElementById('dm-notes')?.value || '';
+  touchPropFields(p, [
+    'name', 'address', 'gps', 'price', 'rooms', 'size', 'firmName', 'firmPhone', 'realtorUrl',
+    'broker', 'brokerPhone', 'brokerEmail', 'status', 'grp', 'userPlannedDate', 'userPlannedTime',
+    'proposedDate', 'lastContacted', 'schedDate', 'schedTime', 'notes',
+  ]);
   _dmDirty = false;
   document.getElementById('dm-save-btn').disabled = true;
   document.getElementById('dm-status-msg').textContent = 'Saved ✓';
@@ -1556,23 +2254,35 @@ function saveDetailModal() {
   saveToStorage();
   renderProps();
   if (locChanged) {
-    resolvePropCoords(p, true).then(() => updatePropElevation(p)).then(() => recalcDriveTimes(p)).then(() => saveToStorage());
+    await updatePropElevation(p);
+    await recalcDriveTimes(p);
+    await saveToStorage();
   }
   if (new Set(['Rejected','Unavailable','Duplicate','Deleted']).has(p.status) &&
       !new Set(['Rejected','Unavailable','Duplicate','Deleted']).has(_prevStatus||'') && p.id) {
     window.postMessage({type:'HOUSEHUNT_DISCARD',idealistaId:p.id},'*');
   }
+  closeDetailModal(true);
 }
 
 function closeDetailModal(force) {
   if (!force && _dmDirty) { showDmUnsavedPrompt(); return; }
+  const pid = _dmPropId;
   hideDmUnsavedPrompt();
   document.getElementById('detail-modal').style.display = 'none';
-  _dmPropId = null; _dmDirty = false;
+  _dmPropId = null; _dmDirty = false; _dmReadOnly = false;
+  document.querySelectorAll('#detail-modal input, #detail-modal select, #detail-modal textarea').forEach(el => { el.disabled = false; });
+  if (pid) releasePropLock(pid);
 }
 
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
+  const tp = document.getElementById('hh-time-picker');
+  if (tp && tp.style.display === 'flex') {
+    e.preventDefault();
+    cancelTimePicker();
+    return;
+  }
   const syncModal = document.getElementById('ifl-sync-modal');
   if (syncModal && syncModal.style.display === 'flex') {
     e.preventDefault();
@@ -1652,7 +2362,7 @@ async function confirmAddProperty() {
   const gps = (document.getElementById('add-gps')?.value || '').trim();
   const price = parseFloat(document.getElementById('add-price')?.value) || 0;
   if (!name) { alert('Property Name is required.'); return; }
-  if (!gps && !address) { alert('Address is required when no GPS coordinates are entered.'); return; }
+  if (!gps && !address) { alert('Town is required when no GPS coordinates are entered.'); return; }
   const url = (document.getElementById('add-url')?.value || '').trim();
   const idEl = document.getElementById('add-id');
   let id = parseInt(idEl?.value);
@@ -1661,7 +2371,7 @@ async function confirmAddProperty() {
   const grp = document.getElementById('add-grp')?.value || state_bases[0]?.abbr || '';
   const np = initProp({
     id, name, url: url || `https://www.idealista.it/immobile/${id}/`,
-    address, gps, price,
+    address: '', gps: '', price,
     rooms: parseInt(document.getElementById('add-rooms')?.value)||0,
     size: parseInt(document.getElementById('add-size')?.value)||0,
     grp,
@@ -1673,6 +2383,9 @@ async function confirmAddProperty() {
     notes: (document.getElementById('add-notes')?.value||'').trim(),
     _custom: true,
   });
+  const locMode = gps ? 'gps' : 'address';
+  const loc = await syncEntityLocation(np, { gps, address, isBase: false, mode: locMode });
+  if (!loc.ok) { alert(loc.error || 'Could not resolve location.'); return; }
   state.props.push(np);
   closeAddModal();
   await ingestProperty(np);
@@ -1714,14 +2427,16 @@ function applyTemplate(tpl, p) {
   // Find base for this property's planned date, or use assigned base
   let base = date ? getTripDays().find(d => d.date === date && d.base)?.baseObj : null;
   if (!base) base = getBase(p.grp);
-  const apt = base?.airport || 'FCO';
+  const closestApt = getClosestAirportDrive(p);
+  const apt = closestApt?.abbr || state_airports[0]?.abbr || 'FCO';
   const bName = base?.name || '';
   const fromDate = base?.visitFrom ? _fmtDate(base.visitFrom) : '';
   const toDate = (base?.visitTo && base.visitTo !== base.visitFrom) ? _fmtDate(base.visitTo) : '';
-  const aptDrive = getPropDriveToAirport(p, apt);
+  const aptDrive = closestApt?.mins ?? null;
 
   let result = tpl
     .replace(/\[base airport\]/gi, apt)
+    .replace(/\[nearest airport\]/gi, apt)
     .replace(/\[base name\]/gi, bName)
     .replace(/\[base from date\]/gi, fromDate)
     .replace(/\[Property URL\]/gi, p.url || '')
@@ -1819,19 +2534,210 @@ function parseTimeToMinutes(t) {
   }
   let h = parseInt(m[1], 10);
   const min = parseInt(m[2], 10);
+  if (min < 0 || min > 59) return null;
   const ap = m[3];
-  if (ap === 'PM' && h < 12) h += 12;
-  if (ap === 'AM' && h === 12) h = 0;
+  if (ap) {
+    if (ap === 'PM' && h < 12) h += 12;
+    if (ap === 'AM' && h === 12) h = 0;
+  }
+  if (h < 0 || h > 23) return null;
   return h * 60 + min;
 }
 
 function formatMinToTime(m) {
   if (m == null || isNaN(m)) return '—';
   const h24 = Math.floor(m / 60) % 24;
-  const min = m % 60;
-  const ap = h24 >= 12 ? 'PM' : 'AM';
-  const h12 = h24 % 12 || 12;
-  return `${h12}:${String(min).padStart(2, '0')} ${ap}`;
+  const min = Math.round(m % 60);
+  return `${String(h24).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+
+function normalizeTimeString(t) {
+  if (!t || !String(t).trim()) return '';
+  const mins = parseTimeToMinutes(t);
+  if (mins == null) return '';
+  return formatMinToTime(mins);
+}
+
+function formatTimeDisplay(t) {
+  const n = normalizeTimeString(t);
+  return n || '';
+}
+
+function normalizePropTimes(p) {
+  if (!p) return;
+  if (p.userPlannedTime) p.userPlannedTime = normalizeTimeString(p.userPlannedTime);
+  if (p.schedTime) p.schedTime = normalizeTimeString(p.schedTime);
+}
+
+function runTimeFormatMigration() {
+  let changed = false;
+  for (const p of state.props) {
+    const pt = p.userPlannedTime;
+    const st = p.schedTime;
+    normalizePropTimes(p);
+    if (p.userPlannedTime !== pt || p.schedTime !== st) changed = true;
+  }
+  return changed;
+}
+
+// ─── 24h circular time picker ────────────────────────────────────────────────
+let _tpTargetInput = null;
+let _tpHour = null;
+let _tpMinute = null;
+let _tpStep = 'hour';
+
+function bindTimeInput(el) {
+  if (!el || el._timeBound) return;
+  el._timeBound = true;
+  el.addEventListener('input', () => {
+    let v = el.value.replace(/[^\d:]/g, '');
+    if (v.length > 5) v = v.slice(0, 5);
+    if (v.length === 2 && !v.includes(':')) v += ':';
+    el.value = v;
+  });
+  el.addEventListener('blur', () => {
+    if (!el.value.trim()) return;
+    const n = normalizeTimeString(el.value);
+    if (n) el.value = n;
+    else el.value = '';
+  });
+}
+
+function initTimeInputs() {
+  document.querySelectorAll('.hh-time-input').forEach(bindTimeInput);
+}
+
+function openTimePickerFor(inputId) {
+  const el = document.getElementById(inputId);
+  if (!el || el.disabled) return;
+  _tpTargetInput = el;
+  const cur = normalizeTimeString(el.value);
+  if (cur) {
+    const mins = parseTimeToMinutes(cur);
+    _tpHour = Math.floor(mins / 60);
+    _tpMinute = mins % 60;
+    _tpStep = 'minute';
+  } else {
+    _tpHour = null;
+    _tpMinute = null;
+    _tpStep = 'hour';
+  }
+  document.getElementById('hh-time-picker').style.display = 'flex';
+  _renderTimePicker();
+}
+
+function _tpUpdatePreview() {
+  const prev = document.getElementById('hh-tp-preview');
+  const step = document.getElementById('hh-tp-step');
+  if (!prev || !step) return;
+  if (_tpHour == null) {
+    prev.textContent = '--:--';
+  } else if (_tpMinute == null) {
+    prev.textContent = `${String(_tpHour).padStart(2, '0')}:--`;
+  } else {
+    prev.textContent = `${String(_tpHour).padStart(2, '0')}:${String(_tpMinute).padStart(2, '0')}`;
+  }
+  step.textContent = _tpStep === 'hour' ? 'Select hour (outer 0–12 · inner 1–24)' : 'Select minutes';
+}
+
+function _tpPlaceCell(dial, label, angleDeg, radiusPct, ring, onClick, selected) {
+  const rad = angleDeg * Math.PI / 180;
+  const x = 50 + radiusPct * Math.cos(rad);
+  const y = 50 + radiusPct * Math.sin(rad);
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  const isMajor = ring === 'min' && label && label.length === 2;
+  btn.className = `hh-tp-cell hh-tp-${ring}${isMajor ? ' hh-tp-min-major' : ''}${selected ? ' hh-tp-selected' : ''}`;
+  btn.textContent = label || '·';
+  btn.style.left = `${x}%`;
+  btn.style.top = `${y}%`;
+  btn.onclick = (e) => { e.stopPropagation(); onClick(); };
+  dial.appendChild(btn);
+}
+
+function _outerHourAngle(h) {
+  if (h === 0) return -90;
+  if (h === 12) return 90;
+  return h * 30 - 90;
+}
+
+function _innerHourAngle(h) {
+  const hourPos = h === 24 ? 0 : h;
+  return hourPos * 15 - 90;
+}
+
+function _tpSelectHour(h) {
+  _tpHour = h;
+  _tpMinute = _tpMinute ?? 0;
+  _tpStep = 'minute';
+  _renderTimePicker();
+}
+
+function _tpSelectMinute(m) {
+  _tpMinute = m;
+  _renderTimePicker();
+}
+
+function _renderHourDial(dial) {
+  dial.innerHTML = '';
+  const center = document.createElement('div');
+  center.className = 'hh-tp-center';
+  center.textContent = _tpHour != null ? String(_tpHour).padStart(2, '0') : '--';
+  dial.appendChild(center);
+  for (let h = 0; h <= 12; h++) {
+    _tpPlaceCell(dial, String(h), _outerHourAngle(h), 43, 'outer', () => _tpSelectHour(h), _tpHour === h);
+  }
+  for (let h = 1; h <= 24; h++) {
+    const val = h === 24 ? 0 : h;
+    _tpPlaceCell(dial, String(h), _innerHourAngle(h), 24, 'inner', () => _tpSelectHour(val), _tpHour === val);
+  }
+}
+
+function _renderMinuteDial(dial) {
+  dial.innerHTML = '';
+  const center = document.createElement('div');
+  center.className = 'hh-tp-center';
+  center.textContent = `${String(_tpHour).padStart(2, '0')}:${_tpMinute != null ? String(_tpMinute).padStart(2, '0') : '--'}`;
+  dial.appendChild(center);
+  for (let m = 0; m < 60; m++) {
+    const label = m % 5 === 0 ? String(m).padStart(2, '0') : '';
+    _tpPlaceCell(dial, label, m * 6 - 90, 38, 'min', () => _tpSelectMinute(m), _tpMinute === m);
+  }
+}
+
+function _renderTimePicker() {
+  const dial = document.getElementById('hh-tp-dial');
+  if (!dial) return;
+  _tpUpdatePreview();
+  if (_tpStep === 'hour') _renderHourDial(dial);
+  else _renderMinuteDial(dial);
+}
+
+function confirmTimePicker() {
+  if (_tpHour == null) { cancelTimePicker(); return; }
+  if (_tpMinute == null) { _tpMinute = 0; }
+  const val = formatMinToTime(_tpHour * 60 + _tpMinute);
+  if (_tpTargetInput) {
+    _tpTargetInput.value = val;
+    _tpTargetInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  cancelTimePicker();
+}
+
+function clearTimePicker() {
+  if (_tpTargetInput) {
+    _tpTargetInput.value = '';
+    _tpTargetInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  cancelTimePicker();
+}
+
+function cancelTimePicker() {
+  document.getElementById('hh-time-picker').style.display = 'none';
+  _tpTargetInput = null;
+  _tpHour = null;
+  _tpMinute = null;
+  _tpStep = 'hour';
 }
 
 async function calcDriveLeg(fromLat, fromLng, toLat, toLng) {
@@ -1889,6 +2795,20 @@ function getDayProperties(date) {
     });
 }
 
+async function getSuggestedDriveBudget(base, endpoints) {
+  if (!base || base.baseType !== 'transit') {
+    return { budget: SUGGESTED_DRIVE_STAY, baseToBase: null };
+  }
+  const baseToBase = await calcDriveLeg(
+    endpoints.startLat, endpoints.startLng,
+    endpoints.endLat, endpoints.endLng
+  );
+  if (baseToBase == null) {
+    return { budget: SUGGESTED_DRIVE_TRANSIT, baseToBase: null };
+  }
+  return { budget: baseToBase + SUGGESTED_DRIVE_TRANSIT, baseToBase };
+}
+
 async function computeDayPlan(date, bustCache = false) {
   if (!date) return null;
   if (!bustCache && _dayPlanCache[date]) return _dayPlanCache[date];
@@ -1901,6 +2821,7 @@ async function computeDayPlan(date, bustCache = false) {
   let curLat = endpoints?.startLat ?? null;
   let curLng = endpoints?.startLng ?? null;
   let curMin = DAY_START_MIN;
+  let totalDriveMin = 0;
 
   for (let i = 0; i < props.length; i++) {
     const p = props[i];
@@ -1908,6 +2829,7 @@ async function computeDayPlan(date, bustCache = false) {
     const plannedMin = parseTimeToMinutes(getPropDayTime(p, date));
     const noPlannedTime = plannedMin == null;
     const drive = (curLat != null && p.lat != null) ? await calcDriveLeg(curLat, curLng, p.lat, p.lng) : null;
+    if (drive != null) totalDriveMin += drive;
     const arriveMin = drive != null ? curMin + drive : (plannedMin ?? null);
     const late = arriveMin != null && plannedMin != null && arriveMin > plannedMin + 5;
     const startViewMin = arriveMin != null ? (plannedMin != null ? Math.max(arriveMin, plannedMin) : arriveMin) : null;
@@ -1935,15 +2857,25 @@ async function computeDayPlan(date, bustCache = false) {
   if (endpoints && curLat != null && lastDepart != null) {
     returnDrive = await calcDriveLeg(curLat, curLng, endpoints.endLat, endpoints.endLng);
     if (returnDrive != null) {
+      totalDriveMin += returnDrive;
       returnArrive = lastDepart + returnDrive;
       returnOver = returnArrive > DAY_END_MIN;
     }
   }
 
+  let transitDriveBudget = null, transitDriveOver = false, baseToBaseDrive = null;
+  if (base.baseType === 'transit' && endpoints) {
+    const bud = await getSuggestedDriveBudget(base, endpoints);
+    transitDriveBudget = bud.budget;
+    baseToBaseDrive = bud.baseToBase;
+    transitDriveOver = totalDriveMin > transitDriveBudget;
+  }
+
   const plan = {
     date, day, base, endpoints, stops, returnDrive, returnArrive, returnOver,
+    totalDriveMin, transitDriveBudget, baseToBaseDrive, transitDriveOver,
     mode: 'timed',
-    infeasibleCount: stops.filter(s => s.infeasible).length + (returnOver ? 1 : 0),
+    infeasibleCount: stops.filter(s => s.infeasible).length + (returnOver ? 1 : 0) + (transitDriveOver ? 1 : 0),
   };
   _dayPlanCache[date] = plan;
   return plan;
@@ -1958,7 +2890,7 @@ async function computeSuggestedDayRoute(date, bustCache = false) {
   const endpoints = await getBaseStartEndCoords(base);
   if (!endpoints) return null;
 
-  const budget = base.baseType === 'transit' ? SUGGESTED_DRIVE_TRANSIT : SUGGESTED_DRIVE_STAY;
+  const { budget, baseToBase } = await getSuggestedDriveBudget(base, endpoints);
   const candidates = getDayProperties(date);
   for (const p of candidates) await resolvePropCoords(p, false);
   const withCoords = candidates.filter(p => p.lat != null);
@@ -2003,7 +2935,7 @@ async function computeSuggestedDayRoute(date, bustCache = false) {
 
   const plan = {
     date, day, base, endpoints, stops, skipped, finalDrive,
-    mode: 'suggested', totalDrive: usedDrive, driveBudget: budget,
+    mode: 'suggested', totalDrive: usedDrive, driveBudget: budget, baseToBaseDrive: baseToBase,
     infeasibleCount: skipped.length,
   };
   _dayPlanCache[cacheKey] = plan;
@@ -2033,11 +2965,43 @@ function getTripDays() {
   return days;
 }
 
-function populateMapDaySelect() {
-  const sel = document.getElementById('map-day');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">All days</option>' +
-    getTripDays().map(d => `<option value="${d.date}">${d.label} · ${d.base}</option>`).join('');
+function populateMapDayDropdown() {
+  const baseF = document.getElementById('map-base')?.value || '';
+  const btn = document.getElementById('map-day-btn');
+  const dd = document.getElementById('map-day-dropdown');
+  if (!btn || !dd) return;
+  dd.style.display = 'none';
+  if (!baseF) {
+    btn.disabled = true;
+    btn.textContent = 'Select a base first';
+    dd.innerHTML = '';
+    _mapSelectedDays.clear();
+    updateMapRouteModeState();
+    return;
+  }
+  const days = getDaysForBase(baseF);
+  if (!days.length) {
+    btn.disabled = true;
+    btn.textContent = 'No days for base';
+    dd.innerHTML = '';
+    _mapSelectedDays.clear();
+    updateMapRouteModeState();
+    return;
+  }
+  if (days.length === 1) {
+    _mapSelectedDays = new Set([days[0].date]);
+    btn.disabled = true;
+    btn.textContent = days[0].label;
+    dd.innerHTML = '';
+    updateMapRouteModeState();
+    return;
+  }
+  btn.disabled = false;
+  btn.textContent = _mapSelectedDays.size ? `${_mapSelectedDays.size} day(s) selected` : 'Select days…';
+  dd.innerHTML = days.map(d =>
+    `<label class="map-day-opt"><input type="checkbox" value="${d.date}" ${ _mapSelectedDays.has(d.date) ? 'checked' : '' } onchange="onMapDayCheckChange()"> ${escHtml(d.label)}</label>`
+  ).join('');
+  updateMapRouteModeState();
 }
 
 function populateDpDaySelect() {
@@ -2147,6 +3111,10 @@ async function renderDayPlan(forceRecalc = false) {
   summary.innerHTML = `<h3>${plan.day.label} · ${escHtml(base?.name || '')} (${base?.abbr}) · ${typeLbl}</h3>
     <div>${ep ? `${escHtml(ep.startLabel)} → ${plan.stops.length ? plan.stops.length + ' viewings' : 'no viewings'} → ${escHtml(ep.endLabel)}` : 'Base location not resolved'}</div>
     <div style="margin-top:4px;color:var(--text3)">Day window ${formatMinToTime(DAY_START_MIN)}–${formatMinToTime(DAY_END_MIN)} · ${VIEWING_MIN} min per property</div>
+    ${base?.baseType === 'transit' && plan.baseToBaseDrive != null
+      ? `<div style="margin-top:4px;color:var(--text3)">Transit drive: ${plan.baseToBaseDrive} min direct + up to ${SUGGESTED_DRIVE_TRANSIT} min detour (${plan.transitDriveBudget} min max) · ${plan.totalDriveMin} min planned</div>`
+      : ''}
+    ${plan.transitDriveOver ? `<div style="margin-top:6px;color:var(--red);font-weight:600">⚠ Driving exceeds transit budget (${plan.totalDriveMin} / ${plan.transitDriveBudget} min)</div>` : ''}
     ${plan.infeasibleCount ? `<div style="margin-top:6px;color:var(--red);font-weight:600">⚠ ${plan.infeasibleCount} leg(s) may not fit</div>` : '<div style="margin-top:6px;color:var(--olive)">✓ Route fits the day window</div>'}`;
 
   let html = '';
@@ -2161,12 +3129,18 @@ async function renderDayPlan(forceRecalc = false) {
     if (s.noTimeToView) reasons.push('past day end');
     if (s.tightToNext) reasons.push('conflicts with next');
     if (s.noPlannedTime) reasons.push('no planned time');
-    html += `<div class="dp-leg ${cls}">
+    html += `<div class="dp-leg dp-stop ${cls}${s.locked ? ' dp-locked' : ''}" data-pid="${s.p.id}" onclick="if(!event.target.closest('.dp-actions,.dp-drag-handle'))openDetailModal(${s.p.id})">
+      ${s.locked
+        ? '<span style="opacity:.3;width:14px;flex-shrink:0;text-align:center" title="Scheduled — locked">🔒</span>'
+        : '<span class="dp-drag-handle" title="Drag to reorder" onclick="event.stopPropagation()">⠿</span>'}
       <span class="dp-leg-time">${formatMinToTime(s.plannedMin)}</span>
       <span class="dp-leg-name">${s.seq}. ${escHtml(s.p.name)}${s.locked ? ' ✓' : ''}</span>
       <span class="dp-leg-meta">${s.drive != null ? s.drive + 'm drive' : '—'} · arr ${formatMinToTime(s.arriveMin)} · ${VIEWING_MIN}m view</span>
       ${reasons.length ? `<span class="dp-leg-meta" style="color:var(--red)">${reasons.join(', ')}</span>` : ''}
-      <button class="t-btn t-btn-blue" style="font-size:9px;padding:1px 5px" onclick="openDetailModal(${s.p.id})">✏</button>
+      <span class="dp-actions" onclick="event.stopPropagation()">
+        ${!s.locked ? `<button class="t-btn t-btn-red" style="font-size:9px;padding:1px 5px" title="Remove from day plan" onclick="dpClearPlanned(${s.p.id})">✕</button>` : ''}
+        <button class="t-btn t-btn-blue" style="font-size:9px;padding:1px 5px" onclick="openDetailModal(${s.p.id})">✏</button>
+      </span>
     </div>`;
   }
   if (ep) {
@@ -2174,16 +3148,67 @@ async function renderDayPlan(forceRecalc = false) {
     html += `<div class="dp-leg ${retCls}"><span class="dp-leg-time">${formatMinToTime(plan.returnArrive)}</span><span class="dp-leg-name">${escHtml(ep.endLabel)} — arrive${plan.returnDrive != null ? ` (${plan.returnDrive}m drive)` : ''}</span>${plan.returnOver ? '<span class="dp-leg-meta" style="color:var(--red)">past day end</span>' : ''}</div>`;
   }
   timeline.innerHTML = html || '<div class="empty-day">No properties planned this day</div>';
+  _initDpDnd(date);
   if (statusEl) statusEl.textContent = `Updated ${new Date().toLocaleTimeString()}`;
   if (!_dpMapInited) initDayPlanMap();
   if (_dpMapObj) await drawDayPlanOnMap(_dpMapObj, plan);
-  const mapDay = document.getElementById('map-day');
-  if (mapDay && mapDay.value !== date) {
-    mapDay.value = date;
-    const mode = document.getElementById('map-route-mode');
-    if (mode) mode.disabled = !date;
+  const mapBase = document.getElementById('map-base');
+  if (mapBase && base?.abbr) {
+    mapBase.value = base.abbr;
+    _mapSelectedDays = new Set([date]);
+    populateMapDayDropdown();
+    updateMapRouteModeState();
     if (_mapInited) refreshMap();
   }
+}
+
+function _initDpDnd(date) {
+  const timeline = document.getElementById('dp-timeline');
+  if (!timeline) return;
+  if (_dpSortable) { _dpSortable.destroy(); _dpSortable = null; }
+  _dpSortable = new Sortable(timeline, {
+    animation: 150,
+    handle: '.dp-drag-handle',
+    draggable: '.dp-leg.dp-stop:not(.dp-locked)',
+    filter: '.dp-start,.dp-end,.empty-day',
+    onEnd: () => dpReorderStops(date),
+  });
+}
+
+function dpReorderStops(date) {
+  const timeline = document.getElementById('dp-timeline');
+  if (!timeline) return;
+  const rows = [...timeline.querySelectorAll('.dp-leg.dp-stop[data-pid]')];
+  const times = rows.map(el => {
+    const p = getProp(el.dataset.pid);
+    return p ? parseTimeToMinutes(getPropDayTime(p, date)) : null;
+  }).filter(t => t != null).sort((a, b) => a - b);
+  rows.forEach((el, i) => {
+    const p = getProp(el.dataset.pid);
+    if (!p || p.schedDate === date) return;
+    if (times[i] != null) p.userPlannedTime = formatMinToTime(times[i]);
+  });
+  delete _dayPlanCache[date];
+  delete _dayPlanCache[date + '_suggested'];
+  saveToStorage();
+  renderDayPlan(true);
+}
+
+function dpClearPlanned(pid) {
+  const p = getProp(pid);
+  if (!p || p.schedDate) return;
+  const wasDate = p.userPlannedDate;
+  p.userPlannedDate = '';
+  p.userPlannedTime = '';
+  touchPropFields(p, ['userPlannedDate', 'userPlannedTime']);
+  if (wasDate) {
+    delete _dayPlanCache[wasDate];
+    delete _dayPlanCache[wasDate + '_suggested'];
+  }
+  saveToStorage();
+  renderDayPlan(true);
+  renderProps();
+  if (_mapInited) refreshMap();
 }
 
 function renderSchedule() {
@@ -2250,7 +3275,7 @@ function renderSchedule() {
     });
     for (const p of sortedItems) {
       const isLocked = p.schedDate === day.date;
-      const time = getPropDayTime(p, day.date);
+      const time = formatTimeDisplay(getPropDayTime(p, day.date));
       const dt = getPropDriveToBase(p, day.base);
       const driveClass = dt == null ? '' : dt > DRIVE_CAP ? 'drive-chip-over' : dt > DRIVE_CAP * 0.75 ? 'drive-chip-warn' : '';
       const loc = getPropGps(p) || getPropAddress(p);
@@ -2330,6 +3355,7 @@ function _initSchedDnd() {
         }
         p.userPlannedDate = toDate || '';
         p.userPlannedTime = '';
+        touchPropFields(p, ['userPlannedDate', 'userPlannedTime']);
         if (toDate) delete _dayPlanCache[toDate];
         saveToStorage();
       }
@@ -2342,13 +3368,105 @@ function _initSchedDnd() {
       onEnd: evt => {
         const pid = evt.item.dataset.pid;
         const p = getProp(pid);
-        if (p && !p.schedDate) { p.userPlannedDate = ''; saveToStorage(); }
+        if (p && !p.schedDate) {
+          p.userPlannedDate = '';
+          touchPropFields(p, ['userPlannedDate', 'userPlannedTime']);
+          saveToStorage();
+        }
       }
     });
   }
 }
 
 // ─── Map ─────────────────────────────────────────────────────────────────────
+function getActiveBases() {
+  return state_bases.filter(b => b.active !== false);
+}
+
+function isPropOnActiveBase(p) {
+  const b = getBase(p.grp);
+  return !!(b && b.active !== false);
+}
+
+function getDaysForBase(abbr) {
+  return getTripDays().filter(d => d.base === abbr);
+}
+
+function getPropScheduleKind(p, date) {
+  if (date) {
+    if (p.schedDate === date) return 'scheduled';
+    if (!p.schedDate && p.userPlannedDate === date) return 'planned';
+    return null;
+  }
+  if (p.schedDate) return 'scheduled';
+  if (p.userPlannedDate) return 'planned';
+  return null;
+}
+
+function makePropMarkerIcon({ fill, seq, scheduleKind, size = 24 }) {
+  const ring = scheduleKind === 'scheduled' ? '#2E7D32' : (scheduleKind === 'planned' ? '#F5A623' : null);
+  const ringW = ring ? 4 : 0;
+  const outer = size + ringW * 2;
+  const label = seq != null ? String(seq) : '';
+  const fs = seq != null ? (size >= 26 ? 12 : 11) : 0;
+  return L.divIcon({
+    html: `<div style="position:relative;width:${outer}px;height:${outer}px">
+      ${ring ? `<div style="position:absolute;inset:0;border-radius:50%;border:${ringW}px solid ${ring};box-sizing:border-box"></div>` : ''}
+      <div style="position:absolute;left:${ringW}px;top:${ringW}px;background:${fill};color:#fff;border-radius:50%;width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;font-size:${fs}px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45)">${label}</div>
+    </div>`,
+    iconSize: [outer, outer],
+    iconAnchor: [outer / 2, outer / 2],
+    className: ''
+  });
+}
+
+function setMapStatus(msg) {
+  const el = document.getElementById('map-status');
+  if (el) el.textContent = msg || '';
+}
+
+function getMapRouteDay() {
+  return _mapSelectedDays.size === 1 ? [..._mapSelectedDays][0] : '';
+}
+
+function updateMapRouteModeState() {
+  const mode = document.getElementById('map-route-mode');
+  const routeDay = getMapRouteDay();
+  const baseF = document.getElementById('map-base')?.value || '';
+  if (mode) mode.disabled = !baseF || !routeDay;
+}
+
+function onMapBaseChange() {
+  _mapSelectedDays.clear();
+  populateMapDayDropdown();
+  updateMapRouteModeState();
+  const info = document.getElementById('map-route-info');
+  if (info) info.textContent = '';
+  refreshMap();
+}
+
+function toggleMapDayDropdown() {
+  const dd = document.getElementById('map-day-dropdown');
+  const btn = document.getElementById('map-day-btn');
+  if (!dd || !btn || btn.disabled) return;
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+
+function onMapDayCheckChange() {
+  const dd = document.getElementById('map-day-dropdown');
+  if (!dd) return;
+  _mapSelectedDays.clear();
+  dd.querySelectorAll('input[type=checkbox]:checked').forEach(cb => _mapSelectedDays.add(cb.value));
+  const btn = document.getElementById('map-day-btn');
+  if (btn) btn.textContent = _mapSelectedDays.size ? `${_mapSelectedDays.size} day(s) selected` : 'Select days…';
+  updateMapRouteModeState();
+  const dp = document.getElementById('dp-day');
+  if (dp && _mapSelectedDays.size === 1) dp.value = [..._mapSelectedDays][0];
+  const info = document.getElementById('map-route-info');
+  if (info && _mapSelectedDays.size !== 1) info.textContent = '';
+  refreshMap();
+}
+
 function initMap() {
   if (_mapInited) return;
   _mapObj = L.map('map').setView([42.85, 12.0], 8);
@@ -2356,21 +3474,12 @@ function initMap() {
     attribution: '© OpenStreetMap contributors', maxZoom: 18
   }).addTo(_mapObj);
   _mapInited = true;
-  // Populate base filter
   const mapBase = document.getElementById('map-base');
-  if (mapBase) mapBase.innerHTML = '<option value="">All</option>' +
-    state_bases.map(b=>`<option value="${b.abbr}">${b.name}</option>`).join('');
-  refreshMap();
-}
-
-function onMapDayChange() {
-  const d = document.getElementById('map-day')?.value || '';
-  const dp = document.getElementById('dp-day');
-  const mode = document.getElementById('map-route-mode');
-  if (dp && d) dp.value = d;
-  if (mode) mode.disabled = !d;
-  const info = document.getElementById('map-route-info');
-  if (info && !d) info.textContent = '';
+  if (mapBase) {
+    mapBase.innerHTML = '<option value="">All bases</option>' +
+      getActiveBases().map(b => `<option value="${b.abbr}">${b.name} (${b.abbr})</option>`).join('');
+  }
+  populateMapDayDropdown();
   refreshMap();
 }
 
@@ -2379,7 +3488,10 @@ function _updateMapRouteInfo(plan) {
   if (!el) return;
   if (!plan) { el.textContent = ''; return; }
   if (plan.mode === 'suggested') {
-    el.textContent = `Suggested · ${plan.stops.length} on route · ${plan.totalDrive ?? '?'} / ${plan.driveBudget} min drive` +
+    const budNote = plan.baseToBaseDrive != null
+      ? ` (${plan.baseToBaseDrive} direct + ${SUGGESTED_DRIVE_TRANSIT} detour)`
+      : '';
+    el.textContent = `Suggested · ${plan.stops.length} on route · ${plan.totalDrive ?? '?'} / ${plan.driveBudget} min drive${budNote}` +
       (plan.skipped?.length ? ` · ${plan.skipped.length} skipped` : '');
   } else {
     el.textContent = `Timed · ${plan.stops.length} stops` +
@@ -2399,28 +3511,26 @@ function _drawMapDayRoute(mapObj, plan, allLatLngs) {
   for (const s of plan.stops) {
     const p = s.p;
     if (!p.lat) continue;
-    const col = s.infeasible ? '#C0392B' : (plan.mode === 'suggested' ? '#7B1FA2' : '#5B7232');
+    const sk = getPropScheduleKind(p, plan.date);
+    const fill = s.infeasible ? '#C0392B' : (plan.mode === 'suggested' ? '#7B1FA2' : baseColor(plan.base?.abbr || p.grp));
     const popup = plan.mode === 'suggested'
-      ? `<b>${s.seq}. ${escHtml(p.name)}</b><br>${s.drive ?? '?'}m from previous · on suggested route`
+      ? `<b>${s.seq}. ${escHtml(p.name)}</b><br>${s.drive ?? '?'}m from previous · on suggested route<br><a href="#" onclick="openDetailModal(${p.id});return false">Edit property</a>`
       : `<b>${s.seq}. ${escHtml(p.name)}</b><br>` +
-        `${getPropDayTime(p, plan.date) ? 'Appt: ' + escHtml(getPropDayTime(p, plan.date)) + '<br>' : ''}` +
-        (s.infeasible ? '<span style="color:#C0392B">⚠ Not enough time</span>' : '✓ Feasible');
+        `Planned: ${getPropDayTime(p, plan.date) ? escHtml(formatTimeDisplay(getPropDayTime(p, plan.date))) : '—'}<br>` +
+        `Arrive: ${formatMinToTime(s.arriveMin)} · Drive: ${s.drive ?? '?'}m<br>` +
+        (s.infeasible ? '<span style="color:#C0392B">⚠ Not enough time</span>' : '✓ Feasible') +
+        `<br><a href="#" onclick="openDetailModal(${p.id});return false">Edit property</a>`;
     L.marker([p.lat, p.lng], {
-      icon: L.divIcon({
-        html: `<div style="background:${col};color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #fff">${s.seq}</div>`,
-        iconSize: [22, 22], className: ''
-      })
+      icon: makePropMarkerIcon({ fill, seq: s.seq, scheduleKind: sk, size: 26 })
     }).addTo(mapObj).bindPopup(popup);
     allLatLngs.push([p.lat, p.lng]);
   }
   for (const sk of (plan.skipped || [])) {
     const p = sk.p;
     if (!p.lat) continue;
+    const skind = getPropScheduleKind(p, plan.date);
     L.marker([p.lat, p.lng], {
-      icon: L.divIcon({
-        html: `<div style="background:#F5A623;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #fff">✕</div>`,
-        iconSize: [20, 20], className: ''
-      })
+      icon: makePropMarkerIcon({ fill: '#F5A623', scheduleKind: skind, size: 22 })
     }).addTo(mapObj).bindPopup(`<b>${escHtml(p.name)}</b><br>Skipped: ${escHtml(sk.reason)}`);
     allLatLngs.push([p.lat, p.lng]);
   }
@@ -2429,39 +3539,44 @@ function _drawMapDayRoute(mapObj, plan, allLatLngs) {
 
 function refreshMap() {
   if (!_mapInited || !_mapObj) return;
-  refreshMapAsync().catch(e => console.warn('Map refresh:', e));
+  refreshMapAsync().catch(e => { console.warn('Map refresh:', e); setMapStatus(''); });
 }
 
 async function refreshMapAsync() {
   if (!_mapInited || !_mapObj) return;
+  setMapStatus('Loading map…');
   _mapObj.eachLayer(l => { if (l instanceof L.Marker || l instanceof L.Polyline) _mapObj.removeLayer(l); });
 
   const schedOnly = document.getElementById('map-sched')?.checked;
   const baseF = document.getElementById('map-base')?.value || '';
-  const dayF = document.getElementById('map-day')?.value || '';
+  const routeDay = getMapRouteDay();
   const routeMode = document.getElementById('map-route-mode')?.value || 'timed';
   let dayPlan = null;
-  if (dayF) {
+
+  if (routeDay) {
+    setMapStatus(routeMode === 'suggested' ? 'Calculating suggested route…' : 'Calculating route…');
     dayPlan = routeMode === 'suggested'
-      ? await computeSuggestedDayRoute(dayF)
-      : await computeDayPlan(dayF);
+      ? await computeSuggestedDayRoute(routeDay)
+      : await computeDayPlan(routeDay);
+    if (!dayPlan) setMapStatus('Could not calculate route — check base location');
   }
   _updateMapRouteInfo(dayPlan);
-  const dayBaseAbbr = dayPlan?.base?.abbr || getDayForDate(dayF)?.base || '';
+  const dayBaseAbbr = dayPlan?.base?.abbr || getDayForDate(routeDay)?.base || baseF || '';
 
-  const basesToDraw = state_bases.filter(b => {
-    if (dayF && dayBaseAbbr && b.abbr !== dayBaseAbbr) return false;
+  const basesToDraw = getActiveBases().filter(b => {
+    if (routeDay && dayBaseAbbr && b.abbr !== dayBaseAbbr) return false;
     if (baseF && b.abbr !== baseF) return false;
     return true;
   });
 
+  setMapStatus('Drawing bases…');
   const allLatLngs = [];
   for (const base of basesToDraw) {
     const color = baseColor(base.abbr);
     if (base.baseType === 'transit') {
       const ep = await resolveTransitEndpoints(base);
       if (ep) {
-        if (!dayF) {
+        if (!routeDay) {
           const dir = await fetchDirections(ep.fromLat, ep.fromLng, ep.toLat, ep.toLng);
           if (dir?.points?.length) {
             L.polyline(dir.points, { color, weight: 4, opacity: 0.85 }).addTo(_mapObj)
@@ -2470,32 +3585,41 @@ async function refreshMapAsync() {
             L.polyline([[ep.fromLat, ep.fromLng], [ep.toLat, ep.toLng]], { color, weight: 3, opacity: 0.6, dashArray: '6,4' }).addTo(_mapObj);
           }
         }
-        L.marker([ep.fromLat, ep.fromLng], { icon: L.divIcon({ html: `<div style="background:${color};color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;border:2px solid #fff">◎</div>`, iconSize: [22, 22], className: '' }) }).addTo(_mapObj).bindPopup(`<b>Origin</b> · ${escHtml(getBase(base.fromBase)?.name || base.fromBase || base.name)}`);
-        L.marker([ep.toLat, ep.toLng], { icon: L.divIcon({ html: `<div style="background:${color};color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;border:2px solid #fff">◉</div>`, iconSize: [22, 22], className: '' }) }).addTo(_mapObj).bindPopup(`<b>Destinate</b> · ${escHtml(getBase(base.toBase)?.name || base.toBase || base.name)}`);
+        L.marker([ep.fromLat, ep.fromLng], { icon: L.divIcon({ html: `<div style="background:${color};color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)">◎</div>`, iconSize: [26, 26], className: '' }) }).addTo(_mapObj).bindPopup(`<b>Origin</b> · ${escHtml(getBase(base.fromBase)?.name || base.fromBase || base.name)}`);
+        L.marker([ep.toLat, ep.toLng], { icon: L.divIcon({ html: `<div style="background:${color};color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)">◉</div>`, iconSize: [26, 26], className: '' }) }).addTo(_mapObj).bindPopup(`<b>Destinate</b> · ${escHtml(getBase(base.toBase)?.name || base.toBase || base.name)}`);
         allLatLngs.push([ep.fromLat, ep.fromLng], [ep.toLat, ep.toLng]);
       }
       continue;
     }
     const bc = await resolveBaseCoords(base);
     if (!bc) continue;
-    const icon = L.divIcon({ html: `<div style="background:${color};color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)">${base.abbr}</div>`, iconSize: [28, 28], className: '' });
+    const icon = L.divIcon({ html: `<div style="background:${color};color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)">${base.abbr}</div>`, iconSize: [32, 32], className: '' });
     L.marker([bc.lat, bc.lng], { icon }).addTo(_mapObj)
       .bindPopup(`<b>★ ${base.name}</b> (Stay)<br>${base.visitFrom || ''}${base.visitTo && base.visitTo !== base.visitFrom ? ' – ' + base.visitTo : ''}`);
     allLatLngs.push([bc.lat, bc.lng]);
   }
 
-  if (dayF && dayPlan) {
+  if (routeDay && dayPlan) {
+    setMapStatus('Drawing route…');
     const routePts = _drawMapDayRoute(_mapObj, dayPlan, allLatLngs);
     const fitPts = routePts.length ? routePts : allLatLngs;
     if (fitPts.length > 1) _mapObj.fitBounds(fitPts, { padding: [30, 30] });
     else if (fitPts.length === 1) _mapObj.setView(fitPts[0], 12);
+    setMapStatus('');
     return;
   }
 
+  setMapStatus('Loading properties…');
+  const selectedDays = baseF && _mapSelectedDays.size ? _mapSelectedDays : null;
+
   const props = state.props.filter(p => {
     if (ELIM_STATUSES.has(p.status)) return false;
+    if (!isPropOnActiveBase(p)) return false;
     if (baseF && p.grp !== baseF) return false;
     if (schedOnly && !p.schedDate) return false;
+    if (selectedDays) {
+      if (![...selectedDays].some(d => isPropOnDay(p, d))) return false;
+    }
     return true;
   });
 
@@ -2508,17 +3632,18 @@ async function refreshMapAsync() {
     }
     if (!lat) continue;
     allLatLngs.push([lat, lng]);
-    const color = baseColor(p.grp);
-    const icon = L.divIcon({
-      html: `<div style="background:${color};border-radius:50%;width:10px;height:10px;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>`,
-      iconSize: [10, 10], className: ''
-    });
-    const apt = getBase(p.grp)?.airport || 'FCO';
-    const aptDrive = getPropDriveToAirport(p, apt);
+    const fill = baseColor(p.grp);
+    const scheduleKind = selectedDays?.size === 1
+      ? getPropScheduleKind(p, [...selectedDays][0])
+      : getPropScheduleKind(p, null);
+    const icon = makePropMarkerIcon({ fill, scheduleKind, size: 22 });
+    const closestApt = getClosestAirportDrive(p);
     const baseDrive = getPropDriveToBase(p, p.grp);
+    const schedLbl = scheduleKind === 'scheduled' ? 'Scheduled' : (scheduleKind === 'planned' ? 'Planned' : '');
     L.marker([lat, lng], { icon }).addTo(_mapObj).bindPopup(
-      `<b>${escHtml(p.name)}</b><br>${escHtml(getPropAddress(p))}<br>${formatPrice(p.price)} · ${p.rooms}rm<br>` +
-      `${aptDrive != null ? `✈ ${apt}: ${aptDrive}m<br>` : ''}${baseDrive != null ? `📍 ${p.grp}: ${baseDrive}m` : ''}`
+      `<b>${escHtml(p.name)}</b>${schedLbl ? ` <span style="color:${scheduleKind === 'scheduled' ? '#2E7D32' : '#F5A623'}">(${schedLbl})</span>` : ''}<br>` +
+      `${escHtml(getPropAddress(p))}<br>${formatPrice(p.price)} · ${p.rooms}rm<br>` +
+      `${closestApt ? `✈ ${closestApt.abbr}: ${closestApt.mins}m<br>` : ''}${baseDrive != null ? `📍 ${p.grp}: ${baseDrive}m` : ''}`
     );
     const routeDate = p.schedDate || p.userPlannedDate || '';
     if (routeDate) {
@@ -2538,7 +3663,16 @@ async function refreshMapAsync() {
 
   if (allLatLngs.length > 1) _mapObj.fitBounds(allLatLngs, { padding: [30, 30] });
   else if (allLatLngs.length === 1) _mapObj.setView(allLatLngs[0], 12);
+  setMapStatus(props.length ? '' : (basesToDraw.length ? '' : 'Nothing to show on map'));
 }
+
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('map-day-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    const dd = document.getElementById('map-day-dropdown');
+    if (dd) dd.style.display = 'none';
+  }
+});
 
 // ─── Gemini ──────────────────────────────────────────────────────────────────
 function updateGeminiContext() {
@@ -2602,28 +3736,26 @@ async function fetchBroker(id) {
 function addToCalendar(id) {
   const p = getProp(id);
   if (!p || !p.schedDate) { alert('No scheduled date set for this property.'); return; }
-  const t = (p.schedTime || '09:00').replace(' AM','').replace(' PM','');
-  const hhmm = t.match(/^\d{1,2}:\d{2}$/) ? t : '09:00';
+  const t = normalizeTimeString(p.schedTime) || '09:00';
+  const hhmm = t.match(/^\d{2}:\d{2}$/) ? t : '09:00';
   const s = new Date(p.schedDate + 'T' + hhmm + ':00');
   const e = new Date(s); e.setMinutes(e.getMinutes() + 45);
   const fmt = d => d.toISOString().replace(/[-:.]/g,'').slice(0,15);
-  const apt = getBase(p.grp)?.airport || 'FCO';
-  const aptDrive = getPropDriveToAirport(p, apt);
+  const closestApt = getClosestAirportDrive(p);
   const title = encodeURIComponent(`House viewing: ${p.name} (${p.town}${p.prov?', '+p.prov:''})`);
-  const det = encodeURIComponent(`${p.url}\n${apt}: ${aptDrive??'?'}min | ${formatPrice(p.price)} | ${p.rooms} rooms`);
+  const det = encodeURIComponent(`${p.url}\n${closestApt ? `${closestApt.abbr}: ${closestApt.mins}min` : 'airport: ?'} | ${formatPrice(p.price)} | ${p.rooms} rooms`);
   window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(s)}/${fmt(e)}&details=${det}`,'_blank');
 }
 
 function _buildGeminiContext() {
   const activeProps = state.props.filter(p=>!ELIM_STATUSES.has(p.status));
   const summary = activeProps.map(p => {
-    const apt = getBase(p.grp)?.airport || 'FCO';
-    const aptD = getPropDriveToAirport(p, apt);
+    const closestApt = getClosestAirportDrive(p);
     const baseD = getPropDriveToBase(p, p.grp);
     return `ID:${p.id} | ${p.name} | ${p.town},${p.prov} | ${formatPrice(p.price)} | ${p.rooms}rm | ` +
-      `Base:${p.grp} | ✈${apt}:${aptD??'?'}m | Base:${baseD??'?'}m | Status:${p.status}`;
+      `Base:${p.grp} | ✈${closestApt ? `${closestApt.abbr}:${closestApt.mins}m` : '?'} | Base:${baseD??'?'}m | Status:${p.status}`;
   }).join('\n');
-  const bases = state_bases.map(b => `${b.name}(${b.abbr}) visit:${b.visitFrom||'?'}–${b.visitTo||b.visitFrom||'?'} airport:${b.airport}`).join(', ');
+  const bases = state_bases.map(b => `${b.name}(${b.abbr}) visit:${b.visitFrom||'?'}–${b.visitTo||b.visitFrom||'?'}`).join(', ');
   return `You are a travel assistant helping plan property viewings in Italy.\nBASES: ${bases}\nPROPERTIES (${activeProps.length}):\n${summary}`;
 }
 
@@ -2712,7 +3844,7 @@ async function restoreSnapshot(id) {
   if (!confirm('Restore this snapshot? Current data will be overwritten.')) return;
   try {
     const r = await fetch(API_BASE+'/snapshots/restore', { method:'POST', headers:_apiHdr(), body:JSON.stringify({id}) });
-    if (r.ok) { const d=await r.json(); if(d.data){state.props=d.data.map(initProp);saveToStorage();renderProps();closeSnapshotModal();} }
+    if (r.ok) { const d=await r.json(); if(d.data){state.props=d.data.map(initProp); if(d.rev!=null)_serverRev=d.rev; saveToStorage(); renderProps(); closeSnapshotModal();} }
   } catch(e) { alert('Restore failed.'); }
 }
 
@@ -2743,10 +3875,17 @@ function saveSettingsKey() {
 async function loadBasesIntoSettings() {
   try {
     const r = await fetch(API_BASE+'/bases', {headers:_apiHdr()});
-    if (r.ok) { const sb=await r.json(); if(Array.isArray(sb)&&sb.length){state_bases=sb;localStorage.setItem(LS_BASES,JSON.stringify(sb));} }
+    if (r.ok) {
+      const parsed = _parseBasesResponse(await r.json());
+      if (parsed.rev) _basesRev = parsed.rev;
+      if (Array.isArray(parsed.bases) && parsed.bases.length) {
+        state_bases = parsed.bases;
+        localStorage.setItem(LS_BASES, JSON.stringify(state_bases));
+      }
+    }
   } catch(e) {}
   renderBasesList();
-  refreshBaseFilters(); // keep filter dropdown in sync with state_bases
+  refreshBaseFilters();
 }
 
 function renderBasesList() {
@@ -2759,7 +3898,7 @@ function renderBasesList() {
     return `<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
       <div style="width:4px;height:40px;background:${color};border-radius:2px;flex-shrink:0;margin-top:2px"></div>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:12px;color:var(--text1)">${b.name} <span style="color:var(--text3);font-weight:400">(${b.abbr} · ${b.baseType==='transit'?'Transit':'Stay'} · ✈${b.airport||'?'} · ${propCount} props)</span></div>
+        <div style="font-weight:600;font-size:12px;color:var(--text1)">${b.name} <span style="color:var(--text3);font-weight:400">(${b.abbr} · ${b.baseType==='transit'?'Transit':'Stay'} · ${propCount} props)</span></div>
         <div style="font-size:10px;color:var(--adriat);margin-top:1px">${dateRange}${b.baseType==='stay'&&b.address?` · ${escHtml(b.address)}`:''}${b.baseType==='transit'&&b.fromBase?` · ${escHtml(getBase(b.fromBase)?.name||b.fromBase)} → ${escHtml(getBase(b.toBase)?.name||b.toBase||'?')}`:''}</div>
         ${b.iflToken?`<div style="font-size:10px;color:var(--text3)">IFL: <code>${b.iflToken}</code></div>`:''}
         ${b.desc?`<div style="font-size:10px;color:var(--text3)">${escHtml(b.desc)}</div>`:''}
@@ -2771,11 +3910,6 @@ function renderBasesList() {
   }).join('');
 }
 
-function _populateAirportSelect(selId, selectedAbbr) {
-  const sel = document.getElementById(selId); if (!sel) return;
-  sel.innerHTML = state_airports.map(a=>`<option value="${a.abbr}"${a.abbr===selectedAbbr?' selected':''}>${a.abbr} — ${a.name}</option>`).join('');
-}
-
 function _populateBaseRefSelect(selId, selectedAbbr, excludeAbbr) {
   const sel = document.getElementById(selId);
   if (!sel) return;
@@ -2784,14 +3918,32 @@ function _populateBaseRefSelect(selId, selectedAbbr, excludeAbbr) {
     stayBases.map(b => `<option value="${b.abbr}"${b.abbr === selectedAbbr ? ' selected' : ''}>${b.name} (${b.abbr})</option>`).join('');
 }
 
+function onTransitBaseRefsChange() {
+  const fromBase = document.getElementById('base-form-from-base')?.value || '';
+  const toBase = document.getElementById('base-form-to-base')?.value || '';
+  const nameEl = document.getElementById('base-form-name');
+  const abbrEl = document.getElementById('base-form-abbr');
+  if (fromBase && toBase && nameEl) nameEl.value = transitBaseName(fromBase, toBase);
+  if (fromBase && toBase && abbrEl && !document.getElementById('base-form-abbr-orig')?.value) {
+    abbrEl.value = suggestTransitAbbr(fromBase, toBase);
+  }
+}
+
 function onBaseTypeChange() {
   const t = document.getElementById('base-form-type')?.value || 'stay';
   document.getElementById('base-stay-fields').style.display = t === 'stay' ? 'block' : 'none';
   document.getElementById('base-transit-fields').style.display = t === 'transit' ? 'block' : 'none';
+  const nameEl = document.getElementById('base-form-name');
+  if (nameEl) {
+    nameEl.readOnly = t === 'transit';
+    nameEl.style.background = t === 'transit' ? 'var(--bg2)' : '';
+    nameEl.title = t === 'transit' ? 'Auto-derived from Origin and Destinate bases' : '';
+  }
   if (t === 'transit') {
     const exclude = document.getElementById('base-form-abbr')?.value.trim().toUpperCase() || '';
     _populateBaseRefSelect('base-form-from-base', document.getElementById('base-form-from-base')?.value || '', exclude);
     _populateBaseRefSelect('base-form-to-base', document.getElementById('base-form-to-base')?.value || '', exclude);
+    onTransitBaseRefsChange();
   }
 }
 
@@ -2802,7 +3954,6 @@ function openAddBaseForm() {
   });
   document.getElementById('base-form-type').value = 'stay';
   onBaseTypeChange();
-  _populateAirportSelect('base-form-airport','FCO');
   document.getElementById('base-form-title').textContent='Add Base';
   document.getElementById('base-form').style.display='block';
 }
@@ -2814,11 +3965,10 @@ function editBase(abbr) {
   document.getElementById('base-form-name').value = b.name||'';
   document.getElementById('base-form-abbr').value = b.abbr||'';
   document.getElementById('base-form-type').value = b.baseType || 'stay';
-  onBaseTypeChange();
   document.getElementById('base-form-from').value = b.visitFrom||'';
   document.getElementById('base-form-to').value = b.visitTo||'';
   document.getElementById('base-form-address').value = b.address||'';
-  document.getElementById('base-form-gps').value = b.gps || (b.lat && b.lng ? `${b.lat},${b.lng}` : '');
+  document.getElementById('base-form-gps').value = getBaseGps(b);
   _populateBaseRefSelect('base-form-from-base', b.fromBase || '', b.abbr);
   _populateBaseRefSelect('base-form-to-base', b.toBase || '', b.abbr);
   document.getElementById('base-form-desc').value = b.desc||'';
@@ -2827,7 +3977,7 @@ function editBase(abbr) {
     ? `https://www.idealista.it/en/utente/preferiti/?favoritesListId=${b.iflToken}`
     : `https://www.idealista.it/join-favorites-list/${b.iflToken}`;
   document.getElementById('base-form-ifl').value = iflUrl;
-  _populateAirportSelect('base-form-airport', b.airport||'FCO');
+  onBaseTypeChange();
   document.getElementById('base-form-title').textContent='Edit Base';
   document.getElementById('base-form').style.display='block';
 }
@@ -2836,8 +3986,8 @@ function closeBaseForm() { const el=document.getElementById('base-form'); if(el)
 
 async function saveBaseForm() {
   const origAbbr = document.getElementById('base-form-abbr-orig').value.trim();
-  const name = document.getElementById('base-form-name').value.trim();
-  const abbr = document.getElementById('base-form-abbr').value.trim().toUpperCase();
+  let name = document.getElementById('base-form-name').value.trim();
+  let abbr = document.getElementById('base-form-abbr').value.trim().toUpperCase();
   const baseType = document.getElementById('base-form-type')?.value || 'stay';
   const visitFrom = document.getElementById('base-form-from').value.trim();
   const visitTo = document.getElementById('base-form-to').value.trim();
@@ -2847,8 +3997,6 @@ async function saveBaseForm() {
   const toBase = document.getElementById('base-form-to-base')?.value || '';
   const iflUrl = document.getElementById('base-form-ifl').value.trim();
   const desc = document.getElementById('base-form-desc').value.trim();
-  const airport = document.getElementById('base-form-airport')?.value||'FCO';
-  if (!name||!abbr) { alert('Name and abbreviation required.'); return; }
   if (baseType === 'stay' && !gps && !address) { alert('Stay base requires an address or GPS.'); return; }
   if (baseType === 'transit') {
     if (!fromBase || !toBase) { alert('Transit base requires Origin and Destinate bases.'); return; }
@@ -2857,7 +4005,10 @@ async function saveBaseForm() {
     const fromB = getBase(fromBase), toB = getBase(toBase);
     if (!fromB || fromB.baseType === 'transit') { alert('Origin must be a Stay base with a location.'); return; }
     if (!toB || toB.baseType === 'transit') { alert('Destinate must be a Stay base with a location.'); return; }
+    name = transitBaseName(fromBase, toBase);
+    if (!abbr && !origAbbr) abbr = suggestTransitAbbr(fromBase, toBase);
   }
+  if (!name||!abbr) { alert('Name and abbreviation required.'); return; }
 
   const visitEnd = visitTo || visitFrom;
   const dateErr = visitFrom ? validateBaseDateRange(visitFrom, visitEnd, origAbbr) : null;
@@ -2873,7 +4024,7 @@ async function saveBaseForm() {
   }
 
   const payload = {
-    name, abbr, baseType, visitFrom, visitTo, desc, airport, iflToken: iflToken || null,
+    name, abbr, baseType, visitFrom, visitTo, desc, iflToken: iflToken || null,
     address: baseType === 'stay' ? address : '',
     gps: baseType === 'stay' ? gps : '',
     fromBase: baseType === 'transit' ? fromBase : '',
@@ -2883,17 +4034,27 @@ async function saveBaseForm() {
   if (existing) {
     Object.assign(existing, payload, { iflName: existing.iflName || null });
   } else {
-    state_bases.push({ ...payload, iflName: null, active: true, lat: 0, lng: 0 });
+    state_bases.push({ ...payload, iflName: null, active: true, lat: null, lng: null });
   }
   const saved = existing || state_bases[state_bases.length - 1];
   migrateBaseLocation(saved);
-  if (baseType === 'stay') await resolveBaseCoords(saved);
-  else await resolveTransitEndpoints(saved);
+  if (baseType === 'stay') {
+    const locMode = gps && !address ? 'gps' : 'address';
+    const loc = await syncEntityLocation(saved, { gps, address, isBase: true, mode: locMode });
+    if (!loc.ok) { alert(loc.error || 'Could not resolve location.'); return; }
+  } else {
+    await resolveTransitEndpoints(saved);
+  }
+  for (const b of state_bases) syncTransitBaseName(b);
   try {
-    await fetch(API_BASE+'/bases',{method:'PUT',headers:_apiHdr(),body:JSON.stringify(state_bases)});
+    const r = await fetch(API_BASE+'/bases',{method:'PUT',headers:_apiHdr(),body:JSON.stringify(state_bases)});
+    if (r.ok) {
+      const d = await r.json();
+      if (d.rev != null) _basesRev = d.rev;
+    }
   } catch(e) {}
   localStorage.setItem(LS_BASES, JSON.stringify(state_bases));
-  closeBaseForm(); renderBasesList(); refreshBaseFilters(); renderSchedule(); populateMapDaySelect(); populateDpDaySelect();
+  closeBaseForm(); renderBasesList(); refreshBaseFilters(); renderSchedule(); populateMapDayDropdown(); populateDpDaySelect();
   _dayPlanCache = {};
 }
 
@@ -2955,7 +4116,7 @@ async function addAirportAsync() {
 }
 
 function deleteAirport(abbr) {
-  if(state_bases.some(b=>b.airport===abbr)){alert(`${abbr} is used by a base.`);return;}
+  if (!confirm(`Delete airport ${abbr}?`)) return;
   state_airports=state_airports.filter(a=>a.abbr!==abbr);
   localStorage.setItem(LS_AIRPORTS,JSON.stringify(state_airports));
   renderAirportsList();
@@ -2981,7 +4142,7 @@ function stripD(s) {
 
 window.addEventListener('message', async evt => {
   if (!evt.data) return;
-  if (evt.data.type==='HOUSEHUNT_RELOAD') { loadFromStorage(); return; }
+  if (evt.data.type==='HOUSEHUNT_RELOAD') { pollServerSync(); return; }
   if (evt.data.type==='HOUSEHUNT_IFL_ADD') {
     (async () => {
     const {props, baseGrp, baseName, iflToken, discardedCount, serverResult} = evt.data;
@@ -3059,6 +4220,7 @@ window.addEventListener('message', async evt => {
     return;
   }
   if (evt.data.type !== 'HOUSEHUNT_BROKER') return;
+  (async () => {
   let {idealistaId,broker,phone,location,gps,price,rooms,size,town,prov,title,realtorUrl,commune,firmName,firmPhone} = evt.data;
   const gpsVal = (gps || location || '').trim();
   if (!idealistaId) return;
@@ -3069,35 +4231,41 @@ window.addEventListener('message', async evt => {
   if (!p) {
     showExtToast(`Property ${pid} not in list. Use + Add to add it.`,'warn');
     openAddModal({id:pid,url:`https://www.idealista.it/immobile/${pid}/`,
-      title,commune,town,prov,price,rooms,size,broker,phone,location,realtorUrl,grp:evt.data.grp||''});
+      title,commune,town,prov,price,rooms,size,broker,phone,gps:gpsVal,realtorUrl,grp:evt.data.grp||''});
     return;
   }
   const updated=[];
   if (commune&&commune.trim()){p.commune=commune.trim();updated.push('commune');}
+  if (town&&town.trim()){p.town=town.trim();updated.push('town');}
+  if (prov&&prov.trim()){p.prov=prov.trim();updated.push('prov');}
   if (broker&&broker.trim()){p.broker=broker.trim();updated.push('broker');}
   if (phone&&phone.trim()){p.brokerPhone=phone.trim();updated.push('phone');}
   if (firmName&&firmName.trim()){p.firmName=firmName.trim();updated.push('firm');}
   if (firmPhone&&firmPhone.trim()){p.firmPhone=firmPhone.trim();updated.push('firmPhone');}
-  if (gpsVal){
-    const [lat,lng]=parseGPS(gpsVal);
-    if (lat) {
-      p.gps=gpsVal;
-      p.lat=lat; p.lng=lng;
-      updated.push('gps');
-    }
+  let locUpdated = false;
+  if (gpsVal) {
+    const loc = await syncEntityLocation(p, { gps: gpsVal, mode: 'gps' });
+    if (loc.ok) { updated.push('gps'); locUpdated = true; }
+  } else if (updated.includes('commune') || updated.includes('town') || updated.includes('prov')) {
+    const addr = buildAddressFromParts(p.commune, p.town, p.prov);
+    const loc = await syncEntityLocation(p, { address: addr, mode: 'address' });
+    if (loc.ok) { updated.push('location'); locUpdated = true; }
   }
   if (realtorUrl&&realtorUrl.trim()){p.realtorUrl=realtorUrl.trim();updated.push('realtorUrl');}
   if (updated.length) {
+    touchPropFields(p, ['commune','town','prov','broker','brokerPhone','firmName','firmPhone','address','gps','realtorUrl','lat','lng']);
     saveToStorage(); showTab('props'); renderProps();
     showExtToast(`✓ Updated ${p.name}: ${updated.join(', ')}`, 'ok');
     setTimeout(()=>document.getElementById('tile-'+pid)?.scrollIntoView({behavior:'smooth',block:'center'}),250);
-    // Auto-recalc if location updated
-    if (updated.includes('gps')) {
-      updatePropElevation(p).then(() => recalcDriveTimes(p)).then(ok => { if (ok) saveToStorage(); renderProps(); });
+    if (locUpdated) {
+      await updatePropElevation(p);
+      const ok = await recalcDriveTimes(p);
+      if (ok) { await saveToStorage(); renderProps(); }
     }
   } else {
     showExtToast(`${p.name}: no new data extracted.`,'warn');
   }
+  })();
 });
 
 function showIflSyncModal({ baseName, baseAbbr, total, added, updated, priceFixed, discarded, markedDeleted, serverUpdated }) {
