@@ -1,8 +1,9 @@
-// popup.js — House Hunt Chrome Extension v1.6.6
+// popup.js — House Hunt Chrome Extension v1.6.9
 // MV3-compliant: no inline event handlers, all listeners via addEventListener
 
 let extracted = null;
 let currentTabId = null;
+let _bases = [];
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -35,12 +36,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     initSyncTab();
   });
 
-  const { savedIflUrl } = await chrome.storage.local.get('savedIflUrl');
-  if (savedIflUrl) { const el = document.getElementById('sync-ifl-url'); if (el) el.value = savedIflUrl; }
-
   document.getElementById('tab-extract-btn')?.addEventListener('click', () => switchTab('extract'));
   document.getElementById('tab-sync-btn')?.addEventListener('click', () => switchTab('sync'));
+  document.getElementById('sync-modal-close')?.addEventListener('click', closeSyncModal);
+  document.getElementById('sync-modal-x')?.addEventListener('click', closeSyncModal);
   initSyncTab();
+
+  // Load bases for the extract-tab base selector
+  try { _bases = await loadBases(); } catch(e) { _bases = []; }
+  populateBaseSelector();
 
   const { spaUrl } = await chrome.storage.local.get('spaUrl');
   document.getElementById('spa-url-input').value = spaUrl || 'househunt.pages.dev';
@@ -104,7 +108,7 @@ async function doExtract() {
     setField('f-phone',  data.phone       || null);
     setField('f-loc',    data.location    || null);
     setField('f-town',   [data.town, data.prov ? `(${data.prov})` : null].filter(Boolean).join(' ') || null);
-    setField('f-price',    data.price      ? `€${data.price}k`  : null);
+    setField('f-price',    data.price      ? formatPriceK(data.price)  : null);
     setField('f-rooms',    data.rooms      ? String(data.rooms)  : null);
     setField('f-size',     data.size       ? `${data.size} m²`  : null);
     setField('f-realtorUrl', data.realtorUrl || null);
@@ -118,6 +122,9 @@ async function doExtract() {
       found > 0 ? 'ok' : 'loading'
     );
     document.getElementById('btn-send').style.display = 'block';
+    if (_bases.length) {
+      document.getElementById('base-selector-row').style.display = 'block';
+    }
 
   } catch (err) {
     clearTimeout(safetyTimer);
@@ -129,6 +136,15 @@ async function doExtract() {
 // ── Send to SPA ────────────────────────────────────────────────────────────────────
 async function doSend() {
   if (!extracted) return;
+
+  // Require base selection
+  const grpSel = document.getElementById('f-base-sel');
+  const grp = grpSel?.value || '';
+  if (_bases.length && !grp) {
+    setStatus('Please select a Base before sending.', 'err');
+    return;
+  }
+
   const spaFragment = document.getElementById('spa-url-input').value.trim() || 'househunt.pages.dev';
   chrome.storage.local.set({ spaUrl: spaFragment });
   setStatus('Looking for SPA tab…', 'loading');
@@ -141,11 +157,12 @@ async function doSend() {
     return;
   }
 
+  const payload = { ...extracted, grp };
   try {
     await chrome.scripting.executeScript({
       target: { tabId: spaTab.id },
       func: payload => { window.postMessage({ type: 'HOUSEHUNT_BROKER', ...payload }, '*'); },
-      args: [extracted],
+      args: [payload],
     });
     setStatus('✓ Sent! Check the SPA tab.', 'ok');
     document.getElementById('btn-send').style.display = 'none';
@@ -153,6 +170,36 @@ async function doSend() {
   } catch (err) {
     setStatus('Send failed: ' + err.message, 'err');
   }
+}
+
+// ── Sync result modal ──────────────────────────────────────────────────────────
+function showSyncModal({ base, abbr, total, active, discarded, added, updated, markedDeleted, writeBackNote }) {
+  const body = document.getElementById('sync-modal-body');
+  const modal = document.getElementById('sync-modal');
+  if (!body || !modal) return;
+  body.textContent = [
+    `Base: ${base} (${abbr})`,
+    `Properties in IFL: ${total}${active != null ? ` (${active} active)` : ''}`,
+    added ? `New in SPA: ${added}` : null,
+    updated ? `Updated: ${updated}` : null,
+    markedDeleted ? `Marked Deleted-Idealista: ${markedDeleted}` : null,
+    discarded > 0 ? `Discarded on Idealista: ${discarded}` : null,
+    writeBackNote || null,
+  ].filter(Boolean).join('\n');
+  modal.classList.add('visible');
+}
+
+function closeSyncModal() {
+  document.getElementById('sync-modal')?.classList.remove('visible');
+  const log = document.getElementById('sync-log');
+  if (log) { log.style.display = 'none'; log.textContent = ''; }
+}
+
+// ── Base selector ──────────────────────────────────────────────────────────────
+function populateBaseSelector() {
+  const sel = document.getElementById('f-base-sel');
+  if (!sel) return;
+  sel.innerHTML = _bases.map(b => `<option value="${b.abbr}">${b.name} (${b.abbr})</option>`).join('');
 }
 
 // ── Tab switching ──────────────────────────────────────────────────────────────
@@ -291,17 +338,41 @@ function extractFromPage() {
     }
   }
 
-  const priceEl = document.querySelector('[class*="price"],.price,h2.price,[class*="Price"]');
-  if (priceEl) {
-    const pm = priceEl.textContent.match(/([\d.,]+)\s*€|€\s*([\d.,]+)/);
-    if (pm) {
-      const raw = (pm[1] || pm[2]).replace(/\./g, '').replace(',', '');
-      result.price = Math.round(parseInt(raw) / 1000);
-    }
+  const priceEl = document.querySelector('[class*="price-header"],[class*="Price"],.price,h2.price,[class*="item-price"]');
+  if (priceEl && !/m[²2]|\/\s*m|sqm|mq/i.test(priceEl.textContent)) {
+    result.price = parseIdealistaPriceFromText(priceEl.textContent);
   }
-  if (!result.price) {
-    const pm = document.body.innerText.match(/€\s*([\d.]+\.[\d]+|[\d]{3,7})/);
-    if (pm) result.price = Math.round(parseFloat(pm[1].replace(/\./g, '')) / 1000);
+  if (!result.price) result.price = parseIdealistaPriceFromText(document.body.innerText);
+
+  function parseItalianEuroAmount(raw) {
+    if (!raw) return 0;
+    const s = String(raw).trim();
+    if (/\d\.\d{3}/.test(s)) return parseInt(s.replace(/\./g, ''), 10) || 0;
+    if (/,/.test(s)) return parseInt(s.replace(/,/g, ''), 10) || 0;
+    return parseInt(s.replace(/[^\d]/g, ''), 10) || 0;
+  }
+  function parseIdealistaPriceFromText(text) {
+    if (!text) return null;
+    const t = String(text).replace(/\d+\s*m[²2]/gi, '');
+    let best = 0;
+    for (const re of [/€\s*([\d][\d.\s,]*)/g, /([\d][\d.\s,]*)\s*€/g]) {
+      let m;
+      while ((m = re.exec(t)) !== null) {
+        const euros = parseItalianEuroAmount(m[1]);
+        if (euros >= 30000 && euros <= 20000000) {
+          const k = Math.round(euros / 1000);
+          if (k > best) best = k;
+        }
+      }
+    }
+    if (!best) {
+      const dm = t.match(/(\d{1,3}(?:\.\d{3})+)/);
+      if (dm) {
+        const euros = parseItalianEuroAmount(dm[1]);
+        if (euros >= 30000) best = Math.round(euros / 1000);
+      }
+    }
+    return best > 0 ? best : null;
   }
 
   const bodyText = document.body.innerText;
@@ -343,6 +414,11 @@ function extractFromPage() {
   result.title  = strip(result.title);
 
   return result;
+}
+
+function formatPriceK(priceK) {
+  if (!priceK) return null;
+  return '€' + Math.round(priceK * 1000).toLocaleString('en-GB');
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────────────

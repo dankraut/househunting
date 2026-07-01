@@ -144,14 +144,20 @@ export async function onRequest(context) {
         sp.status = 'Deleted-Idealista'; markedDeleted.push(sid);
       } else if (!isElim && iflIds.has(sid)) {
         const np = priceMap[sid];
-        if (np !== undefined && Math.abs((sp.price||0) - np) > 1) { sp.price = np; updated.push({id:sid,price:np}); }
+        if (np !== undefined && np >= 30 && Math.abs((sp.price||0) - np) > 1) { sp.price = np; updated.push({id:sid,price:np}); }
+        if (baseGrp && sp.grp !== baseGrp) { sp.grp = baseGrp; updated.push({id:sid,grp:baseGrp}); }
         if (IFL_RESET_ELIM.has(sp.status)) { sp.status = 'Reset'; updated.push({id:sid,status:'Reset'}); }
       } else if (isElim && iflIds.has(sid)) {
         writeBackQueue.push({ id: sid });
       }
     }
     for (const p of properties) if (!storedIds.has(String(p.id))) toAdd.push(p);
-    if (markedDeleted.length || updated.length) await env.HH_KV.put('data', JSON.stringify(props));
+    let grpUpdated = false;
+    for (const p of properties) {
+      const sp = props.find(x => String(x.id) === String(p.id));
+      if (sp && baseGrp && sp.grp !== baseGrp) { sp.grp = baseGrp; grpUpdated = true; }
+    }
+    if (markedDeleted.length || updated.length || grpUpdated) await env.HH_KV.put('data', JSON.stringify(props));
     return json({ ok: true, toAdd, updated, markedDeleted, writeBackQueue });
   }
 
