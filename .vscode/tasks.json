@@ -4,14 +4,10 @@
     {
       "label": "Deploy",
       "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/scripts/deploy.ps1"
-      ],
+      "command": ".\\deploy.cmd",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "group": {
         "kind": "build",
         "isDefault": true
@@ -26,15 +22,11 @@
     {
       "label": "Deploy (dry run)",
       "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/scripts/deploy.ps1",
-        "-DryRun"
-      ],
+      "command": ".\\deploy.cmd",
+      "args": ["-DryRun"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "presentation": {
         "reveal": "always",
         "panel": "shared"

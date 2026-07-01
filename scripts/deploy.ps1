@@ -148,91 +148,97 @@ if (-not $repoRoot) {
     exit 1
 }
 
-Set-Location -LiteralPath $repoRoot
-Write-Step "Repository: $repoRoot"
-
-$originUrl = (Invoke-GitRead @('remote', 'get-url', 'origin')).Output
-Write-Host "    origin: $originUrl"
-
-$currentBranch = (Invoke-GitRead @('branch', '--show-current')).Output.Trim()
-if (-not $currentBranch) {
-    Write-Err 'Detached HEAD  -  checkout a branch before deploying.'
-    exit 1
-}
-Write-Host "    branch: $currentBranch"
-
-Write-Step 'Fetching origin'
-Invoke-Git @('fetch', 'origin') | Out-Null
-
-$porcelain = (Invoke-GitRead @('status', '--porcelain')).Output
-$hasChanges = [bool]($porcelain -and $porcelain.Trim())
-
-if ($hasChanges) {
-    Write-Step 'Staging changes'
-    $tracked = (Invoke-GitRead @('diff', '--name-only')).Output
-    $staged = (Invoke-GitRead @('diff', '--cached', '--name-only')).Output
-    $untracked = (Invoke-GitRead @('ls-files', '--others', '--exclude-standard')).Output
-    $allChanged = @(
-        $(if ($tracked) { $tracked -split "`n" }),
-        $(if ($staged) { $staged -split "`n" }),
-        $(if ($untracked) { $untracked -split "`n" })
-    ) | Where-Object { $_ } | Select-Object -Unique
-
-    $sensitive = Test-SensitivePaths -Paths $allChanged
-    if ($sensitive.Count -gt 0 -and -not $ForceSecrets) {
-        Write-Err "Refusing to commit  -  potentially sensitive files detected:"
-        $sensitive | ForEach-Object { Write-Host "  - $_" -ForegroundColor Yellow }
-        Write-Host "Remove them from the commit, add to .gitignore, or re-run with -ForceSecrets if intentional." -ForegroundColor Yellow
-        exit 1
-    }
-    if ($sensitive.Count -gt 0) {
-        Write-Host "WARNING: committing sensitive-looking files (ForceSecrets set):" -ForegroundColor Yellow
-        $sensitive | ForEach-Object { Write-Host "  - $_" -ForegroundColor Yellow }
-    }
-
-    Invoke-Git @('add', '-A') | Out-Null
-
-    if (-not $Message) {
-        $Message = Get-DefaultCommitMessage -Root $repoRoot
-    }
-    Write-Step "Committing: $Message"
-    Invoke-Git @('commit', '-m', $Message) | Out-Null
-} else {
-    Write-Host 'No local changes to commit.' -ForegroundColor DarkGray
-}
-
-function Sync-Branch {
-    param(
-        [string]$Branch,
-        [switch]$SetUpstream
-    )
-    Write-Step "Syncing branch '$Branch' with origin"
-    $localExists = (Invoke-GitRead @('rev-parse', '--verify', $Branch)).Ok
-    if (-not $localExists) {
-        Invoke-Git @('checkout', '-b', $Branch, "origin/$Branch") | Out-Null
-    } else {
-        Invoke-Git @('checkout', $Branch) | Out-Null
-    }
-
-    $upstream = (Invoke-GitRead @('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}')).Output
-    $hasUpstream = [bool]$upstream
-    if ($hasUpstream) {
-        try {
-            Invoke-Git @('pull', '--rebase', 'origin', $Branch) | Out-Null
-        } catch {
-            throw "Rebase failed on '$Branch'. Run: git rebase --abort, fix, then deploy again."
-        }
-        Ensure-CleanMerge -Context "rebase on $Branch"
-    } elseif (Test-Path -LiteralPath ".git/refs/remotes/origin/$Branch") {
-        Write-Host "    No upstream  -  will push with -u" -ForegroundColor DarkGray
-    }
-
-    $pushArgs = @('push', 'origin', $Branch)
-    if ($SetUpstream -or -not $hasUpstream) { $pushArgs = @('push', '-u', 'origin', $Branch) }
-    Invoke-Git $pushArgs | Out-Null
-}
-
+$workRoot = Initialize-SubstDrive -Path $repoRoot
+$exitCode = 0
 try {
+    Set-Location -LiteralPath $workRoot
+    Write-Step "Repository: $repoRoot"
+
+    $originUrl = (Invoke-GitRead @('remote', 'get-url', 'origin')).Output
+    Write-Host "    origin: $originUrl"
+
+    $currentBranch = (Invoke-GitRead @('branch', '--show-current')).Output.Trim()
+    if (-not $currentBranch) {
+        throw 'Detached HEAD  -  checkout a branch before deploying.'
+    }
+    Write-Host "    branch: $currentBranch"
+
+    Write-Step 'Fetching origin'
+    Invoke-Git @('fetch', 'origin') | Out-Null
+
+    $porcelain = (Invoke-GitRead @('status', '--porcelain')).Output
+    $hasChanges = [bool]($porcelain -and $porcelain.Trim())
+
+    if ($hasChanges) {
+        Write-Step 'Staging changes'
+        $tracked = (Invoke-GitRead @('diff', '--name-only')).Output
+        $staged = (Invoke-GitRead @('diff', '--cached', '--name-only')).Output
+        $untracked = (Invoke-GitRead @('ls-files', '--others', '--exclude-standard')).Output
+        $allChanged = @(
+            $(if ($tracked) { $tracked -split "`n" }),
+            $(if ($staged) { $staged -split "`n" }),
+            $(if ($untracked) { $untracked -split "`n" })
+        ) | Where-Object { $_ } | Select-Object -Unique
+
+        $sensitive = Test-SensitivePaths -Paths $allChanged
+        if ($sensitive.Count -gt 0 -and -not $ForceSecrets) {
+            Write-Err "Refusing to commit  -  potentially sensitive files detected:"
+            $sensitive | ForEach-Object { Write-Host "  - $_" -ForegroundColor Yellow }
+            Write-Host "Remove them from the commit, add to .gitignore, or re-run with -ForceSecrets if intentional." -ForegroundColor Yellow
+            throw 'Sensitive files blocked commit.'
+        }
+        if ($sensitive.Count -gt 0) {
+            Write-Host "WARNING: committing sensitive-looking files (ForceSecrets set):" -ForegroundColor Yellow
+            $sensitive | ForEach-Object { Write-Host "  - $_" -ForegroundColor Yellow }
+        }
+
+        Invoke-Git @('add', '-A') | Out-Null
+
+        if (-not $Message) {
+            $Message = Get-DefaultCommitMessage -Root $repoRoot
+        }
+        Write-Step "Committing: $Message"
+        Invoke-Git @('commit', '-m', $Message) | Out-Null
+    } else {
+        Write-Host 'No local changes to commit.' -ForegroundColor DarkGray
+    }
+
+    function Sync-Branch {
+        param(
+            [string]$Branch,
+            [switch]$SetUpstream
+        )
+        Write-Step "Syncing branch '$Branch' with origin"
+        $localExists = (Invoke-GitRead @('rev-parse', '--verify', $Branch)).Ok
+        $onBranch = (Invoke-GitRead @('branch', '--show-current')).Output.Trim()
+        if ($onBranch -ne $Branch) {
+            if (-not $localExists) {
+                Invoke-Git @('checkout', '-b', $Branch, "origin/$Branch") | Out-Null
+            } else {
+                Invoke-Git @('checkout', $Branch) | Out-Null
+            }
+        } else {
+            Write-Host "    already on '$Branch'" -ForegroundColor DarkGray
+        }
+
+        $upstream = (Invoke-GitRead @('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}')).Output
+        $hasUpstream = [bool]$upstream
+        if ($hasUpstream) {
+            try {
+                Invoke-Git @('pull', '--rebase', 'origin', $Branch) | Out-Null
+            } catch {
+                throw "Rebase failed on '$Branch'. Run: git rebase --abort, fix, then deploy again."
+            }
+            Ensure-CleanMerge -Context "rebase on $Branch"
+        } elseif (Test-Path -LiteralPath ".git/refs/remotes/origin/$Branch") {
+            Write-Host "    No upstream  -  will push with -u" -ForegroundColor DarkGray
+        }
+
+        $pushArgs = @('push', 'origin', $Branch)
+        if ($SetUpstream -or -not $hasUpstream) { $pushArgs = @('push', '-u', 'origin', $Branch) }
+        Invoke-Git $pushArgs | Out-Null
+    }
+
     if ($currentBranch -eq $MainBranch) {
         Sync-Branch -Branch $MainBranch
     } else {
@@ -263,8 +269,10 @@ try {
     if ($DryRun) {
         Write-Host '  [dry-run] No git changes were made.' -ForegroundColor DarkGray
     }
-    exit 0
 } catch {
     Write-Err $_.Exception.Message
-    exit 1
+    $exitCode = 1
+} finally {
+    Remove-SubstDrive
 }
+exit $exitCode
