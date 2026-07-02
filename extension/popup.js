@@ -273,7 +273,7 @@ async function startSync(base) {
 function extractFromPage() {
   const result = {
     idealistaId: null, broker: null, phone: null, location: null,
-    price: null, rooms: null, size: null, town: null, prov: null, title: null, realtorUrl: null
+    price: null, rooms: null, size: null, commune: null, town: null, prov: null, title: null, realtorUrl: null
   };
   const strip = s => s ? s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim() : s;
 
@@ -385,8 +385,13 @@ function extractFromPage() {
   const titleMinor = document.querySelector('.main-info__title-minor,[class*="title-minor"]');
   if (titleMinor) {
     const txt = titleMinor.textContent.trim();
-    const ci = txt.lastIndexOf(',');
-    result.town = ci >= 0 ? txt.slice(ci + 1).trim() : txt;
+    const ci = txt.indexOf(',');
+    if (ci >= 0) {
+      result.commune = txt.slice(0, ci).trim();
+      result.town = txt.slice(ci + 1).trim();
+    } else {
+      result.town = txt;
+    }
   }
   if (!result.town) {
     const breadcrumb = document.querySelector('[class*="breadcrumb"],[class*="Breadcrumb"]');
@@ -410,6 +415,7 @@ function extractFromPage() {
     || document.title.replace(/\s*(—|-|\|).*$/, '').split(',')[0].trim();
 
   result.broker = strip(result.broker);
+  result.commune = strip(result.commune);
   result.town   = strip(result.town);
   result.prov   = strip(result.prov);
   result.title  = strip(result.title);

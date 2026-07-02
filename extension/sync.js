@@ -1,4 +1,4 @@
-// sync.js — House Hunt IFL Sync v1.7.1
+// sync.js — House Hunt IFL Sync v1.8.9
 // Handles Idealista Favorites List sync for all bases
 
 // ── Price parsing (Italian Idealista formats) ───────────────────────────────
@@ -125,6 +125,37 @@ function _scrapeIflPage() {
     return parseIdealistaPrice(sansSize);
   }
 
+  function parseIflListingTitle(rawTitle, cardText) {
+    let title = (rawTitle || '').trim();
+    const text = cardText || title;
+    const provM = text.match(/\(([A-Z]{2})\)/);
+    const prov = provM ? provM[1] : '';
+    if (provM && title.includes(provM[0])) title = title.replace(provM[0], '').trim();
+
+    let commune = '', town = '', name = title;
+    const ci = title.lastIndexOf(',');
+    if (ci >= 0) {
+      town = title.slice(ci + 1).trim();
+      const locHead = title.slice(0, ci).trim();
+      const inM = locHead.match(/^(.+?)\s+in\s+(.+)$/i);
+      if (inM) {
+        name = inM[1].trim();
+        commune = inM[2].trim();
+      } else {
+        const ci2 = locHead.lastIndexOf(',');
+        if (ci2 >= 0) {
+          name = locHead.slice(0, ci2).trim();
+          commune = locHead.slice(ci2 + 1).trim();
+        } else {
+          commune = locHead;
+          name = '';
+        }
+      }
+    }
+    if (!name) name = (rawTitle || '').split(',')[0].trim();
+    return { name, commune, town, prov };
+  }
+
   const results = [];
   const seen = new Set();
   const links = document.querySelectorAll('a[href*="/immobile/"]');
@@ -161,11 +192,11 @@ function _scrapeIflPage() {
     const roomsM = text.match(/(\d+)\s*locali/i);
     const sizeM  = text.match(/(\d+)\s*m[²2]/i);
 
-    let town = '';
-    const ci = title.lastIndexOf(',');
-    if (ci >= 0) town = title.slice(ci + 1).trim();
+    const parsed = parseIflListingTitle(title, text);
 
-    results.push({ id, price, title, town,
+    results.push({ id, price, title: parsed.name || title, name: parsed.name || title,
+      commune: parsed.commune, town: parsed.town || parsed.commune,
+      prov: parsed.prov,
       rooms: roomsM ? parseInt(roomsM[1]) : 0,
       size:  sizeM  ? parseInt(sizeM[1]) : 0,
       discarded: isDiscarded });
@@ -298,17 +329,38 @@ function _processWriteBack(ids) {
       }, 700);
     }
 
-    function tryUnfavorite(id, card, cb, ok, fail) {
+    function tryRemoveFromIfl(id, card, cb, ok, fail) {
+      const candidates = [...card.querySelectorAll('button, a, span[role="button"], [role="button"]')];
+      const discardBtn = candidates.find(el => {
+        const t = (el.textContent || '').trim().toLowerCase();
+        const aria = (el.getAttribute('aria-label') || '').toLowerCase();
+        const title = (el.getAttribute('title') || '').toLowerCase();
+        return /^(discard|scarta|elimina|delete|remove)$/i.test(t) ||
+          /discard|scarta|elimina|delete|remove|cestino|trash|garbage/.test(aria + ' ' + title);
+      }) || card.querySelector(
+        '[class*="discard"], [class*="delete"], [class*="trash"], [class*="garbage"],' +
+        '[data-action*="discard"], [data-action*="delete"], [href*="recover"]'
+      );
+      if (discardBtn) {
+        discardBtn.click();
+        if (ok) ok.push(id);
+        setTimeout(cb, 900);
+        return;
+      }
       const heartBtn =
         card.querySelector('[class*="heart"], [class*="favorite"], [class*="like"], button[aria-label*="preferit"]') ||
-        [...(card.querySelectorAll('button, a'))].find(el => el.textContent.includes('♡') || el.textContent.includes('♥'));
+        candidates.find(el => el.textContent.includes('♡') || el.textContent.includes('♥'));
       if (heartBtn) {
         heartBtn.click();
-        if (ok) ok.push(id); else failed.push({ id, reason: 'note-saved-heart-clicked' });
-      } else {
-        if (fail) fail.push({ id, reason: 'no-heart-btn' });
+        if (ok) ok.push(id);
+      } else if (fail) {
+        fail.push({ id, reason: 'no-discard-btn' });
       }
       setTimeout(cb, 800);
+    }
+
+    function tryUnfavorite(id, card, cb, ok, fail) {
+      tryRemoveFromIfl(id, card, cb, ok, fail);
     }
 
     next();
@@ -422,17 +474,20 @@ async function syncBase(base, setStatus) {
 
   let writeBackNote = '';
   if (syncResult.writeBackQueue && syncResult.writeBackQueue.length > 0) {
-    setStatus(`Writing back ${syncResult.writeBackQueue.length} eliminated items to Idealista…`, 'loading');
     const wbIds = syncResult.writeBackQueue.map(p => p.id);
-    const [wbResult] = await chrome.scripting.executeScript({
+    setStatus(`Queuing ${wbIds.length} eliminated write-back(s) in background…`, 'loading');
+    chrome.scripting.executeScript({
       target: { tabId: idealistaTab.id },
       func: _processWriteBack,
       args: [wbIds]
-    });
-    const wb = wbResult.result || {};
-    writeBackNote = `\nWrite-back: ${(wb.success||[]).length} ok · ${(wb.failed||[]).length} failed · ${(wb.notFound||[]).length} not found`;
+    }).then(([wbResult]) => {
+      const wb = wbResult?.result || {};
+      console.log('[HouseHunt] Write-back complete:', wb);
+    }).catch(e => console.warn('[HouseHunt] Write-back failed:', e));
+    writeBackNote = `\nWrite-back: ${wbIds.length} queued (background)`;
   }
 
+  setStatus(`Sync complete for ${base.name}.`, 'ok');
   showSyncModal({
     base: base.name,
     abbr: base.abbr,

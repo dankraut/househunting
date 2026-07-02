@@ -1,5 +1,5 @@
 /** @module config — shared SPA constants */
-export const SPA_VERSION = 'v3.12.12';
+export const SPA_VERSION = 'v3.13.1';
 export const UNASSIGNED_GRP = 'UNA';
 export const DAY_ROUTE_COLORS = ['#2C5F7A', '#7B1FA2', '#C0603A', '#5B7232', '#0891B2', '#DC2626', '#8B5CF6', '#059669'];
 export const API_BASE = '/api';
@@ -10,8 +10,11 @@ export const STATUS_OPTS = ['New','Working','Reset','Reached Out','Replied','Inf
   'To Be Scheduled','Scheduled','Unavailable','Unresponsive','Rejected',
   'Duplicate','Deleted','Deleted-Idealista'];
 export const ELIM_STATUSES = new Set(['Unavailable','Unresponsive','Rejected','Duplicate','Deleted','Deleted-Idealista']);
+export const IFL_ELIM_STATUSES = new Set(['Unavailable','Rejected','Deleted-Idealista','Deleted']);
+export const IFL_RESET_STATUSES = new Set(['Unresponsive','Rejected','Deleted']);
 export const ACTIVE_ELIM = new Set(['Unavailable','Unresponsive','Rejected','Duplicate']);
 export const DRIVE_CAP = 120;
+export const DRIVE_SHOW_CAP = 45;
 export const VIEWING_MIN = 45;
 export const DAY_START = 8.5;
 export const DAY_END = 19.0;
@@ -31,6 +34,7 @@ export const LS_ELEV_MIGRATED = 'italy_hunt_elev_migrated_v351';
 export const LS_PLANNED_CLEARED = 'italy_hunt_planned_cleared_v37';
 export const LS_SCHED_STATUS_MIGRATED = 'italy_hunt_sched_status_v312';
 export const LS_SCHED_STALE_CLEANED = 'italy_hunt_sched_stale_v3123';
+export const LS_PROV_MIGRATED = 'italy_hunt_prov_migrated_v3129';
 export const LS_CLIENT_ID = 'italy_hunt_client_id';
 export const SYNC_POLL_MS = 3000;
 

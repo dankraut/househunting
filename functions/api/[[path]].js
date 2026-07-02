@@ -455,55 +455,137 @@ export async function onRequest(context) {
 
   if (path === 'ifl-sync' && request.method === 'POST') {
     const { baseGrp, iflToken, properties } = await request.json();
+    if (!iflToken) return json({ error: 'Missing iflToken' }, 400);
     const iflIds = new Set(properties.map(p => String(p.id)));
-    const priceMap = Object.fromEntries(properties.map(p => [String(p.id), p.price]));
-    const ELIM = new Set(['Unavailable', 'Rejected', 'Deleted-Idealista']);
-    const IFL_RESET_ELIM = new Set(['Unresponsive', 'Rejected', 'Deleted']);
+    const propMap = Object.fromEntries(properties.map(p => [String(p.id), p]));
+    const IFL_ELIM = new Set(['Unavailable', 'Rejected', 'Deleted-Idealista', 'Deleted']);
     const dataRaw = await env.HH_KV.get('data');
     if (!dataRaw)
-      return json({ ok: true, toAdd: properties, updated: [], markedDeleted: [], writeBackQueue: [] });
+      return json({ ok: true, toAdd: properties.filter(p => !p.discarded), updated: [], markedDeleted: [], writeBackQueue: [] });
     const props = parseProps(dataRaw);
-    const storedIds = new Set(props.map(p => String(p.id)));
     const toAdd = [], updated = [], markedDeleted = [], writeBackQueue = [];
     const now = Date.now();
+    let dirty = false;
+
+    function touchField(sp, field) {
+      if (!sp._fts) sp._fts = {};
+      sp._fts[field] = now;
+    }
+
+    function applyScrapedFields(sp, scraped) {
+      if (!scraped || scraped.discarded) return;
+      const changes = [];
+      const np = Number(scraped.price) || 0;
+      if (np >= 30 && Math.abs((sp.price || 0) - np) > 1) {
+        sp.price = np; changes.push('price');
+      }
+      if (scraped.rooms && scraped.rooms !== sp.rooms) { sp.rooms = scraped.rooms; changes.push('rooms'); }
+      if (scraped.size && scraped.size !== sp.size) { sp.size = scraped.size; changes.push('size'); }
+      const nm = scraped.name || scraped.title;
+      if (nm && nm !== sp.name) { sp.name = nm; changes.push('name'); }
+      if (scraped.commune && scraped.commune !== sp.commune) { sp.commune = scraped.commune; changes.push('commune'); }
+      if (scraped.town && scraped.town !== sp.town) { sp.town = scraped.town; changes.push('town'); }
+      if (scraped.prov && scraped.prov.toUpperCase() !== sp.prov) { sp.prov = scraped.prov.toUpperCase(); changes.push('prov'); }
+      if (changes.length) {
+        const addr = [scraped.commune, scraped.town, scraped.prov].filter(Boolean).join(', ');
+        if (addr && (!sp.address || sp.address === buildAddressFromParts(sp.commune, sp.town, sp.prov))) {
+          sp.address = addr + (addr && !/italy/i.test(addr) ? ', Italy' : '');
+          changes.push('address');
+        }
+      }
+      for (const f of changes) touchField(sp, f);
+      if (changes.length) {
+        sp._v = now;
+        dirty = true;
+        updated.push({ id: String(sp.id), fields: changes });
+      }
+    }
+
+    function buildAddressFromParts(commune, town, prov) {
+      const parts = [commune, town].filter(Boolean);
+      let addr = parts.join(', ');
+      if (prov) addr += (addr ? ', ' : '') + String(prov).toUpperCase();
+      if (addr && !/italy/i.test(addr)) addr += ', Italy';
+      return addr;
+    }
+
+    function initFromScrape(scraped) {
+      const prov = (scraped.prov || '').toUpperCase();
+      return {
+        id: parseInt(scraped.id, 10),
+        name: scraped.name || scraped.title || ('IFL-' + scraped.id),
+        commune: scraped.commune || '',
+        town: scraped.town || '',
+        prov,
+        address: buildAddressFromParts(scraped.commune, scraped.town, prov),
+        price: Number(scraped.price) >= 30 ? Number(scraped.price) : 0,
+        rooms: scraped.rooms || 0,
+        size: scraped.size || 0,
+        grp: baseGrp || '',
+        url: `https://www.idealista.it/immobile/${scraped.id}/`,
+        sourceIfl: iflToken,
+        status: 'New',
+        _custom: true,
+        _fts: { sourceIfl: now },
+        _v: now,
+      };
+    }
+
+    // Properties currently in the scraped IFL
+    for (const scraped of properties) {
+      const sid = String(scraped.id);
+      const sp = props.find(x => String(x.id) === sid);
+      if (!sp) {
+        if (!scraped.discarded) {
+          toAdd.push(scraped);
+          props.push(initFromScrape(scraped));
+          dirty = true;
+        }
+        continue;
+      }
+      const wasIfl = sp.sourceIfl || 'none';
+      sp.sourceIfl = iflToken;
+      if (wasIfl !== iflToken) { touchField(sp, 'sourceIfl'); dirty = true; }
+
+      const isElim = IFL_ELIM.has(sp.status);
+      if (scraped.discarded) {
+        if (!isElim) {
+          sp.status = 'Deleted-Idealista';
+          touchField(sp, 'status');
+          sp._v = now;
+          markedDeleted.push(sid);
+          dirty = true;
+        }
+        continue;
+      }
+      if (isElim) {
+        writeBackQueue.push({ id: sid });
+        continue;
+      }
+      applyScrapedFields(sp, scraped);
+      if (baseGrp && sp.grp !== baseGrp) {
+        sp.grp = baseGrp;
+        touchField(sp, 'grp');
+        dirty = true;
+        updated.push({ id: sid, grp: baseGrp });
+      }
+    }
+
+    // SPA properties last-synced with this IFL but no longer in it
     for (const sp of props) {
       const sid = String(sp.id);
       if ((sp.sourceIfl || 'none') !== iflToken) continue;
-      const isElim = ELIM.has(sp.status);
-      if (!isElim && !iflIds.has(sid)) {
-        sp.status = 'Deleted-Idealista'; markedDeleted.push(sid);
-        if (!sp._fts) sp._fts = {};
-        sp._fts.status = now;
+      if (IFL_ELIM.has(sp.status)) continue;
+      if (!iflIds.has(sid)) {
+        sp.status = 'Deleted-Idealista';
+        markedDeleted.push(sid);
+        touchField(sp, 'status');
         sp._v = now;
-      } else if (!isElim && iflIds.has(sid)) {
-        const np = priceMap[sid];
-        if (np !== undefined && np >= 30 && Math.abs((sp.price||0) - np) > 1) {
-          sp.price = np; updated.push({id:sid,price:np});
-          if (!sp._fts) sp._fts = {};
-          sp._fts.price = now;
-        }
-        if (baseGrp && sp.grp !== baseGrp) {
-          sp.grp = baseGrp; updated.push({id:sid,grp:baseGrp});
-          if (!sp._fts) sp._fts = {};
-          sp._fts.grp = now;
-        }
-        if (IFL_RESET_ELIM.has(sp.status)) {
-          sp.status = 'Reset'; updated.push({id:sid,status:'Reset'});
-          if (!sp._fts) sp._fts = {};
-          sp._fts.status = now;
-          sp._v = now;
-        }
-      } else if (isElim && iflIds.has(sid)) {
-        writeBackQueue.push({ id: sid });
+        dirty = true;
       }
     }
-    for (const p of properties) if (!storedIds.has(String(p.id))) toAdd.push(p);
-    let grpUpdated = false;
-    for (const p of properties) {
-      const sp = props.find(x => String(x.id) === String(p.id));
-      if (sp && baseGrp && sp.grp !== baseGrp) { sp.grp = baseGrp; grpUpdated = true; }
-    }
-    if (markedDeleted.length || updated.length || grpUpdated) await saveDataProps(env, props);
+
+    if (dirty || toAdd.length) await saveDataProps(env, props);
     return json({ ok: true, toAdd, updated, markedDeleted, writeBackQueue });
   }
 
