@@ -1,4 +1,4 @@
-// content.js — House Hunt Chrome Extension v1.7.0
+// content.js — House Hunt Chrome Extension v1.8.15
 // Runs on idealista.it/immobile/* and idealista.it/en/immobile/* pages
 
 (function() {
