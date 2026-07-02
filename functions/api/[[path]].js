@@ -458,12 +458,12 @@ export async function onRequest(context) {
     if (!iflToken) return json({ error: 'Missing iflToken' }, 400);
     const iflIds = new Set(properties.map(p => String(p.id)));
     const propMap = Object.fromEntries(properties.map(p => [String(p.id), p]));
-    const IFL_ELIM = new Set(['Unavailable', 'Rejected', 'Deleted-Idealista', 'Deleted']);
+    const ELIM_STATUSES = new Set(['Unavailable', 'Unresponsive', 'Rejected', 'Duplicate', 'Deleted', 'Deleted-Idealista']);
     const dataRaw = await env.HH_KV.get('data');
     if (!dataRaw)
-      return json({ ok: true, toAdd: properties.filter(p => !p.discarded), updated: [], markedDeleted: [], writeBackQueue: [] });
+      return json({ ok: true, toAdd: properties.filter(p => !p.discarded), updated: [], markedDeleted: [] });
     const props = parseProps(dataRaw);
-    const toAdd = [], updated = [], markedDeleted = [], writeBackQueue = [];
+    const toAdd = [], updated = [], markedDeleted = [];
     const now = Date.now();
     let dirty = false;
 
@@ -547,9 +547,8 @@ export async function onRequest(context) {
       sp.sourceIfl = iflToken;
       if (wasIfl !== iflToken) { touchField(sp, 'sourceIfl'); dirty = true; }
 
-      const isElim = IFL_ELIM.has(sp.status);
       if (scraped.discarded) {
-        if (!isElim) {
+        if (sp.status !== 'Deleted-Idealista') {
           sp.status = 'Deleted-Idealista';
           touchField(sp, 'status');
           sp._v = now;
@@ -558,25 +557,28 @@ export async function onRequest(context) {
         }
         continue;
       }
-      if (isElim) {
-        writeBackQueue.push({ id: sid });
-        continue;
+      if (ELIM_STATUSES.has(sp.status)) {
+        sp.status = 'Working';
+        touchField(sp, 'status');
+        sp._v = now;
+        dirty = true;
+        updated.push({ id: sid, fields: ['status'] });
       }
-      applyScrapedFields(sp, scraped);
       if (baseGrp && sp.grp !== baseGrp) {
         sp.grp = baseGrp;
         touchField(sp, 'grp');
         dirty = true;
         updated.push({ id: sid, grp: baseGrp });
       }
+      applyScrapedFields(sp, scraped);
     }
 
     // Properties on this base but no longer in the scraped IFL
     for (const sp of props) {
       const sid = String(sp.id);
       if (baseGrp && sp.grp !== baseGrp) continue;
-      if (IFL_ELIM.has(sp.status)) continue;
       if (iflIds.has(sid)) continue;
+      if (sp.status === 'Deleted-Idealista') continue;
       sp.status = 'Deleted-Idealista';
       markedDeleted.push(sid);
       touchField(sp, 'status');
@@ -585,7 +587,7 @@ export async function onRequest(context) {
     }
 
     if (dirty || toAdd.length) await saveDataProps(env, props);
-    return json({ ok: true, toAdd, updated, markedDeleted, writeBackQueue });
+    return json({ ok: true, toAdd, updated, markedDeleted });
   }
 
   return json({ error: 'Not found: ' + path }, 404);

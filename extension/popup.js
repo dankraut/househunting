@@ -1,4 +1,4 @@
-// popup.js — House Hunt Chrome Extension v1.8.15
+// popup.js — House Hunt Chrome Extension v1.8.16
 // MV3-compliant: no inline event handlers, all listeners via addEventListener
 
 let extracted = null;
@@ -173,7 +173,7 @@ async function doSend() {
 }
 
 // ── Sync result modal ──────────────────────────────────────────────────────────
-function showSyncModal({ base, abbr, total, active, discarded, added, updated, markedDeleted, writeBackNote }) {
+function showSyncModal({ base, abbr, total, active, discarded, added, updated, markedDeleted }) {
   const body = document.getElementById('sync-modal-body');
   const modal = document.getElementById('sync-modal');
   if (!body || !modal) return;
@@ -184,7 +184,6 @@ function showSyncModal({ base, abbr, total, active, discarded, added, updated, m
     updated ? `Updated: ${updated}` : null,
     markedDeleted ? `Marked Deleted-Idealista: ${markedDeleted}` : null,
     discarded > 0 ? `Discarded on Idealista: ${discarded}` : null,
-    writeBackNote || null,
   ].filter(Boolean).join('\n');
   modal.classList.add('visible');
 }
