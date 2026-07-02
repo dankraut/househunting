@@ -120,6 +120,21 @@ try {
         Invoke-Git @('checkout', $MainBranch) | Out-Null
     }
 
+    Write-Step 'Smoke check'
+    $smokePs1 = Join-Path $PSScriptRoot 'smoke-check.ps1'
+    if (Test-Path -LiteralPath $smokePs1) {
+        & $smokePs1 -RepoRoot $repoRoot
+        if ($LASTEXITCODE -ne 0) { throw 'Smoke check failed — fix regressions before deploy.' }
+    } else {
+        $smokeSh = Join-Path $PSScriptRoot 'smoke-check.sh'
+        if (Test-Path -LiteralPath $smokeSh) {
+            & bash $smokeSh
+            if ($LASTEXITCODE -ne 0) { throw 'Smoke check failed — fix regressions before deploy.' }
+        } else {
+            Write-Host 'WARNING: smoke-check script not found; skipping.' -ForegroundColor Yellow
+        }
+    }
+
     $porcelain = (Invoke-GitRead @('status', '--porcelain')).Output
     if ($porcelain -and $porcelain.Trim()) {
         Write-Step 'Staging changes'

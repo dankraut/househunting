@@ -1,0 +1,106 @@
+# PROJECT_STATE — House Hunt (source of truth for agents & deploy)
+
+Last updated: 2026-07-02
+
+## Current versions
+
+| Component | Version | File |
+|-----------|---------|------|
+| SPA | v3.13.6 | js/config.js → SPA_VERSION |
+| Extension | v1.8.15 | extension/manifest.json |
+| API | (no semver) | functions/api/[[path]].js header comment |
+
+Always bump SPA + Extension together when shipping changes. Run `scripts/smoke-check.sh` before deploy.
+
+## Development phase
+
+Stable production use on Cloudflare Pages (`househunt.pages.dev`) + Chrome extension IFL sync.
+
+## Regression history (do not repeat)
+
+Commit `5415b2b` ("Deploy v3.13.1") landed on `main` **after** PR #6 merged and **reverted** large sections of `index.html` from an stale workspace copy. Lost items included:
+
+- Unified **Date** sort (restored PR #10)
+- Map/Day Plan **mobile toggles** (restored PR #8)
+- Map base-filter / transit-day logic (restored PR #9)
+- Safe localStorage bootstrap (restored PR #7/8)
+
+**Rule:** Never commit a version-only "Deploy vX" that rewrites `index.html` unless that file changed on the branch being merged. Always `git checkout main && git pull` before editing.
+
+## Shipped features — must not remove
+
+Agents: do **not** delete or replace wholesale. Patch only the section you are changing.
+
+### Properties tab
+- [ ] Sort option **Date ▲/▼** using `getPropRouteDate()` (not separate Planned/Sched)
+- [ ] Date sort tie-break: closest airport drive time on same date
+
+### Map tab
+- [ ] `setMapView` / `setDpView` + `.geo-view-toggle` (mobile Map/Stops, Timeline/Map)
+- [ ] `@media (max-width:767px)` responsive layout rules
+- [ ] `propMatchesMapBase()` transit-base + selected-day logic
+- [ ] `getMapDayFilter()` applies when `_mapSelectedDays` set (no manual-only gate)
+- [ ] `_mapRefreshGen` stale refresh guard in `refreshMapAsync()`
+- [ ] Hide shaded off-filter markers when base selected (`shaded && !matches`)
+- [ ] Collapsible map legend on mobile (`.map-legend-collapsible`)
+
+### Schedule / Day Planning
+- [ ] `getPropRouteSchedule()` priority: scheduled (locked) → proposed → none
+- [ ] `getDayProperties()` transit-base includes all props on that day
+
+### Startup / sync
+- [ ] `_safeJsonParse()` for airports/bases localStorage
+- [ ] `loadFromStorage()` try/catch — header always updates
+- [ ] `syncGeoLayouts()` on init and on Map/DayPlan tab show
+
+### IFL sync
+- [ ] `markPropsRemovedFromIfl()` — mark by **base grp**, not only `sourceIfl` token
+- [ ] Server `/api/ifl-sync` same base-grp deletion logic
+
+### ES modules (js/)
+- [ ] bootstrap.js exposes HHApi, HHLoc, HHPropConflict, config constants
+- [ ] Do not read or modify anything under `zArchive/`
+
+## Smoke check
+
+Before every deploy:
+
+```bash
+./scripts/smoke-check.sh
+```
+
+Windows (Git Bash or WSL):
+
+```powershell
+bash ./scripts/smoke-check.sh
+# or
+./scripts/smoke-check.ps1
+```
+
+`deploy.ps1` and `push.ps1` run the smoke check automatically before commit.
+
+## Agent workflow
+
+1. Read this file first.
+2. `git checkout main && git pull origin main`
+3. Create branch: `cursor/<description>-fb87`
+4. Minimal diff — never replace all of `index.html`
+5. Run smoke check locally
+6. Bump SPA + Extension versions
+7. PR → merge → deploy (do not hand-commit "Deploy vX" on main with unrelated file churn)
+
+## Lost-feature review (2026-07-02)
+
+Compared current `main` to pre-regression baseline `956a090`:
+
+| Item | Status |
+|------|--------|
+| Date sort | ✅ Restored (PR #10) |
+| Map/DayPlan mobile views | ✅ Restored (PR #8) |
+| Map filters + refresh guard | ✅ Restored (PR #9) |
+| Loading safe parse | ✅ Restored (PR #7/8) |
+| IFL delete by base grp | ✅ Restored (PR #9) |
+| `syncGeoLayouts()` on startup | ⚠️ Fixed in this branch (was only on tab switch) |
+| Extension/API IFL improvements from v3.13.1 deploy | ✅ Retained (ahead of baseline) |
+
+No other function-level regressions vs `956a090` found in `index.html`.
