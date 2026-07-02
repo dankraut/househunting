@@ -1,5 +1,5 @@
 /** @module config — shared SPA constants */
-export const SPA_VERSION = 'v3.13.6';
+export const SPA_VERSION = 'v3.13.7';
 export const UNASSIGNED_GRP = 'UNA';
 export const DAY_ROUTE_COLORS = ['#2C5F7A', '#7B1FA2', '#C0603A', '#5B7232', '#0891B2', '#DC2626', '#8B5CF6', '#059669'];
 export const API_BASE = '/api';

@@ -1,4 +1,4 @@
-// sync.js — House Hunt IFL Sync v1.8.15
+// sync.js — House Hunt IFL Sync v1.8.16
 // Handles Idealista Favorites List sync for all bases
 
 // ── Price parsing (Italian Idealista formats) ───────────────────────────────
@@ -280,93 +280,6 @@ function _clickListTab(listName) {
   return 'not-found';
 }
 
-// ── Write-back: add note + unfavorite for each eliminated property ───────────
-function _processWriteBack(ids) {
-  return new Promise(resolve => {
-    const success = [], failed = [], notFound = [];
-    let i = 0;
-
-    function next() {
-      if (i >= ids.length) { resolve({ success, failed, notFound }); return; }
-      const id = ids[i++];
-
-      const link = document.querySelector(`a[href*="/immobile/${id}/"]`);
-      if (!link) { notFound.push(id); next(); return; }
-
-      let card = link.closest('article') || link.closest('[class*="item"]') || link.parentElement;
-      for (let j = 0; j < 4 && card; j++) {
-        if (card.querySelector('[class*="nota"], [class*="note"]') ||
-            [...(card.querySelectorAll('a, button'))].some(el => el.textContent.toLowerCase().includes('nota'))) break;
-        card = card.parentElement;
-      }
-      if (!card) { notFound.push(id); next(); return; }
-
-      const noteTrigger =
-        card.querySelector('[class*="nota"], [href*="nota"]') ||
-        [...card.querySelectorAll('a, button, span[role="button"]')]
-          .find(el => el.textContent.toLowerCase().includes('nota') || el.textContent.toLowerCase().includes('note'));
-
-      if (!noteTrigger) { failed.push({ id, reason: 'no-note-btn' }); next(); return; }
-
-      noteTrigger.click();
-
-      setTimeout(() => {
-        const textarea = card.querySelector('textarea') || document.querySelector('[class*="nota"] textarea, [class*="note"] textarea');
-        if (!textarea) { failed.push({ id, reason: 'no-textarea' }); tryUnfavorite(id, card, next); return; }
-
-        const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-        if (nativeSetter) nativeSetter.call(textarea, 'Eliminated in SPA');
-        else textarea.value = 'Eliminated in SPA';
-        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-        textarea.dispatchEvent(new Event('change', { bubbles: true }));
-
-        setTimeout(() => {
-          const saveBtn = card.querySelector('button[type="submit"]') ||
-            [...card.querySelectorAll('button')].find(b => /salva|save|ok|conferma/i.test(b.textContent));
-          if (saveBtn) saveBtn.click();
-          setTimeout(() => tryUnfavorite(id, card, next, success, failed), 600);
-        }, 400);
-      }, 700);
-    }
-
-    function tryRemoveFromIfl(id, card, cb, ok, fail) {
-      const candidates = [...card.querySelectorAll('button, a, span[role="button"], [role="button"]')];
-      const discardBtn = candidates.find(el => {
-        const t = (el.textContent || '').trim().toLowerCase();
-        const aria = (el.getAttribute('aria-label') || '').toLowerCase();
-        const title = (el.getAttribute('title') || '').toLowerCase();
-        return /^(discard|scarta|elimina|delete|remove)$/i.test(t) ||
-          /discard|scarta|elimina|delete|remove|cestino|trash|garbage/.test(aria + ' ' + title);
-      }) || card.querySelector(
-        '[class*="discard"], [class*="delete"], [class*="trash"], [class*="garbage"],' +
-        '[data-action*="discard"], [data-action*="delete"], [href*="recover"]'
-      );
-      if (discardBtn) {
-        discardBtn.click();
-        if (ok) ok.push(id);
-        setTimeout(cb, 900);
-        return;
-      }
-      const heartBtn =
-        card.querySelector('[class*="heart"], [class*="favorite"], [class*="like"], button[aria-label*="preferit"]') ||
-        candidates.find(el => el.textContent.includes('♡') || el.textContent.includes('♥'));
-      if (heartBtn) {
-        heartBtn.click();
-        if (ok) ok.push(id);
-      } else if (fail) {
-        fail.push({ id, reason: 'no-discard-btn' });
-      }
-      setTimeout(cb, 800);
-    }
-
-    function tryUnfavorite(id, card, cb, ok, fail) {
-      tryRemoveFromIfl(id, card, cb, ok, fail);
-    }
-
-    next();
-  });
-}
-
 // ── Main sync function ──────────────────────────────────────────────────────
 async function syncBase(base, setStatus) {
   const token = await getApiToken();
@@ -436,7 +349,7 @@ async function syncBase(base, setStatus) {
   const activeProperties = properties.filter(p => !p.discarded);
   setStatus(`Found ${properties.length} properties (${discardedOnIdealista.length} discarded). Sending to SPA…`, 'loading');
 
-  // Send ALL properties to SPA — IFL_ADD handler updates existing, adds new, marks missing as Deleted
+  // Send ALL properties to SPA — IFL is source of truth; SPA updated to match
   const spaFrag = await getSpaUrlFrag();
   const spaTab = allTabs.find(t => t.url && t.url.includes(spaFrag));
 
@@ -454,8 +367,8 @@ async function syncBase(base, setStatus) {
     serverResult: null
   };
 
-  // Server sync (for write-back tracking)
-  let syncResult = { toAdd: [], markedDeleted: [], updated: [], writeBackQueue: [] };
+  // Server sync (KV store mirrors SPA IFL rules)
+  let syncResult = { toAdd: [], markedDeleted: [], updated: [] };
   try {
     const r = await fetch(apiBase + '/ifl-sync', {
       method: 'POST',
@@ -472,21 +385,6 @@ async function syncBase(base, setStatus) {
     args: [syncPayload]
   });
 
-  let writeBackNote = '';
-  if (syncResult.writeBackQueue && syncResult.writeBackQueue.length > 0) {
-    const wbIds = syncResult.writeBackQueue.map(p => p.id);
-    setStatus(`Queuing ${wbIds.length} eliminated write-back(s) in background…`, 'loading');
-    chrome.scripting.executeScript({
-      target: { tabId: idealistaTab.id },
-      func: _processWriteBack,
-      args: [wbIds]
-    }).then(([wbResult]) => {
-      const wb = wbResult?.result || {};
-      console.log('[HouseHunt] Write-back complete:', wb);
-    }).catch(e => console.warn('[HouseHunt] Write-back failed:', e));
-    writeBackNote = `\nWrite-back: ${wbIds.length} queued (background)`;
-  }
-
   setStatus(`Sync complete for ${base.name}.`, 'ok');
   showSyncModal({
     base: base.name,
@@ -496,8 +394,7 @@ async function syncBase(base, setStatus) {
     discarded: discardedOnIdealista.length,
     added: (syncResult.toAdd || []).length,
     updated: (syncResult.updated || []).length,
-    markedDeleted: (syncResult.markedDeleted || []).length,
-    writeBackNote
+    markedDeleted: (syncResult.markedDeleted || []).length
   });
 }
 

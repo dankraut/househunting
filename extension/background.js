@@ -1,4 +1,4 @@
-// background.js — House Hunt Extension service worker v1.8.15
+// background.js — House Hunt Extension service worker v1.8.16
 
 // ── Relay content.js → SPA (SEND_TO_SPA) ────────────────────────────────────
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
