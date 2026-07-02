@@ -571,18 +571,17 @@ export async function onRequest(context) {
       }
     }
 
-    // SPA properties last-synced with this IFL but no longer in it
+    // Properties on this base but no longer in the scraped IFL
     for (const sp of props) {
       const sid = String(sp.id);
-      if ((sp.sourceIfl || 'none') !== iflToken) continue;
+      if (baseGrp && sp.grp !== baseGrp) continue;
       if (IFL_ELIM.has(sp.status)) continue;
-      if (!iflIds.has(sid)) {
-        sp.status = 'Deleted-Idealista';
-        markedDeleted.push(sid);
-        touchField(sp, 'status');
-        sp._v = now;
-        dirty = true;
-      }
+      if (iflIds.has(sid)) continue;
+      sp.status = 'Deleted-Idealista';
+      markedDeleted.push(sid);
+      touchField(sp, 'status');
+      sp._v = now;
+      dirty = true;
     }
 
     if (dirty || toAdd.length) await saveDataProps(env, props);
