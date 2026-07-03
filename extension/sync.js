@@ -1,4 +1,4 @@
-// sync.js — House Hunt IFL Sync v1.8.18
+// sync.js — House Hunt IFL Sync v1.8.19
 // Handles Idealista Favorites List sync for all bases
 
 // ── Price parsing (Italian Idealista formats) ───────────────────────────────

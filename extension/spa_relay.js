@@ -1,4 +1,4 @@
-// spa_relay.js — House Hunt SPA relay v1.8.18
+// spa_relay.js — House Hunt SPA relay v1.8.19
 // Listens for HOUSEHUNT_DISCARD postMessages from the SPA and relays to background.
 (function () {
   window.addEventListener('message', (evt) => {
