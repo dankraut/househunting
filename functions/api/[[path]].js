@@ -2,6 +2,7 @@
 // Routes: GET/PUT /api/data, GET /api/sync, POST/DELETE /api/lock,
 //         GET/POST /api/snapshots, POST /api/snapshots/restore,
 //         DELETE /api/snapshots/:id, GET/PUT /api/bases, POST /api/ifl-sync,
+//         GET /api/ifl-sync-log,
 //         GET /api/drive-time, GET /api/geocode, GET /api/reverse-geocode,
 //         GET /api/directions, GET /api/elevation
 
@@ -135,6 +136,46 @@ async function getActiveLocks(env) {
 async function saveDataProps(env, props) {
   await env.HH_KV.put('data', JSON.stringify(props));
   return bumpDataRev(env);
+}
+
+const GENERIC_IDEALISTA_NAMES = new Set([
+  'villa', 'detached house', 'semi-detached house', 'semi detached house', 'terraced house',
+  'country house', 'chalet', 'flat', 'apartment', 'penthouse', 'duplex', 'studio',
+  'single family house', 'single-family house', 'rustic house', 'rustic', 'palazzo', 'castle',
+  'farmhouse', 'bungalow', 'loft', 'independent house', 'town house', 'townhouse',
+  'manor house', 'attic', 'house', 'property', 'casale', 'rustico', 'appartamento', 'attico',
+  'villetta', 'palazzina', 'terreno', 'garage', 'stanza', 'casa indipendente', 'villa bifamiliare',
+  'villetta a schiera',
+]);
+
+function isGenericIdealistaTypeName(name) {
+  if (!name || typeof name !== 'string') return true;
+  const n = name.trim();
+  if (!n) return true;
+  if (n.length > 45) return false;
+  const lower = n.toLowerCase();
+  if (GENERIC_IDEALISTA_NAMES.has(lower)) return true;
+  return /^(villa|house|flat|apartment|rustic|chalet|loft|bungalow|farmhouse|casale|rustico)\s*$/i.test(n);
+}
+
+function resolvePropNameFromScrape(scraped) {
+  const nm = (scraped.name || scraped.title || '').trim();
+  if (nm && !isGenericIdealistaTypeName(nm)) return nm;
+  const town = (scraped.town || scraped.commune || '').trim();
+  if (town && /^villa$/i.test(nm)) return `${town} Villa`;
+  if (town) return town;
+  return 'IFL-' + scraped.id;
+}
+
+async function appendIflSyncLog(env, entry) {
+  let log = [];
+  try {
+    log = JSON.parse((await env.HH_KV.get('ifl-sync-log')) || '[]');
+    if (!Array.isArray(log)) log = [];
+  } catch { log = []; }
+  log.unshift({ ...entry, at: entry.at || Date.now() });
+  if (log.length > 5) log.length = 5;
+  await env.HH_KV.put('ifl-sync-log', JSON.stringify(log));
 }
 
 function parseGeocodeComponents(comps) {
@@ -459,15 +500,37 @@ export async function onRequest(context) {
     }
   }
 
+  if (path === 'ifl-sync-log' && request.method === 'GET') {
+    try {
+      const log = JSON.parse((await env.HH_KV.get('ifl-sync-log')) || '[]');
+      return json({ log: Array.isArray(log) ? log : [] });
+    } catch {
+      return json({ log: [] });
+    }
+  }
+
   if (path === 'ifl-sync' && request.method === 'POST') {
-    const { baseGrp, iflToken, properties } = await request.json();
+    const { baseGrp, baseName, iflToken, properties } = await request.json();
     if (!iflToken) return json({ error: 'Missing iflToken' }, 400);
     const iflIds = new Set(properties.map(p => String(p.id)));
     const propMap = Object.fromEntries(properties.map(p => [String(p.id), p]));
     const ELIM_STATUSES = new Set(['Unavailable', 'Unresponsive', 'Rejected', 'Duplicate', 'Deleted', 'Deleted-Idealista']);
     const dataRaw = await env.HH_KV.get('data');
-    if (!dataRaw)
-      return json({ ok: true, toAdd: properties.filter(p => !p.discarded), updated: [], markedDeleted: [] });
+    if (!dataRaw) {
+      const toAddEmpty = properties.filter(p => !p.discarded);
+      await appendIflSyncLog(env, {
+        baseGrp: baseGrp || '',
+        baseName: baseName || baseGrp || '',
+        iflToken,
+        total: properties.length,
+        active: properties.filter(p => !p.discarded).length,
+        added: toAddEmpty.length,
+        updated: 0,
+        markedDeleted: 0,
+        discarded: properties.filter(p => p.discarded).length,
+      });
+      return json({ ok: true, toAdd: toAddEmpty, updated: [], markedDeleted: [] });
+    }
     const props = parseProps(dataRaw);
     const toAdd = [], updated = [], markedDeleted = [];
     const now = Date.now();
@@ -487,8 +550,10 @@ export async function onRequest(context) {
       }
       if (scraped.rooms && scraped.rooms !== sp.rooms) { sp.rooms = scraped.rooms; changes.push('rooms'); }
       if (scraped.size && scraped.size !== sp.size) { sp.size = scraped.size; changes.push('size'); }
-      const nm = scraped.name || scraped.title;
-      if (nm && nm !== sp.name) { sp.name = nm; changes.push('name'); }
+      const candidate = resolvePropNameFromScrape(scraped);
+      if (candidate && !isGenericIdealistaTypeName(candidate) && isGenericIdealistaTypeName(sp.name)) {
+        if (candidate !== sp.name) { sp.name = candidate; changes.push('name'); }
+      }
       if (scraped.commune && scraped.commune !== sp.commune) { sp.commune = scraped.commune; changes.push('commune'); }
       if (scraped.town && scraped.town !== sp.town) { sp.town = scraped.town; changes.push('town'); }
       if (scraped.prov && scraped.prov.toUpperCase() !== sp.prov) { sp.prov = scraped.prov.toUpperCase(); changes.push('prov'); }
@@ -519,7 +584,7 @@ export async function onRequest(context) {
       const prov = (scraped.prov || '').toUpperCase();
       return {
         id: parseInt(scraped.id, 10),
-        name: scraped.name || scraped.title || ('IFL-' + scraped.id),
+        name: resolvePropNameFromScrape(scraped),
         commune: scraped.commune || '',
         town: scraped.town || '',
         prov,
@@ -593,6 +658,17 @@ export async function onRequest(context) {
     }
 
     if (dirty || toAdd.length) await saveDataProps(env, props);
+    await appendIflSyncLog(env, {
+      baseGrp: baseGrp || '',
+      baseName: baseName || baseGrp || '',
+      iflToken,
+      total: properties.length,
+      active: properties.filter(p => !p.discarded).length,
+      added: toAdd.length,
+      updated: updated.length,
+      markedDeleted: markedDeleted.length,
+      discarded: properties.filter(p => p.discarded).length,
+    });
     return json({ ok: true, toAdd, updated, markedDeleted });
   }
 

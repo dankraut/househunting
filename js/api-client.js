@@ -57,5 +57,6 @@ export function createApiClient(getToken) {
     deleteSnapshot(id) { return request(`/snapshots/${id}`, { method: 'DELETE' }); },
 
     iflSync(payload) { return request('/ifl-sync', { method: 'POST', body: payload }); },
+    getIflSyncLog() { return request('/ifl-sync-log'); },
   };
 }
