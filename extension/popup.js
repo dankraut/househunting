@@ -1,4 +1,4 @@
-// popup.js — House Hunt Chrome Extension v1.8.19
+// popup.js — House Hunt Chrome Extension v1.8.20
 // MV3-compliant: no inline event handlers, all listeners via addEventListener
 
 let extracted = null;

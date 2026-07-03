@@ -1,5 +1,5 @@
 /** @module config — shared SPA constants */
-export const SPA_VERSION = 'v3.13.10';
+export const SPA_VERSION = 'v3.13.11';
 export const UNASSIGNED_GRP = 'UNA';
 export const DAY_ROUTE_COLORS = ['#2C5F7A', '#7B1FA2', '#C0603A', '#5B7232', '#0891B2', '#DC2626', '#8B5CF6', '#059669'];
 export const API_BASE = '/api';
@@ -42,4 +42,4 @@ export const SYNC_POLL_MS = 3000;
 export const PERSIST_FIELDS = ['status','schedDate','schedTime','proposedDate','proposedTime','lastContacted',
   'firmName','firmPhone','broker','brokerPhone','brokerEmail',
   'address','gps','userPlannedDate','userPlannedTime','notes','realtorUrl','sourceIfl','grp',
-  'commune','town','prov','driveTimes','name','price','rooms','size','lat','lng','elevation','elevationCoordsKey'];
+  'commune','town','prov','driveTimes','driveMiles','refAirport','name','price','rooms','size','lat','lng','elevation','elevationCoordsKey'];

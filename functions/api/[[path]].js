@@ -13,7 +13,7 @@ const MERGE_FIELDS = [
   'status', 'schedDate', 'schedTime', 'proposedDate', 'lastContacted',
   'firmName', 'firmPhone', 'broker', 'brokerPhone', 'brokerEmail',
   'address', 'gps', 'userPlannedDate', 'userPlannedTime', 'notes', 'realtorUrl', 'sourceIfl', 'grp',
-  'commune', 'town', 'prov', 'driveTimes', 'name', 'price', 'rooms', 'size', 'lat', 'lng',
+  'commune', 'town', 'prov', 'driveTimes', 'driveMiles', 'refAirport', 'name', 'price', 'rooms', 'size', 'lat', 'lng',
   'elevation', 'elevationCoordsKey',
 ];
 
@@ -445,8 +445,14 @@ export async function onRequest(context) {
         `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${fromLat},${fromLng}&destinations=${toLat},${toLng}&mode=driving&key=${gmapsKey}`
       );
       const d = await r.json();
-      if (d.status === 'OK' && d.rows?.[0]?.elements?.[0]?.status === 'OK')
-        return json({ minutes: Math.round(d.rows[0].elements[0].duration.value / 60), source: 'gmaps' });
+      if (d.status === 'OK' && d.rows?.[0]?.elements?.[0]?.status === 'OK') {
+        const el = d.rows[0].elements[0];
+        return json({
+          minutes: Math.round(el.duration.value / 60),
+          miles: Math.round(el.distance.value / 1609.344),
+          source: 'gmaps',
+        });
+      }
       return json({ minutes: null, source: 'gmaps-error', gmStatus: d.status });
     } catch (e) {
       return json({ minutes: null, source: 'error', error: e.message });
