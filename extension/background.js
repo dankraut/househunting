@@ -1,4 +1,33 @@
-// background.js — House Hunt Extension service worker v1.8.20
+// background.js — House Hunt Extension service worker
+importScripts('sync.js');
+
+function setIflSyncStatus(text, type) {
+  chrome.storage.local.set({ iflSyncStatus: { text, type, ts: Date.now() } });
+}
+
+async function runIflSyncJob(base) {
+  const setStatus = (text, type) => setIflSyncStatus(text, type);
+  try {
+    await syncBase(base, setStatus);
+  } catch (e) {
+    setStatus('Sync error: ' + (e?.message || String(e)), 'err');
+  }
+}
+
+// ── IFL sync (runs in service worker so popup can close) ─────────────────────
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'RUN_IFL_SYNC') {
+    if (!msg.base?.abbr) {
+      sendResponse({ ok: false, reason: 'missing base' });
+      return false;
+    }
+    setIflSyncStatus(`Syncing ${msg.base.name} (${msg.base.abbr})…`, 'loading');
+    runIflSyncJob(msg.base);
+    sendResponse({ ok: true, started: true });
+    return false;
+  }
+  return false;
+});
 
 // ── Relay content.js → SPA (SEND_TO_SPA) ────────────────────────────────────
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -28,21 +57,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 // ── Auto-discard: SPA relay → Idealista ─────────────────────────────────────
-// Receives {type:'HOUSEHUNT_DISCARD', idealistaId} from spa_relay.js content script.
-// Queues the ID in storage; content.js on Idealista property pages reads the queue
-// and auto-clicks Discard when the matching property page loads.
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== 'HOUSEHUNT_DISCARD') return false;
 
   const { idealistaId } = msg;
   if (!idealistaId) { sendResponse({ ok: false, reason: 'no id' }); return false; }
 
-  // Add to pending discard queue
   chrome.storage.local.get({ pendingDiscards: [] }, ({ pendingDiscards }) => {
     const id = String(idealistaId);
     if (!pendingDiscards.includes(id)) pendingDiscards.push(id);
     chrome.storage.local.set({ pendingDiscards }, () => {
-      // Open the property page (background tab) so content.js can click Discard
       const url = `https://www.idealista.it/en/immobile/${id}/`;
       chrome.tabs.create({ url, active: false }, () => sendResponse({ ok: true }));
     });
@@ -62,7 +86,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (!spaTab) { sendResponse({ ok: false, reason: 'SPA tab not found' }); return; }
       chrome.scripting.executeScript({
         target: { tabId: spaTab.id },
-        func: (payload) => window.postMessage({ type: 'HOUSEHUNT_BROKER', ...payload }, '*'),
+        world: 'MAIN',
+        func: (payload) => { window.postMessage({ type: 'HOUSEHUNT_BROKER', ...payload }, '*'); },
         args: [pendingData],
       }).then(() => { chrome.storage.local.remove('pendingData'); sendResponse({ ok: true }); })
         .catch(e => sendResponse({ ok: false, reason: e.message }));
