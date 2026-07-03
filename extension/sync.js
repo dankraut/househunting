@@ -1,4 +1,4 @@
-// sync.js — House Hunt IFL Sync v1.8.20
+// sync.js — House Hunt IFL Sync v1.8.22
 // Handles Idealista Favorites List sync for all bases
 
 // ── Price parsing (Italian Idealista formats) ───────────────────────────────
@@ -125,6 +125,25 @@ function _scrapeIflPage() {
     return parseIdealistaPrice(sansSize);
   }
 
+  function isGenericIdealistaTypeName(name) {
+    if (!name || typeof name !== 'string') return true;
+    const n = name.trim();
+    if (!n) return true;
+    if (n.length > 45) return false;
+    const lower = n.toLowerCase();
+    const generic = new Set([
+      'villa', 'detached house', 'semi-detached house', 'semi detached house', 'terraced house',
+      'country house', 'chalet', 'flat', 'apartment', 'penthouse', 'duplex', 'studio',
+      'single family house', 'single-family house', 'rustic house', 'rustic', 'palazzo', 'castle',
+      'farmhouse', 'bungalow', 'loft', 'independent house', 'town house', 'townhouse',
+      'manor house', 'attic', 'house', 'property', 'casale', 'rustico', 'appartamento', 'attico',
+      'villetta', 'palazzina', 'terreno', 'garage', 'stanza', 'casa indipendente', 'villa bifamiliare',
+      'villetta a schiera',
+    ]);
+    if (generic.has(lower)) return true;
+    return /^(villa|house|flat|apartment|rustic|chalet|loft|bungalow|farmhouse|casale|rustico)\s*$/i.test(n);
+  }
+
   function parseIflListingTitle(rawTitle, cardText) {
     let title = (rawTitle || '').trim();
     const text = cardText || title;
@@ -193,8 +212,10 @@ function _scrapeIflPage() {
     const sizeM  = text.match(/(\d+)\s*m[²2]/i);
 
     const parsed = parseIflListingTitle(title, text);
+    const parsedName = parsed.name || title;
 
-    results.push({ id, price, title: parsed.name || title, name: parsed.name || title,
+    results.push({ id, price, cardTitle: title, title,
+      name: isGenericIdealistaTypeName(parsedName) ? '' : parsedName,
       commune: parsed.commune, town: parsed.town || parsed.commune,
       prov: parsed.prov,
       rooms: roomsM ? parseInt(roomsM[1]) : 0,
@@ -373,7 +394,7 @@ async function syncBase(base, setStatus) {
     const r = await fetch(apiBase + '/ifl-sync', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ baseGrp: base.abbr, iflToken: base.iflToken, properties })
+      body: JSON.stringify({ baseGrp: base.abbr, iflToken: base.iflToken, baseName: base.name, properties })
     });
     if (r.ok) syncResult = await r.json();
   } catch (e) { /* non-fatal — SPA update follows */ }
