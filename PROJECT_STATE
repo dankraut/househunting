@@ -6,7 +6,7 @@ Last updated: 2026-07-03
 
 | Component | Version | File |
 |-----------|---------|------|
-| SPA | v3.13.23 | js/config.js → SPA_VERSION |
+| SPA | v3.13.24 | js/config.js → SPA_VERSION |
 | Extension | v1.8.26 | extension/manifest.json |
 | API | (no semver) | functions/api/[[path]].js header comment |
 
