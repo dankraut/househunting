@@ -111,7 +111,7 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 .tiles-section-header{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 4px;padding:4px 0;border-bottom:1px solid var(--border2)}
 /* Modals — above Leaflet map popups (~900); below time picker (10050) */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px}
-#dm-unsaved-prompt{z-index:10001}
+#dm-unsaved-prompt,#base-unsaved-prompt{z-index:10001}
 .modal{background:#fff;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.25);width:100%;max-width:540px;max-height:92vh;overflow-y:auto}
 .modal-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2}
 .modal-header h3{font-size:14px;font-weight:600;color:var(--adriat)}
@@ -618,6 +618,82 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
   </div>
 </div>
 
+<!-- ADD / EDIT BASE MODAL -->
+<div id="base-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)requestCloseBaseModal()">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h3 id="base-form-title">Add Base</h3>
+      <button class="modal-close" onclick="requestCloseBaseModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="base-form-abbr-orig" value="">
+      <div class="tile-field-row">
+        <div class="tile-field" style="flex:2"><label>Name</label>
+          <input id="base-form-name" type="text" placeholder="e.g. Lake Region" autocomplete="off" oninput="baseFormMarkDirty()">
+          <div class="field-hint" id="base-name-hint">Trip label — can differ from town when GPS is set.</div></div>
+        <div class="tile-field"><label>Abbr</label>
+          <input id="base-form-abbr" type="text" maxlength="5" autocomplete="off" oninput="baseFormMarkDirty()"></div>
+        <div class="tile-field"><label>Type</label>
+          <select id="base-form-type" onchange="onBaseTypeChange();baseFormMarkDirty()">
+            <option value="stay">Stay</option><option value="transit">Transit</option>
+          </select></div>
+      </div>
+      <div id="base-stay-fields">
+        <div class="tile-field">
+          <label>Town / location</label>
+          <input id="base-form-address" type="text" placeholder="e.g. Gubbio, PG" autocomplete="off" oninput="baseFormMarkDirty();clearLocUi('base')" onblur="baseFormSyncLocation('address')">
+          <div id="base-address-error" class="field-error" style="display:none"></div>
+          <div class="field-hint">Optional when GPS is set. Required if no GPS.</div>
+        </div>
+        <div class="tile-field">
+          <label>GPS coordinates</label>
+          <input id="base-form-gps" type="text" placeholder="42.9535, 12.0022" autocomplete="off" oninput="baseFormMarkDirty();clearLocUi('base')" onblur="baseFormSyncLocation('gps')">
+          <div id="base-gps-error" class="field-error" style="display:none"></div>
+          <div id="base-loc-status" class="loc-status"></div>
+        </div>
+      </div>
+      <div id="base-transit-fields" style="display:none">
+        <div class="tile-field-row">
+          <div class="tile-field"><label>Origin Base</label>
+            <select id="base-form-from-base" onchange="onTransitBaseRefsChange();baseFormMarkDirty()"></select></div>
+          <div class="tile-field"><label>Destinate Base</label>
+            <select id="base-form-to-base" onchange="onTransitBaseRefsChange();baseFormMarkDirty()"></select></div>
+        </div>
+        <p class="field-hint" style="margin-bottom:8px">Transit days route between two Stay bases. Add Stay bases with locations before creating a Transit base.</p>
+      </div>
+      <div class="tile-field-row">
+        <div class="tile-field"><label>Visit From</label>
+          <input id="base-form-from" type="date" oninput="baseFormMarkDirty()">
+          <div class="field-hint">mm/dd/yyyy</div></div>
+        <div class="tile-field"><label>Visit To (optional)</label>
+          <input id="base-form-to" type="date" oninput="baseFormMarkDirty()">
+          <div class="field-hint">mm/dd/yyyy</div></div>
+        <div class="tile-field"><label>Airport (optional)</label>
+          <select id="base-form-airport" onchange="baseFormMarkDirty()"></select>
+          <div class="field-hint">Blank = nearest airport</div></div>
+      </div>
+      <div class="tile-field"><label>IFL Favorites URL (optional)</label>
+        <input id="base-form-ifl" type="url" autocomplete="off" oninput="baseFormMarkDirty()"></div>
+      <div class="tile-field"><label>Notes</label>
+        <textarea id="base-form-desc" rows="2" style="resize:vertical" oninput="baseFormMarkDirty()"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="requestCloseBaseModal()">Close</button>
+      <button class="btn-primary" id="base-form-save-btn" onclick="saveBaseForm()">Save</button>
+    </div>
+  </div>
+  <div id="base-unsaved-prompt" class="modal-overlay" style="display:none;background:rgba(0,0,0,.35)" onclick="if(event.target===this)hideBaseUnsavedPrompt()">
+    <div class="modal" style="max-width:360px" onclick="event.stopPropagation()">
+      <div class="modal-header"><h3>Unsaved changes</h3></div>
+      <div class="modal-body" style="font-size:12px;color:var(--text2)">Edits will be lost.</div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="hideBaseUnsavedPrompt()">Cancel</button>
+        <button class="btn-primary" onclick="baseDiscardAndClose()">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ADD PROPERTY MODAL -->
 <div id="add-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddModal()">
   <div class="modal">
@@ -706,60 +782,6 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
       </div>
       <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Each base is a trip location. Set Visit From/To dates to generate schedule days. Link to an Idealista Favorites List to enable sync.</p>
       <div id="bases-list"></div>
-      <!-- Add/Edit Base Form -->
-      <div id="base-form" style="display:none;margin-top:10px;padding:12px;background:#EEE8DC;border-radius:6px;border:1px solid var(--border)">
-        <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:8px" id="base-form-title">Add Base</div>
-        <input type="hidden" id="base-form-abbr-orig" value="">
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <div style="flex:2"><label style="font-size:10px;font-weight:600;color:var(--text3)">Name</label>
-            <input id="base-form-name" type="text" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
-          <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Abbr</label>
-            <input id="base-form-abbr" type="text" maxlength="5" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
-          <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Type</label>
-            <select id="base-form-type" onchange="onBaseTypeChange()" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px">
-              <option value="stay">Stay</option><option value="transit">Transit</option>
-            </select></div>
-        </div>
-        <div id="base-stay-fields">
-          <div style="margin-bottom:8px"><label style="font-size:10px;font-weight:600;color:var(--text3)">Town / location</label>
-            <input id="base-form-address" type="text" placeholder="e.g. Gubbio, PG" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px" onblur="baseFormSyncLocation('address')">
-            <div id="base-address-error" class="field-error" style="display:none"></div>
-            <div class="field-hint">Required if no GPS. GPS is added when town is entered.</div></div>
-          <div style="margin-bottom:8px"><label style="font-size:10px;font-weight:600;color:var(--text3)">GPS coordinates</label>
-            <input id="base-form-gps" type="text" placeholder="42.9535, 12.0022" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px" onblur="baseFormSyncLocation('gps')">
-            <div id="base-gps-error" class="field-error" style="display:none"></div>
-            <div id="base-loc-status" class="loc-status"></div>
-          </div>
-        </div>
-        <div id="base-transit-fields" style="display:none">
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Origin Base</label>
-              <select id="base-form-from-base" onchange="onTransitBaseRefsChange()" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></select></div>
-            <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Destinate Base</label>
-              <select id="base-form-to-base" onchange="onTransitBaseRefsChange()" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></select></div>
-          </div>
-          <p style="font-size:10px;color:var(--text3);margin-bottom:8px">Transit days route between two Stay bases. Add Stay bases with locations before creating a Transit base.</p>
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Visit From</label>
-            <input id="base-form-from" type="date" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px">
-            <div class="field-hint">mm/dd/yyyy</div></div>
-          <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Visit To (optional)</label>
-            <input id="base-form-to" type="date" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px">
-            <div class="field-hint">mm/dd/yyyy</div></div>
-          <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text3)">Airport (optional)</label>
-            <select id="base-form-airport" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></select>
-            <div class="field-hint">Blank = nearest airport</div></div>
-        </div>
-        <div style="margin-bottom:8px"><label style="font-size:10px;font-weight:600;color:var(--text3)">IFL Favorites URL (optional)</label>
-          <input id="base-form-ifl" type="url" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-top:2px"></div>
-        <div style="margin-bottom:10px"><label style="font-size:10px;font-weight:600;color:var(--text3)">Notes</label>
-          <textarea id="base-form-desc" rows="2" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;resize:vertical;margin-top:2px"></textarea></div>
-        <div style="display:flex;gap:8px">
-          <button class="io-btn" onclick="saveBaseForm()" style="background:var(--adriat);color:#fff;border-color:var(--adriat)">Save Base</button>
-          <button class="io-btn" onclick="closeBaseForm()">Cancel</button>
-        </div>
-      </div>
     </div>
 
     <!-- Data -->
@@ -1890,7 +1912,11 @@ function baseFormSyncLocation(fromField) {
     const gps = document.getElementById('base-form-gps')?.value.trim() || '';
     const address = document.getElementById('base-form-address')?.value.trim() || '';
     const scratch = { address, gps };
-    await runLocSync('base', scratch, { gps, address, isBase: true, mode: field === 'gps' ? 'gps' : 'address' });
+    await runLocSync('base', scratch, {
+      gps, address, isBase: true, mode: field === 'gps' ? 'gps' : 'address',
+      preserveEmptyAddress: field === 'gps' && !address,
+      onSuccess: () => baseFormMarkDirty(),
+    });
   });
 }
 
@@ -2772,6 +2798,17 @@ document.addEventListener('keydown', e => {
   if (_dmEscPrompt) {
     e.preventDefault();
     hideDmUnsavedPrompt();
+    return;
+  }
+  if (_baseFormEscPrompt) {
+    e.preventDefault();
+    hideBaseUnsavedPrompt();
+    return;
+  }
+  const baseModal = document.getElementById('base-modal');
+  if (baseModal && baseModal.style.display === 'flex') {
+    e.preventDefault();
+    requestCloseBaseModal();
     return;
   }
   const detailModal = document.getElementById('detail-modal');
@@ -4766,11 +4803,13 @@ function onBaseTypeChange() {
   document.getElementById('base-stay-fields').style.display = t === 'stay' ? 'block' : 'none';
   document.getElementById('base-transit-fields').style.display = t === 'transit' ? 'block' : 'none';
   const nameEl = document.getElementById('base-form-name');
+  const nameHint = document.getElementById('base-name-hint');
   if (nameEl) {
     nameEl.readOnly = t === 'transit';
     nameEl.style.background = t === 'transit' ? 'var(--bg2)' : '';
     nameEl.title = t === 'transit' ? 'Auto-derived from Origin and Destinate bases' : '';
   }
+  if (nameHint) nameHint.style.display = t === 'transit' ? 'none' : 'block';
   if (t === 'transit') {
     const exclude = document.getElementById('base-form-abbr')?.value.trim().toUpperCase() || '';
     _populateBaseRefSelect('base-form-from-base', document.getElementById('base-form-from-base')?.value || '', exclude);
@@ -4779,44 +4818,92 @@ function onBaseTypeChange() {
   }
 }
 
-function openAddBaseForm() {
+// ─── Add / Edit Base Modal ────────────────────────────────────────────────────
+let _baseFormDirty = false, _baseFormEscPrompt = false;
+
+function baseFormMarkDirty() {
+  if (!_baseFormDirty) _baseFormDirty = true;
+}
+
+function requestCloseBaseModal() {
+  if (!_baseFormDirty) { closeBaseModal(true); return; }
+  showBaseUnsavedPrompt();
+}
+
+function showBaseUnsavedPrompt() {
+  _baseFormEscPrompt = true;
+  const el = document.getElementById('base-unsaved-prompt');
+  if (el) el.style.display = 'flex';
+}
+
+function hideBaseUnsavedPrompt() {
+  _baseFormEscPrompt = false;
+  const el = document.getElementById('base-unsaved-prompt');
+  if (el) el.style.display = 'none';
+}
+
+function baseDiscardAndClose() {
+  hideBaseUnsavedPrompt();
+  closeBaseModal(true);
+}
+
+function _resetBaseFormFields() {
   ['base-form-abbr-orig','base-form-name','base-form-abbr','base-form-from','base-form-to',
    'base-form-address','base-form-gps','base-form-ifl','base-form-desc'].forEach(id => {
-    const el=document.getElementById(id); if(el) el.value='';
+    const el = document.getElementById(id); if (el) el.value = '';
   });
   _populateAirportSelect('base-form-airport', '');
   document.getElementById('base-form-type').value = 'stay';
+  clearLocUi('base');
   onBaseTypeChange();
-  document.getElementById('base-form-title').textContent='Add Base';
-  document.getElementById('base-form').style.display='block';
+}
+
+function openBaseModal(title) {
+  document.getElementById('base-form-title').textContent = title;
+  _baseFormDirty = false;
+  hideBaseUnsavedPrompt();
+  document.getElementById('base-modal').style.display = 'flex';
+}
+
+function openAddBaseForm() {
+  _resetBaseFormFields();
+  openBaseModal('Add Base');
 }
 
 function editBase(abbr) {
   const b = getBase(abbr); if (!b) return;
   migrateBaseLocation(b);
+  _resetBaseFormFields();
   document.getElementById('base-form-abbr-orig').value = b.abbr;
-  document.getElementById('base-form-name').value = b.name||'';
-  document.getElementById('base-form-abbr').value = b.abbr||'';
+  document.getElementById('base-form-name').value = b.name || '';
+  document.getElementById('base-form-abbr').value = b.abbr || '';
   document.getElementById('base-form-type').value = b.baseType || 'stay';
-  document.getElementById('base-form-from').value = b.visitFrom||'';
-  document.getElementById('base-form-to').value = b.visitTo||'';
-  document.getElementById('base-form-address').value = b.address||'';
+  document.getElementById('base-form-from').value = b.visitFrom || '';
+  document.getElementById('base-form-to').value = b.visitTo || '';
+  document.getElementById('base-form-address').value = b.address || '';
   document.getElementById('base-form-gps').value = getBaseGps(b);
   _populateBaseRefSelect('base-form-from-base', b.fromBase || '', b.abbr);
   _populateBaseRefSelect('base-form-to-base', b.toBase || '', b.abbr);
-  document.getElementById('base-form-desc').value = b.desc||'';
+  document.getElementById('base-form-desc').value = b.desc || '';
   _populateAirportSelect('base-form-airport', b.airport || '');
-  let iflUrl='';
+  let iflUrl = '';
   if (b.iflToken) iflUrl = /^\d+$/.test(b.iflToken)
     ? `https://www.idealista.it/en/utente/preferiti/?favoritesListId=${b.iflToken}`
     : `https://www.idealista.it/join-favorites-list/${b.iflToken}`;
   document.getElementById('base-form-ifl').value = iflUrl;
   onBaseTypeChange();
-  document.getElementById('base-form-title').textContent='Edit Base';
-  document.getElementById('base-form').style.display='block';
+  openBaseModal('Edit Base');
 }
 
-function closeBaseForm() { const el=document.getElementById('base-form'); if(el) el.style.display='none'; }
+function closeBaseModal(force) {
+  if (!force && _baseFormDirty) { showBaseUnsavedPrompt(); return; }
+  hideBaseUnsavedPrompt();
+  const el = document.getElementById('base-modal');
+  if (el) el.style.display = 'none';
+  _baseFormDirty = false;
+}
+
+function closeBaseForm() { requestCloseBaseModal(); }
 
 async function saveBaseForm() {
   const origAbbr = document.getElementById('base-form-abbr-orig').value.trim();
@@ -4900,7 +4987,7 @@ async function saveBaseForm() {
     await recalcPropsForBase(abbr);
     try { await saveToStorage(); } catch (e) {}
   }
-  closeBaseForm(); renderBasesList(); refreshBaseFilters(); renderSchedule(); populateMapDayDropdown(); populateDpDaySelect();
+  closeBaseModal(true); renderBasesList(); refreshBaseFilters(); renderSchedule(); populateMapDayDropdown(); populateDpDaySelect();
   _dayPlanCache = {};
 }
 
