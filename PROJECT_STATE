@@ -81,6 +81,17 @@ Production reaches **Cloudflare Pages only when a PR merges to `main`**. Direct 
 
 `deploy.ps1` / `push.ps1`: commit → push branch (never `main`) → open PR via `gh` → `.github/workflows/auto-merge-cursor.yml` squash-merges.
 
+### Stuck deploy (Cloudflare not updating)
+
+Production only changes when a **cursor/\* PR merges to `main`**. If a PR is open but Cloudflare is stale:
+
+1. Open the PR on GitHub — confirm **Cloudflare Pages** check is green.
+2. If the PR is still **Draft**, run `gh pr ready <number>` (or click "Ready for review"). Draft PRs block auto-merge.
+3. Re-run **Auto-merge cursor agent PRs** workflow (Actions tab → Run workflow) if checks passed but merge did not run.
+4. After merge: pull `main`, hard-refresh https://househunt.pages.dev; reload extension only if `extension/` changed.
+
+**Note:** GitHub REST `draft: false` does not undraft PRs; auto-merge uses GraphQL `markPullRequestAsReadyForReview`.
+
 **On `main` with local changes:** pass `-Description 'my-feature'` to create `cursor/my-feature-fb87`.
 
 ## Smoke check
