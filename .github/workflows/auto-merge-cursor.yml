@@ -13,8 +13,8 @@ permissions:
   checks: read
 
 concurrency:
-  group: automerge-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: true
+  group: automerge-cursor-prs
+  cancel-in-progress: false
 
 jobs:
   automerge:
@@ -146,10 +146,19 @@ jobs:
               const cf = checks.check_runs.find(c => c.name === requiredCheck);
 
               if (cf?.status === 'completed' && cf.conclusion === 'success') {
-                await github.rest.pulls.merge({
-                  owner, repo, pull_number: prNum, merge_method: 'squash'
-                });
-                core.info(`Merged PR #${prNum}.`);
+                try {
+                  await github.rest.pulls.merge({
+                    owner, repo, pull_number: prNum, merge_method: 'squash'
+                  });
+                  core.info(`Merged PR #${prNum}.`);
+                } catch (e) {
+                  const { data: prAfter } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+                  if (prAfter.merged) {
+                    core.info(`PR #${prNum} already merged (parallel automerge run).`);
+                  } else {
+                    core.setFailed(`Merge failed: ${e.message || e}`);
+                  }
+                }
                 return;
               }
               if (cf?.status === 'completed' && cf.conclusion === 'failure') {
