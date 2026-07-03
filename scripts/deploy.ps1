@@ -1,14 +1,17 @@
-# House Hunt  -  single-command deploy: commit → sync → merge to main → push
-# Cloudflare Pages auto-deploys when main is updated on GitHub.
+# House Hunt — ship via PR (same path as Cursor Cloud agents)
+# commit → push cursor/* branch → open PR → auto-merge when Cloudflare Pages passes
 param(
     [string]$Message = '',
+    [string]$Description = '',
+    [string]$PrTitle = '',
     [switch]$DryRun,
-    [switch]$NoReturnToBranch,
     [switch]$ForceSecrets
 )
 
 $ErrorActionPreference = 'Stop'
 $MainBranch = 'main'
+$BranchPrefix = 'cursor/'
+$BranchSuffix = '-fb87'
 $script:SubstMapped = $false
 $script:SubstDrive = $null
 
@@ -76,17 +79,26 @@ function Get-DefaultCommitMessage {
     if (Test-Path -LiteralPath $configPath) {
         $content = Get-Content -LiteralPath $configPath -Raw -ErrorAction SilentlyContinue
         if ($content -match "SPA_VERSION\s*=\s*'([^']+)'") {
-            return "Deploy $($Matches[1])"
+            return "Ship $($Matches[1])"
         }
     }
-    $indexPath = Join-Path $Root 'index.html'
-    if (Test-Path -LiteralPath $indexPath) {
-        $content = Get-Content -LiteralPath $indexPath -Raw -ErrorAction SilentlyContinue
-        if ($content -match "SPA_VERSION\s*=\s*'([^']+)'") {
-            return "Deploy $($Matches[1])"
-        }
-    }
-    return "Deploy $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
+    return "Ship $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
+}
+
+function Test-CursorShipBranch([string]$Branch) {
+    return [bool]($Branch -match "^$([regex]::Escape($BranchPrefix)).+$([regex]::Escape($BranchSuffix))$")
+}
+
+function ConvertTo-BranchSlug([string]$Text) {
+    $slug = ($Text -replace '[^a-zA-Z0-9]+', '-').Trim('-').ToLower()
+    if ($slug.Length -gt 48) { $slug = $slug.Substring(0, 48).Trim('-') }
+    if (-not $slug) { $slug = 'desktop-ship' }
+    return $slug
+}
+
+function New-CursorBranchName([string]$DescriptionText) {
+    $slug = ConvertTo-BranchSlug -Text $DescriptionText
+    return "$BranchPrefix$slug$BranchSuffix"
 }
 
 function Ensure-CleanMerge {
@@ -95,8 +107,8 @@ function Ensure-CleanMerge {
     if ($conflicts) {
         throw @(
             "Merge conflict during $Context.",
-            'Resolve conflicts, then run: git add -A && git commit',
-            'Or abort with: git merge --abort / git rebase --abort'
+            'Resolve conflicts, then run deploy again.',
+            'Or abort with: git rebase --abort'
         ) -join ' '
     }
 }
@@ -125,6 +137,63 @@ function Remove-SubstDrive {
     $null = & subst $script:SubstDrive /d 2>&1
     $script:SubstMapped = $false
     $script:SubstDrive = $null
+}
+
+function Test-GhAvailable {
+    $gh = Get-Command gh -ErrorAction SilentlyContinue
+    return [bool]$gh
+}
+
+function Get-OpenPullRequestUrl {
+    param([string]$Branch)
+    if (-not (Test-GhAvailable)) { return $null }
+    if ($DryRun) { return 'https://github.com/example/pull/0' }
+    $json = & gh pr list --head $Branch --state open --json url --limit 1 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $json) { return $null }
+    $rows = $json | ConvertFrom-Json
+    if ($rows -and $rows.Count -gt 0) { return $rows[0].url }
+    return $null
+}
+
+function Open-PullRequest {
+    param(
+        [string]$Branch,
+        [string]$Title,
+        [string]$Body
+    )
+    if (-not (Test-GhAvailable)) {
+        Write-Host "WARNING: GitHub CLI (gh) not found — push succeeded but PR was not created." -ForegroundColor Yellow
+        Write-Host "  Install gh, then run: gh pr create --base main --head $Branch --title `"$Title`"" -ForegroundColor Yellow
+        return $null
+    }
+
+    $existing = Get-OpenPullRequestUrl -Branch $Branch
+    if ($existing) {
+        Write-Host "    Open PR: $existing" -ForegroundColor DarkGray
+        if (-not $DryRun) {
+            & gh pr ready $existing 2>$null | Out-Null
+        }
+        return $existing
+    }
+
+    if ($DryRun) {
+        Write-Host "[dry-run] gh pr create --base main --head $Branch --title `"$Title`"" -ForegroundColor DarkGray
+        return "https://github.com/example/pull/0"
+    }
+
+    $createArgs = @(
+        'pr', 'create',
+        '--base', $MainBranch,
+        '--head', $Branch,
+        '--title', $Title,
+        '--body', $Body
+    )
+    $url = (& gh @createArgs 2>&1 | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0) {
+        throw "gh pr create failed: $url"
+    }
+    Write-Host "    Created PR: $url" -ForegroundColor DarkGray
+    return $url
 }
 
 # Resolve repo root from script location (avoids hardcoding paths with apostrophes).
@@ -159,7 +228,7 @@ try {
 
     $currentBranch = (Invoke-GitRead @('branch', '--show-current')).Output.Trim()
     if (-not $currentBranch) {
-        throw 'Detached HEAD  -  checkout a branch before deploying.'
+        throw 'Detached HEAD — checkout a branch before shipping.'
     }
     Write-Host "    branch: $currentBranch"
 
@@ -170,12 +239,12 @@ try {
     $smokePs1 = Join-Path $PSScriptRoot 'smoke-check.ps1'
     if (Test-Path -LiteralPath $smokePs1) {
         & $smokePs1 -RepoRoot $repoRoot
-        if ($LASTEXITCODE -ne 0) { throw 'Smoke check failed — fix regressions before deploy.' }
+        if ($LASTEXITCODE -ne 0) { throw 'Smoke check failed — fix regressions before ship.' }
     } else {
         $smokeSh = Join-Path $PSScriptRoot 'smoke-check.sh'
         if (Test-Path -LiteralPath $smokeSh) {
             & bash $smokeSh
-            if ($LASTEXITCODE -ne 0) { throw 'Smoke check failed — fix regressions before deploy.' }
+            if ($LASTEXITCODE -ne 0) { throw 'Smoke check failed — fix regressions before ship.' }
         } else {
             Write-Host 'WARNING: smoke-check script not found; skipping.' -ForegroundColor Yellow
         }
@@ -197,7 +266,7 @@ try {
 
         $sensitive = Test-SensitivePaths -Paths $allChanged
         if ($sensitive.Count -gt 0 -and -not $ForceSecrets) {
-            Write-Err "Refusing to commit  -  potentially sensitive files detected:"
+            Write-Err "Refusing to commit — potentially sensitive files detected:"
             $sensitive | ForEach-Object { Write-Host "  - $_" -ForegroundColor Yellow }
             Write-Host "Remove them from the commit, add to .gitignore, or re-run with -ForceSecrets if intentional." -ForegroundColor Yellow
             throw 'Sensitive files blocked commit.'
@@ -218,69 +287,79 @@ try {
         Write-Host 'No local changes to commit.' -ForegroundColor DarkGray
     }
 
-    function Sync-Branch {
-        param(
-            [string]$Branch,
-            [switch]$SetUpstream
-        )
-        Write-Step "Syncing branch '$Branch' with origin"
-        $localExists = (Invoke-GitRead @('rev-parse', '--verify', $Branch)).Ok
-        $onBranch = (Invoke-GitRead @('branch', '--show-current')).Output.Trim()
-        if ($onBranch -ne $Branch) {
-            if (-not $localExists) {
-                Invoke-Git @('checkout', '-b', $Branch, "origin/$Branch") | Out-Null
-            } else {
-                Invoke-Git @('checkout', $Branch) | Out-Null
-            }
-        } else {
-            Write-Host "    already on '$Branch'" -ForegroundColor DarkGray
-        }
-
-        $upstream = (Invoke-GitRead @('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}')).Output
-        $hasUpstream = [bool]$upstream
-        if ($hasUpstream) {
-            try {
-                Invoke-Git @('pull', '--rebase', 'origin', $Branch) | Out-Null
-            } catch {
-                throw "Rebase failed on '$Branch'. Run: git rebase --abort, fix, then deploy again."
-            }
-            Ensure-CleanMerge -Context "rebase on $Branch"
-        } elseif (Test-Path -LiteralPath ".git/refs/remotes/origin/$Branch") {
-            Write-Host "    No upstream  -  will push with -u" -ForegroundColor DarkGray
-        }
-
-        $pushArgs = @('push', 'origin', $Branch)
-        if ($SetUpstream -or -not $hasUpstream) { $pushArgs = @('push', '-u', 'origin', $Branch) }
-        Invoke-Git $pushArgs | Out-Null
-    }
-
+    $aheadOfMain = [int]((Invoke-GitRead @('rev-list', '--count', "origin/$MainBranch..HEAD")).Output.Trim() -replace '\D', '0')
     if ($currentBranch -eq $MainBranch) {
-        Sync-Branch -Branch $MainBranch
-    } else {
-        Sync-Branch -Branch $currentBranch -SetUpstream
-        Sync-Branch -Branch $MainBranch
-
-        Write-Step "Merging '$currentBranch' into $MainBranch"
-        try {
-            Invoke-Git @('merge', $currentBranch, '--no-edit') | Out-Null
-        } catch {
-            Ensure-CleanMerge -Context "merge $currentBranch into $MainBranch"
-            throw
+        if ($aheadOfMain -eq 0 -and -not $hasChanges) {
+            Write-Ok "main is clean and synced with origin/main."
+            Write-Host "  Production only updates when a cursor/* PR merges to main."
+            Write-Host "  Work on a branch like cursor/my-feature-fb87, then run deploy again."
+            exit 0
         }
-        Ensure-CleanMerge -Context "merge $currentBranch into $MainBranch"
 
-        Invoke-Git @('push', 'origin', $MainBranch) | Out-Null
-
-        if (-not $NoReturnToBranch) {
-            Write-Step "Returning to '$currentBranch'"
-            Invoke-Git @('checkout', $currentBranch) | Out-Null
+        if (-not $Description) {
+            if ($Message) {
+                $Description = $Message
+            } else {
+                throw @(
+                    "Cannot ship directly from main (branch protection blocks direct push).",
+                    "Pass -Description 'my-feature' to create cursor/my-feature-fb87,",
+                    "or checkout an existing cursor/*-fb87 branch first."
+                ) -join ' '
+            }
         }
+
+        $shipBranch = New-CursorBranchName -DescriptionText $Description
+        Write-Step "Creating ship branch '$shipBranch' from main"
+        Invoke-Git @('checkout', '-b', $shipBranch) | Out-Null
+        $currentBranch = $shipBranch
+    } elseif (-not (Test-CursorShipBranch $currentBranch)) {
+        throw @(
+            "Branch '$currentBranch' will not auto-merge.",
+            "Rename to cursor/<description>-fb87 (cloud agent convention), or",
+            "checkout main and re-run with -Description 'my-feature'."
+        ) -join ' '
     }
+
+    Write-Step "Syncing '$currentBranch' with origin/$MainBranch"
+    $upstream = (Invoke-GitRead @('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}')).Output
+    $hasUpstream = [bool]$upstream
+    try {
+        Invoke-Git @('rebase', "origin/$MainBranch") | Out-Null
+    } catch {
+        Ensure-CleanMerge -Context "rebase onto origin/$MainBranch"
+        throw "Rebase failed on '$currentBranch'. Run: git rebase --abort, fix conflicts, then deploy again."
+    }
+    Ensure-CleanMerge -Context "rebase onto origin/$MainBranch"
+
+    $pushArgs = @('push', '-u', 'origin', $currentBranch)
+    if ($hasUpstream) { $pushArgs = @('push', 'origin', $currentBranch) }
+    Write-Step "Pushing '$currentBranch' (not main)"
+    Invoke-Git $pushArgs | Out-Null
+
+    if (-not $PrTitle) {
+        $PrTitle = if ($Message) { $Message } else { "Ship $currentBranch" }
+    }
+    $prBody = @(
+        'Shipped from Cursor Desktop using the same PR pipeline as Cloud agents.',
+        '',
+        '- Auto-merge runs when the **Cloudflare Pages** check passes.',
+        '- Do not merge or push to `main` manually.',
+        '',
+        'After merge:',
+        '1. GitHub Desktop → Pull `main`',
+        '2. Hard-refresh the SPA at https://househunt.pages.dev',
+        '3. If `extension/` changed: pull and Reload the unpacked extension in Chrome'
+    ) -join "`n"
+
+    Write-Step 'Opening pull request'
+    $prUrl = Open-PullRequest -Branch $currentBranch -Title $PrTitle -Body $prBody
 
     Write-Host ''
-    Write-Ok 'Deploy complete.'
-    Write-Host "  main is on GitHub  -  Cloudflare Pages will deploy to https://househunt.pages.dev"
-    Write-Host "  (usually within 1-2 minutes; check the Cloudflare dashboard for build status)"
+    Write-Ok 'Ship initiated (PR workflow — same as Cursor Cloud).'
+    Write-Host "  Branch: $currentBranch"
+    if ($prUrl) { Write-Host "  PR:     $prUrl" }
+    Write-Host '  Next:   GitHub auto-merge merges to main when Cloudflare Pages succeeds.'
+    Write-Host '  Then:   Pull main locally; refresh SPA; reload extension if extension/ changed.'
     if ($DryRun) {
         Write-Host '  [dry-run] No git changes were made.' -ForegroundColor DarkGray
     }

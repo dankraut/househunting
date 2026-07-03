@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Deploy",
+      "label": "Ship (PR → auto-merge)",
       "type": "process",
       "command": "cmd.exe",
       "args": ["/c", "${workspaceFolder}\\deploy.cmd"],
@@ -18,13 +18,26 @@
       "problemMatcher": []
     },
     {
-      "label": "Deploy (dry run)",
+      "label": "Ship (dry run)",
       "type": "process",
       "command": "cmd.exe",
       "args": ["/c", "${workspaceFolder}\\deploy.cmd", "-DryRun"],
       "presentation": {
         "reveal": "always",
         "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Deploy",
+      "type": "process",
+      "command": "cmd.exe",
+      "args": ["/c", "${workspaceFolder}\\deploy.cmd"],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
       },
       "problemMatcher": []
     }
