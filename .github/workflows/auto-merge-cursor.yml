@@ -152,11 +152,24 @@ jobs:
                   });
                   core.info(`Merged PR #${prNum}.`);
                 } catch (e) {
-                  const { data: prAfter } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
-                  if (prAfter.merged) {
-                    core.info(`PR #${prNum} already merged (parallel automerge run).`);
+                  const msg = e?.message || String(e);
+                  const benign405 = /already merged|merge already in progress|still a draft/i.test(msg);
+                  if (benign405) {
+                    for (let i = 0; i < 15; i++) {
+                      const { data: prAfter } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+                      if (prAfter.merged) {
+                        core.info(`PR #${prNum} merged by parallel automerge run.`);
+                        return;
+                      }
+                      core.info(`Waiting for PR #${prNum} merge to finish… (${i + 1}/15)`);
+                      await new Promise(r => setTimeout(r, 2000));
+                    }
+                  }
+                  const { data: prFinal } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+                  if (prFinal.merged) {
+                    core.info(`PR #${prNum} merged by parallel automerge run.`);
                   } else {
-                    core.setFailed(`Merge failed: ${e.message || e}`);
+                    core.setFailed(`Merge failed: ${msg}`);
                   }
                 }
                 return;
