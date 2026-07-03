@@ -46,6 +46,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('sync-modal-x')?.addEventListener('click', closeSyncModal);
   switchTab('sync');
   initSyncTab();
+  startSyncStatusPoll();
+  checkPendingSyncResult();
 
   // Load bases for the extract-tab base selector
   try { _bases = await loadBases(); } catch(e) { _bases = []; }
@@ -59,14 +61,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (!tab) {
     document.getElementById('not-idealista').style.display = 'block';
-    document.getElementById('main-ui').style.display = 'none';
-    return;
+  } else {
+    currentTabId = tab.id;
+    const m = tab.url.match(/immobile\/(\d+)/);
+    if (m) setField('f-id', m[1]);
+    setStatus('Listing found — click Extract.', 'idle');
   }
-
-  currentTabId = tab.id;
-  const m = tab.url.match(/immobile\/(\d+)/);
-  if (m) setField('f-id', m[1]);
-  setStatus('Listing found — click Extract.', 'idle');
 });
 
 // ── Extract ─────────────────────────────────────────────────────────────────────
@@ -233,8 +233,10 @@ async function initSyncTab() {
   if (!el) return;
   el.textContent = 'Loading bases…';
 
-  const { apiToken } = await chrome.storage.local.get('apiToken');
-  if (!apiToken) {
+  const token = await getApiToken();
+  const keyIndicator = document.getElementById('key-set-indicator');
+  if (keyIndicator) keyIndicator.textContent = token ? '● set' : 'not set';
+  if (!token) {
     el.innerHTML = '<span style="color:#C0392B">Enter your server key above first.</span>';
     return;
   }
@@ -267,19 +269,49 @@ async function initSyncTab() {
 
 async function startSync(base) {
   const log = document.getElementById('sync-log');
-  if (log) log.style.display = 'block';
-
-  function setStatus(msg, type) {
-    if (log) {
-      log.style.color = type === 'err' ? '#C0392B' : type === 'ok' ? '#2E7D32' : '#5A5248';
-      log.textContent = msg;
-    }
+  if (log) {
+    log.style.display = 'block';
+    log.style.color = '#5A5248';
+    log.textContent = 'Starting sync (runs in background)…';
   }
 
-  try {
-    await syncBase(base, setStatus);
-  } catch (e) {
-    setStatus('Sync error: ' + e.message, 'err');
+  chrome.storage.local.set({ iflSyncResult: null });
+  chrome.runtime.sendMessage({ type: 'RUN_IFL_SYNC', base }, (resp) => {
+    if (chrome.runtime.lastError) {
+      applySyncLogStatus('Could not start sync: ' + chrome.runtime.lastError.message, 'err');
+    } else if (resp && !resp.ok) {
+      applySyncLogStatus(resp.reason || 'Could not start sync', 'err');
+    }
+  });
+}
+
+function applySyncLogStatus(text, type) {
+  const log = document.getElementById('sync-log');
+  if (!log) return;
+  log.style.display = 'block';
+  log.style.color = type === 'err' ? '#C0392B' : type === 'ok' ? '#2E7D32' : '#5A5248';
+  log.textContent = text;
+}
+
+let _syncPollTimer = null;
+function startSyncStatusPoll() {
+  if (_syncPollTimer) clearInterval(_syncPollTimer);
+  _syncPollTimer = setInterval(async () => {
+    const { iflSyncStatus, iflSyncResult } = await chrome.storage.local.get(['iflSyncStatus', 'iflSyncResult']);
+    if (iflSyncStatus?.text) applySyncLogStatus(iflSyncStatus.text, iflSyncStatus.type);
+    if (iflSyncResult?.ts) {
+      showSyncModal(iflSyncResult);
+      chrome.storage.local.remove('iflSyncResult');
+    }
+  }, 500);
+}
+
+async function checkPendingSyncResult() {
+  const { iflSyncStatus, iflSyncResult } = await chrome.storage.local.get(['iflSyncStatus', 'iflSyncResult']);
+  if (iflSyncStatus?.text) applySyncLogStatus(iflSyncStatus.text, iflSyncStatus.type);
+  if (iflSyncResult?.ts && Date.now() - iflSyncResult.ts < 120000) {
+    showSyncModal(iflSyncResult);
+    chrome.storage.local.remove('iflSyncResult');
   }
 }
 

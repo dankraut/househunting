@@ -72,29 +72,28 @@ function getSpaUrlFrag() {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function sendIflPayloadToSpa(spaTab, payload, setStatus) {
+  // Prefer MAIN-world inject (works from background service worker; survives popup close).
   try {
-    const resp = await chrome.tabs.sendMessage(spaTab.id, { type: 'RELAY_IFL_SYNC', payload });
-    if (resp?.ok) return true;
-    throw new Error(resp?.reason || 'SPA relay failed');
-  } catch (e) {
-    const msg = e?.message || String(e);
-    if (/Receiving end does not exist|Could not establish connection/i.test(msg)) {
-      setStatus('Reload the House Hunt SPA tab (F5), then sync again.', 'err');
-      return false;
-    }
+    await chrome.scripting.executeScript({
+      target: { tabId: spaTab.id },
+      world: 'MAIN',
+      func: p => window.postMessage({ type: 'HOUSEHUNT_IFL_ADD', ...p }, '*'),
+      args: [payload]
+    });
+    return true;
+  } catch (e1) {
     try {
-      await chrome.scripting.executeScript({
-        target: { tabId: spaTab.id },
-        world: 'MAIN',
-        func: p => window.postMessage({ type: 'HOUSEHUNT_IFL_ADD', ...p }, '*'),
-        args: [payload]
-      });
-      return true;
-    } catch (e2) {
-      setStatus('Could not reach SPA: ' + (e2.message || msg), 'err');
-      return false;
-    }
+      const resp = await chrome.tabs.sendMessage(spaTab.id, { type: 'RELAY_IFL_SYNC', payload });
+      if (resp?.ok) return true;
+    } catch (e2) { /* fall through */ }
+    setStatus('Could not reach SPA — reload the House Hunt tab (F5), then sync again.', 'err');
+    return false;
   }
+}
+
+function finishSyncModal(result) {
+  try { chrome.storage.local.set({ iflSyncResult: { ...result, ts: Date.now() } }); } catch (e) {}
+  if (typeof showSyncModal === 'function') showSyncModal(result);
 }
 
 function waitForTabLoad(tabId, timeout = 15000) {
@@ -378,11 +377,11 @@ async function syncBase(base, setStatus) {
 
   const needsNav = !idealistaTab || !idealistaTab.url || !urlsRoughlyMatch(idealistaTab.url, iflUrl);
   if (idealistaTab && needsNav) {
-    await new Promise(res => chrome.tabs.update(idealistaTab.id, { url: iflUrl, active: true }, res));
+    await new Promise(res => chrome.tabs.update(idealistaTab.id, { url: iflUrl, active: false }, res));
   } else if (!idealistaTab) {
-    idealistaTab = await new Promise(res => chrome.tabs.create({ url: iflUrl, active: true }, res));
+    idealistaTab = await new Promise(res => chrome.tabs.create({ url: iflUrl, active: false }, res));
   } else {
-    await new Promise(res => chrome.tabs.update(idealistaTab.id, { active: true }, res));
+    await new Promise(res => chrome.tabs.update(idealistaTab.id, { active: false }, res));
   }
 
   try { await waitForTabLoad(idealistaTab.id); } catch (e) { setStatus('Page load timeout — is Idealista open?', 'err'); return; }
@@ -437,7 +436,7 @@ async function syncBase(base, setStatus) {
   // Send ALL properties to SPA — IFL is source of truth; SPA updated to match
   const spaFrag = await getSpaUrlFrag();
   const freshTabs = await new Promise(res => chrome.tabs.query({}, res));
-  const spaTab = freshTabs.find(t => t.url && t.url.includes(spaFrag));
+  const spaTab = freshTabs.find(t => t.url && t.url.includes(spaFrag) && !t.url.includes('idealista'));
 
   if (!spaTab) {
     setStatus(`SPA tab not found (looking for URL containing "${spaFrag}"). Open the SPA first.`, 'err');
@@ -470,7 +469,7 @@ async function syncBase(base, setStatus) {
   if (!spaOk) return;
 
   setStatus(`Sync complete for ${base.name}.`, 'ok');
-  showSyncModal({
+  finishSyncModal({
     base: base.name,
     abbr: base.abbr,
     total: properties.length,
