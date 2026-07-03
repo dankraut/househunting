@@ -17,6 +17,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
     chrome.scripting.executeScript({
       target: { tabId: spaTab.id },
+      world: 'MAIN',
       func: (payload) => { window.postMessage({ type: 'HOUSEHUNT_BROKER', ...payload }, '*'); },
       args: [data],
     }).then(() => sendResponse({ ok: true }))

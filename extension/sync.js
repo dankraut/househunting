@@ -1,4 +1,4 @@
-// sync.js — House Hunt IFL Sync v1.8.24
+// sync.js — House Hunt IFL Sync (see manifest.json for version)
 // Handles Idealista Favorites List sync for all bases
 
 const DEFAULT_API_TOKEN = 'jmjk05DK';
@@ -70,6 +70,32 @@ function getSpaUrlFrag() {
   return new Promise(res => chrome.storage.local.get('spaUrl', d => res(d.spaUrl || 'househunt.pages.dev')));
 }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function sendIflPayloadToSpa(spaTab, payload, setStatus) {
+  try {
+    const resp = await chrome.tabs.sendMessage(spaTab.id, { type: 'RELAY_IFL_SYNC', payload });
+    if (resp?.ok) return true;
+    throw new Error(resp?.reason || 'SPA relay failed');
+  } catch (e) {
+    const msg = e?.message || String(e);
+    if (/Receiving end does not exist|Could not establish connection/i.test(msg)) {
+      setStatus('Reload the House Hunt SPA tab (F5), then sync again.', 'err');
+      return false;
+    }
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: spaTab.id },
+        world: 'MAIN',
+        func: p => window.postMessage({ type: 'HOUSEHUNT_IFL_ADD', ...p }, '*'),
+        args: [payload]
+      });
+      return true;
+    } catch (e2) {
+      setStatus('Could not reach SPA: ' + (e2.message || msg), 'err');
+      return false;
+    }
+  }
+}
 
 function waitForTabLoad(tabId, timeout = 15000) {
   return new Promise((resolve, reject) => {
@@ -440,12 +466,8 @@ async function syncBase(base, setStatus) {
   } catch (e) { /* non-fatal — SPA update follows */ }
 
   syncPayload.serverResult = syncResult;
-  await chrome.scripting.executeScript({
-    target: { tabId: spaTab.id },
-    world: 'MAIN',
-    func: payload => window.postMessage({ type: 'HOUSEHUNT_IFL_ADD', ...payload }, '*'),
-    args: [syncPayload]
-  });
+  const spaOk = await sendIflPayloadToSpa(spaTab, syncPayload, setStatus);
+  if (!spaOk) return;
 
   setStatus(`Sync complete for ${base.name}.`, 'ok');
   showSyncModal({

@@ -55,7 +55,7 @@ hr{border:none;border-top:1px solid #E8E0D2}
 <body>
 <div class="hdr">
   <div class="logo">🏡</div>
-  <div><h1>House Hunt Extractor</h1><div class="sub">Idealista → SPA bridge &nbsp;·&nbsp; v1.8.20</div></div>
+  <div><h1>House Hunt Extractor</h1><div class="sub" id="ext-version">Idealista → SPA bridge</div></div>
 </div>
 
 <div id="not-idealista" class="not-idealista" style="display:none">
@@ -64,10 +64,10 @@ hr{border:none;border-top:1px solid #E8E0D2}
 </div>
 
 <div class="tabs">
-  <button class="tab-btn active" id="tab-extract-btn">Extract</button>
-  <button class="tab-btn" id="tab-sync-btn">Sync IFL</button>
+  <button class="tab-btn" id="tab-extract-btn">Extract</button>
+  <button class="tab-btn active" id="tab-sync-btn">Sync IFL</button>
 </div>
-<div id="tab-extract" class="tab-pane active"><div id="main-ui" class="body">
+<div id="tab-extract" class="tab-pane"><div id="main-ui" class="body">
   <div id="status" class="status idle">Ready — click Extract to scrape this listing.</div>
   <div class="field"><label>Idealista ID</label><div id="f-id" class="val empty">—</div></div>
   <div class="field"><label>Name / Title</label><div id="f-name" class="val empty">—</div></div>
@@ -99,7 +99,7 @@ hr{border:none;border-top:1px solid #E8E0D2}
 </div>
 </div></div><!-- /tab-extract -->
 
-<div id="tab-sync" class="tab-pane">
+<div id="tab-sync" class="tab-pane active">
 <div class="body" style="gap:10px">
   <div style="display:flex;gap:6px;align-items:center">
     <div style="flex:1;font-size:11px;color:#9A9088" id="key-status-line">Server key: <span id="key-set-indicator">not set</span></div>
