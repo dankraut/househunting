@@ -9,7 +9,8 @@ index.html|syncGeoLayouts|Responsive layout sync
 index.html|_mapRefreshGen|Map refresh stale-run guard
 index.html|_safeJsonParse|Safe localStorage JSON parse
 index.html|getPropRouteDate|Unified route date helper
-index.html|getPropRouteSchedule|Scheduled vs proposed date logic
+index.html|fitGeoMapView|Day plan map bounds fit
+index.html|getDayProperties|Day plan property filter including transit
 index.html|propMatchesMapBase|Map base filter including transit
 index.html|isUnassignedProp|Unassigned excluded from All unless filtered
 index.html|isTransitBase|Transit base detection for map and endpoints
