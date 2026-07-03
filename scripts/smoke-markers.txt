@@ -11,12 +11,13 @@ index.html|_safeJsonParse|Safe localStorage JSON parse
 index.html|getPropRouteDate|Unified route date helper
 index.html|getPropRouteSchedule|Scheduled vs proposed date logic
 index.html|propMatchesMapBase|Map base filter including transit
-index.html|markPropsRemovedFromIfl|IFL removed-property marking
+index.html|markPropsRemovedFromIfl|IFL removed-property marking by base grp
+index.html|showIflSyncModal|IFL sync result dismiss modal
 index.html|map-legend-collapsible|Mobile collapsible map legend
 index.html|hh-modules-ready|ES module bootstrap event
 index.html|@media(max-width:767px)|Mobile responsive CSS breakpoint
 functions/api/[[path]].js|ifl-sync|IFL sync API route
-functions/api/[[path]].js|baseGrp && sp.grp|IFL delete by base group
+functions/api/[[path]].js|propOnBaseGrp|IFL delete by base group
 js/bootstrap.js|__hhModulesReady|Module bootstrap flag
 js/config.js|SPA_VERSION|SPA version constant
 js/config.js|LS_MXP_AIRPORT_BACKFILL|MXP airport backfill migration key

@@ -1,5 +1,7 @@
-// sync.js — House Hunt IFL Sync v1.8.22
+// sync.js — House Hunt IFL Sync v1.8.24
 // Handles Idealista Favorites List sync for all bases
+
+const DEFAULT_API_TOKEN = 'jmjk05DK';
 
 // ── Price parsing (Italian Idealista formats) ───────────────────────────────
 function parseItalianEuroAmount(raw) {
@@ -55,7 +57,14 @@ function scrapePriceFromCard(card) {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getApiToken() {
-  return new Promise(res => chrome.storage.local.get('apiToken', d => res(d.apiToken || '')));
+  return new Promise(res => chrome.storage.local.get('apiToken', d => {
+    let t = d.apiToken || '';
+    if (!t && DEFAULT_API_TOKEN) {
+      t = DEFAULT_API_TOKEN;
+      chrome.storage.local.set({ apiToken: t });
+    }
+    res(t);
+  }));
 }
 function getSpaUrlFrag() {
   return new Promise(res => chrome.storage.local.get('spaUrl', d => res(d.spaUrl || 'househunt.pages.dev')));
@@ -184,7 +193,23 @@ function _scrapeIflPage() {
 
   const results = [];
   const seen = new Set();
-  const links = document.querySelectorAll('a[href*="/immobile/"]');
+  function findListRoot() {
+    const selectors = [
+      '[class*="FavoritesList"]',
+      '[class*="favorites-list"]',
+      '[class*="list-items"]',
+      '[class*="items-list"]',
+      'main section',
+      'main',
+    ];
+    for (const sel of selectors) {
+      const el = document.querySelector(sel);
+      if (el && el.querySelector('a[href*="/immobile/"]')) return el;
+    }
+    return document.body;
+  }
+  const listRoot = findListRoot();
+  const links = listRoot.querySelectorAll('a[href*="/immobile/"]');
   for (const link of links) {
     const m = link.href.match(/\/immobile\/(\d+)/);
     if (!m || seen.has(m[1])) continue;
@@ -247,12 +272,16 @@ function _pageDiagnostics() {
   return { url, linkCount, isLogin, bodySnippet };
 }
 
+function normalizePathname(path) {
+  return (path || '').replace(/\/$/, '').replace(/^\/en(?=\/)/, '') || '/';
+}
+
 function urlsRoughlyMatch(tabUrl, targetUrl) {
   try {
     const a = new URL(tabUrl);
     const b = new URL(targetUrl);
     return a.hostname === b.hostname &&
-      a.pathname.replace(/\/$/, '') === b.pathname.replace(/\/$/, '') &&
+      normalizePathname(a.pathname) === normalizePathname(b.pathname) &&
       a.search === b.search;
   } catch (e) { return false; }
 }
@@ -260,7 +289,7 @@ function urlsRoughlyMatch(tabUrl, targetUrl) {
 function buildIflUrl(base) {
   const tok = base.iflToken ? String(base.iflToken) : '';
   if (tok && /^\d+$/.test(tok)) {
-    return `https://www.idealista.it/utente/preferiti/?favoritesListId=${tok}`;
+    return `https://www.idealista.it/en/utente/preferiti/?favoritesListId=${tok}`;
   }
   if (tok) {
     return `https://www.idealista.it/join-favorites-list/${tok}`;
@@ -381,7 +410,8 @@ async function syncBase(base, setStatus) {
 
   // Send ALL properties to SPA — IFL is source of truth; SPA updated to match
   const spaFrag = await getSpaUrlFrag();
-  const spaTab = allTabs.find(t => t.url && t.url.includes(spaFrag));
+  const freshTabs = await new Promise(res => chrome.tabs.query({}, res));
+  const spaTab = freshTabs.find(t => t.url && t.url.includes(spaFrag));
 
   if (!spaTab) {
     setStatus(`SPA tab not found (looking for URL containing "${spaFrag}"). Open the SPA first.`, 'err');
@@ -406,11 +436,13 @@ async function syncBase(base, setStatus) {
       body: JSON.stringify({ baseGrp: base.abbr, iflToken: base.iflToken, baseName: base.name, properties })
     });
     if (r.ok) syncResult = await r.json();
+    else if (r.status === 401) setStatus('Server key rejected — set API key in extension Sync tab.', 'err');
   } catch (e) { /* non-fatal — SPA update follows */ }
 
   syncPayload.serverResult = syncResult;
   await chrome.scripting.executeScript({
     target: { tabId: spaTab.id },
+    world: 'MAIN',
     func: payload => window.postMessage({ type: 'HOUSEHUNT_IFL_ADD', ...payload }, '*'),
     args: [syncPayload]
   });

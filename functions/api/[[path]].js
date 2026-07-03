@@ -541,6 +541,17 @@ export async function onRequest(context) {
       return json({ ok: true, toAdd: toAddEmpty, updated: [], markedDeleted: [] });
     }
     const props = parseProps(dataRaw);
+    const bases = JSON.parse((await env.HH_KV.get('bases')) || '[]');
+    function normalizePropGrp(sp) {
+      if (typeof sp.grp === 'number' && sp.grp > 0 && bases[sp.grp - 1]?.abbr) {
+        sp.grp = bases[sp.grp - 1].abbr;
+      }
+    }
+    function propOnBaseGrp(sp, grp) {
+      if (!grp) return false;
+      normalizePropGrp(sp);
+      return String(sp.grp || '').toUpperCase() === String(grp).toUpperCase();
+    }
     const toAdd = [], updated = [], markedDeleted = [];
     const now = Date.now();
     let dirty = false;
@@ -647,7 +658,7 @@ export async function onRequest(context) {
         dirty = true;
         updated.push({ id: sid, fields: ['status'] });
       }
-      if (baseGrp && sp.grp !== baseGrp) {
+      if (baseGrp && !propOnBaseGrp(sp, baseGrp)) {
         sp.grp = baseGrp;
         touchField(sp, 'grp');
         dirty = true;
@@ -659,7 +670,7 @@ export async function onRequest(context) {
     // Properties on this base but no longer in the scraped IFL
     for (const sp of props) {
       const sid = String(sp.id);
-      if (baseGrp && sp.grp !== baseGrp) continue;
+      if (baseGrp && !propOnBaseGrp(sp, baseGrp)) continue;
       if (iflIds.has(sid)) continue;
       if (sp.status === 'Deleted-Idealista') continue;
       sp.status = 'Deleted-Idealista';
