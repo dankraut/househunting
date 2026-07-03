@@ -202,6 +202,9 @@ export function createLocationModule(api) {
         return { lat, lng };
       }
     }
+    if (p.lat != null && p.lng != null) {
+      return { lat: p.lat, lng: p.lng };
+    }
     const addr = getPropAddress(p);
     if (!addr) {
       clearEntityCoords(p);
@@ -255,6 +258,8 @@ export function createLocationModule(api) {
     }
     if (getPropGps(p)) {
       applyGpsToEntity(p, p.gps);
+    } else if (p.lat != null && p.lng != null) {
+      p.gps = normalizeGpsString(`${p.lat},${p.lng}`);
     } else {
       p.gps = '';
       clearEntityCoords(p);
