@@ -63,7 +63,17 @@ jobs:
             const repo = context.repo.repo;
             const prNum = Number('${{ steps.pr.outputs.number }}');
             await github.rest.pulls.update({ owner, repo, pull_number: prNum, draft: false });
-            core.info(`PR #${prNum} marked ready for review.`);
+            for (let i = 0; i < 15; i++) {
+              const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+              if (!pr.draft) {
+                core.info(`PR #${prNum} is ready for review.`);
+                return;
+              }
+              core.info(`Waiting for PR #${prNum} to leave draft… (${i + 1}/15)`);
+              await new Promise(r => setTimeout(r, 2000));
+            }
+            core.setFailed(`PR #${prNum} is still a draft after ready request.`);
+            return;
 
       - name: Wait for Cloudflare Pages and merge
         if: steps.pr.outputs.skip == 'false'
@@ -78,6 +88,16 @@ jobs:
             let { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
             if (pr.draft) {
               await github.rest.pulls.update({ owner, repo, pull_number: prNum, draft: false });
+              for (let i = 0; i < 15; i++) {
+                ({ data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum }));
+                if (!pr.draft) break;
+                core.info(`Waiting for PR #${prNum} to leave draft… (${i + 1}/15)`);
+                await new Promise(r => setTimeout(r, 2000));
+              }
+              if (pr.draft) {
+                core.setFailed(`PR #${prNum} is still a draft; cannot merge.`);
+                return;
+              }
               core.info(`PR #${prNum} marked ready for review.`);
             }
 
