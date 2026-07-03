@@ -5,7 +5,12 @@ import { createLocationModule } from './location.js';
 import { createPropSyncConflict } from './property-sync-conflict.js';
 
 function getApiToken() {
-  return localStorage.getItem('hh_api_key') || '';
+  let t = localStorage.getItem('hh_api_key');
+  if (!t && config.API_TOKEN) {
+    t = config.API_TOKEN;
+    try { localStorage.setItem('hh_api_key', t); } catch (e) {}
+  }
+  return t || '';
 }
 
 const HHApi = createApiClient(getApiToken);
