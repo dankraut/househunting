@@ -193,6 +193,8 @@ function Open-PullRequest {
         throw "gh pr create failed: $url"
     }
     Write-Host "    Created PR: $url" -ForegroundColor DarkGray
+    # Ensure not left as draft (REST draft:false is unreliable; gh pr ready uses GraphQL).
+    & gh pr ready $url 2>$null | Out-Null
     return $url
 }
 

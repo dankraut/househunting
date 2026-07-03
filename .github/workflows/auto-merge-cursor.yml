@@ -62,7 +62,22 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const prNum = Number('${{ steps.pr.outputs.number }}');
-            await github.rest.pulls.update({ owner, repo, pull_number: prNum, draft: false });
+
+            async function markDraftReady(prNum) {
+              const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+              if (!pr.draft) return;
+              // REST pulls.update({ draft: false }) is ignored by GitHub; use GraphQL.
+              await github.graphql(
+                `mutation($id: ID!) {
+                  markPullRequestAsReadyForReview(input: { pullRequestId: $id }) {
+                    pullRequest { number isDraft }
+                  }
+                }`,
+                { id: pr.node_id }
+              );
+            }
+
+            await markDraftReady(prNum);
             for (let i = 0; i < 15; i++) {
               const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
               if (!pr.draft) {
@@ -85,9 +100,22 @@ jobs:
             const prNum = Number('${{ steps.pr.outputs.number }}');
             const requiredCheck = 'Cloudflare Pages';
 
+            async function markDraftReady(prNum) {
+              const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+              if (!pr.draft) return;
+              await github.graphql(
+                `mutation($id: ID!) {
+                  markPullRequestAsReadyForReview(input: { pullRequestId: $id }) {
+                    pullRequest { number isDraft }
+                  }
+                }`,
+                { id: pr.node_id }
+              );
+            }
+
             let { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
             if (pr.draft) {
-              await github.rest.pulls.update({ owner, repo, pull_number: prNum, draft: false });
+              await markDraftReady(prNum);
               for (let i = 0; i < 15; i++) {
                 ({ data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum }));
                 if (!pr.draft) break;
