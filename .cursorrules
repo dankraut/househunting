@@ -2,15 +2,23 @@
 
 ## Codebase Boundaries & Constraints
 - NEVER read, modify, or reference any files in any directory or sub-directory labeled "zArchive".
-- You operate entirely on the local files in this workspace. Do not attempt to use external browser tools unless explicitly requested. You can suggest using external browser tools when you feel they are needed or materially beneficial.
+- You operate entirely on the local files in this workspace. Do not attempt to use external browser tools unless explicitly requested. You can suggest using external browser tools when they feel needed or materially beneficial.
 
 ## Workflow & State Management
 - CRITICAL: Always read the `PROJECT_STATE` file before analyzing the codebase or suggesting any code changes. This is the source of truth for the current development phase.
 - When applying changes, modify the local files directly. Do not assume or attempt external Git operations unless using Agent mode under explicit instruction.
 
+## Ship pipeline (Desktop = Cloud = GitHub → Cloudflare)
+- **Never push or merge directly to `main`.** Branch protection requires a PR and a passing Cloudflare Pages check.
+- **Branch naming:** `cursor/<description>-fb87` (same convention as Cursor Cloud agents).
+- **Ship steps:** edit on branch → smoke check → bump versions → `.\scripts\deploy.ps1` (or Run Task **Ship**) → PR opens → `.github/workflows/auto-merge-cursor.yml` squash-merges when Cloudflare Pages succeeds.
+- **After merge:** GitHub Desktop Pull on `main`; hard-refresh SPA; if `extension/` changed, pull and Reload unpacked extension in Chrome.
+- Bump **Extension** version only when files under `extension/` change; always bump **SPA** version when shipping SPA/API changes.
+
 ## Versioning & Deployment Rules
-- Always update both the SPA and Chrome Extension version numbers in their respective configuration/manifest files whenever creating new files or implementing feature enhancements.
-- After successfully writing code modifications to the workspace, print a summary message that clearly lists the new version numbers for both the SPA and the Extension so I can track them for the upcoming Git commit.
+- Always update SPA version in `js/config.js` (and matching comment in `index.html` when present) when shipping SPA/API changes.
+- Update Extension version in `extension/manifest.json` only when `extension/` files change.
+- After successfully writing code modifications to the workspace, print a summary message that clearly lists the new version numbers for the SPA and Extension (when applicable) so they can be tracked for the upcoming Git commit.
 
 ## Code Style & Tech Stack Context
 - Frontend: Single Page Application (SPA) deployed on Cloudflare Pages. Keep bundle sizes optimized and use efficient asset routing.

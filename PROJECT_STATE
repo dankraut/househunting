@@ -1,6 +1,6 @@
 # PROJECT_STATE — House Hunt (source of truth for agents & deploy)
 
-Last updated: 2026-07-02
+Last updated: 2026-07-03
 
 ## Current versions
 
@@ -10,7 +10,7 @@ Last updated: 2026-07-02
 | Extension | v1.8.22 | extension/manifest.json |
 | API | (no semver) | functions/api/[[path]].js header comment |
 
-Always bump SPA + Extension together when shipping changes. Run `scripts/smoke-check.sh` before deploy.
+Bump SPA when shipping SPA/API changes; bump Extension only when `extension/` files change. Run `scripts/smoke-check.sh` before ship.
 
 ## Development phase
 
@@ -66,9 +66,26 @@ Agents: do **not** delete or replace wholesale. Patch only the section you are c
 - [ ] bootstrap.js exposes HHApi, HHLoc, HHPropConflict, config constants
 - [ ] Do not read or modify anything under `zArchive/`
 
+## Ship pipeline (Desktop = Cloud)
+
+Production reaches **Cloudflare Pages only when a PR merges to `main`**. Direct push to `main` is blocked.
+
+| Step | Desktop (Cursor / VS Code) | Cloud agent |
+|------|------------------------------|-------------|
+| 1 | `git checkout main && git pull` | same |
+| 2 | Branch `cursor/<description>-fb87` | same |
+| 3 | Edit, smoke check, bump versions | same |
+| 4 | `.\scripts\deploy.ps1` or Run Task **Ship** | commit, push, open PR |
+| 5 | Auto-merge when Cloudflare Pages passes | same workflow |
+| 6 | Pull `main`; refresh SPA; reload extension if needed | user pulls locally |
+
+`deploy.ps1` / `push.ps1`: commit → push branch (never `main`) → open PR via `gh` → `.github/workflows/auto-merge-cursor.yml` squash-merges.
+
+**On `main` with local changes:** pass `-Description 'my-feature'` to create `cursor/my-feature-fb87`.
+
 ## Smoke check
 
-Before every deploy:
+Before every ship:
 
 ```bash
 ./scripts/smoke-check.sh
@@ -91,8 +108,9 @@ bash ./scripts/smoke-check.sh
 3. Create branch: `cursor/<description>-fb87`
 4. Minimal diff — never replace all of `index.html`
 5. Run smoke check locally
-6. Bump SPA + Extension versions
-7. PR → merge → deploy (do not hand-commit "Deploy vX" on main with unrelated file churn)
+6. Bump SPA version (Extension only if `extension/` changed)
+7. Ship via PR — **never push or merge to `main` directly**
+8. After auto-merge: user pulls `main`, hard-refreshes SPA, reloads extension if needed
 
 ## Lost-feature review (2026-07-02)
 
