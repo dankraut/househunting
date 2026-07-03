@@ -158,7 +158,16 @@ function isGenericIdealistaTypeName(name) {
   return /^(villa|house|flat|apartment|rustic|chalet|loft|bungalow|farmhouse|casale|rustico)\s*$/i.test(n);
 }
 
+function idealistaHeadlineName(rawTitle) {
+  const t = (rawTitle || '').trim();
+  if (!t || isGenericIdealistaTypeName(t)) return '';
+  if (/\s+in\s+/i.test(t)) return t;
+  return '';
+}
+
 function resolvePropNameFromScrape(scraped) {
+  const headline = idealistaHeadlineName(scraped.cardTitle || scraped.title);
+  if (headline) return headline;
   const nm = (scraped.name || scraped.title || '').trim();
   if (nm && !isGenericIdealistaTypeName(nm)) return nm;
   const town = (scraped.town || scraped.commune || '').trim();
@@ -551,8 +560,11 @@ export async function onRequest(context) {
       if (scraped.rooms && scraped.rooms !== sp.rooms) { sp.rooms = scraped.rooms; changes.push('rooms'); }
       if (scraped.size && scraped.size !== sp.size) { sp.size = scraped.size; changes.push('size'); }
       const candidate = resolvePropNameFromScrape(scraped);
-      if (candidate && !isGenericIdealistaTypeName(candidate) && isGenericIdealistaTypeName(sp.name)) {
-        if (candidate !== sp.name) { sp.name = candidate; changes.push('name'); }
+      if (candidate && candidate !== sp.name) {
+        const headline = idealistaHeadlineName(scraped.cardTitle || scraped.title);
+        if (headline || isGenericIdealistaTypeName(sp.name)) {
+          sp.name = candidate; changes.push('name');
+        }
       }
       if (scraped.commune && scraped.commune !== sp.commune) { sp.commune = scraped.commune; changes.push('commune'); }
       if (scraped.town && scraped.town !== sp.town) { sp.town = scraped.town; changes.push('town'); }
