@@ -344,7 +344,7 @@ export function createLocationModule(api) {
     }
   }
 
-  async function runLocSync(prefix, scratch, { gps, address, isBase, mode, onSuccess, preserveEmptyAddress = false } = {}) {
+  async function runLocSync(prefix, scratch, { gps, address, isBase, mode, onSuccess }) {
     if (_locSyncing) return { skipped: true };
     _locSyncing = true;
     setLocError(prefix, {});
@@ -364,13 +364,10 @@ export function createLocationModule(api) {
       if (ids) {
         const addrEl = document.getElementById(ids.address);
         const gpsEl = document.getElementById(ids.gps);
-        const skipAddrFill = preserveEmptyAddress && addrEl && !addrEl.value.trim();
-        if (addrEl && !skipAddrFill) addrEl.value = scratch.address || '';
+        if (addrEl) addrEl.value = scratch.address || '';
         if (gpsEl) gpsEl.value = scratch.gps || '';
       }
-      const msg = r.source === 'gps'
-        ? (preserveEmptyAddress ? 'Coordinates verified.' : 'Town updated from GPS.')
-        : r.source === 'geocode' ? 'GPS updated from town.' : '';
+      const msg = r.source === 'gps' ? 'Town updated from GPS.' : r.source === 'geocode' ? 'GPS updated from town.' : '';
       setLocSuccess(prefix, msg);
       if (onSuccess) onSuccess(scratch, r);
       return r;
