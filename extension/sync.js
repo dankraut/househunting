@@ -144,6 +144,13 @@ function _scrapeIflPage() {
     return /^(villa|house|flat|apartment|rustic|chalet|loft|bungalow|farmhouse|casale|rustico)\s*$/i.test(n);
   }
 
+  function idealistaHeadlineName(rawTitle) {
+    const t = (rawTitle || '').trim();
+    if (!t || isGenericIdealistaTypeName(t)) return '';
+    if (/\s+in\s+/i.test(t)) return t;
+    return '';
+  }
+
   function parseIflListingTitle(rawTitle, cardText) {
     let title = (rawTitle || '').trim();
     const text = cardText || title;
@@ -213,9 +220,11 @@ function _scrapeIflPage() {
 
     const parsed = parseIflListingTitle(title, text);
     const parsedName = parsed.name || title;
+    const headline = idealistaHeadlineName(title);
+    const resolvedName = headline || (isGenericIdealistaTypeName(parsedName) ? '' : parsedName);
 
     results.push({ id, price, cardTitle: title, title,
-      name: isGenericIdealistaTypeName(parsedName) ? '' : parsedName,
+      name: resolvedName,
       commune: parsed.commune, town: parsed.town || parsed.commune,
       prov: parsed.prov,
       rooms: roomsM ? parseInt(roomsM[1]) : 0,
