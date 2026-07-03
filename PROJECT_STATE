@@ -6,7 +6,7 @@ Last updated: 2026-07-03
 
 | Component | Version | File |
 |-----------|---------|------|
-| SPA | v3.13.16 | js/config.js → SPA_VERSION |
+| SPA | v3.13.17 | js/config.js → SPA_VERSION |
 | Extension | v1.8.23 | extension/manifest.json |
 | API | (no semver) | functions/api/[[path]].js header comment |
 
@@ -57,7 +57,7 @@ Agents: do **not** delete or replace wholesale. Patch only the section you are c
 - [ ] Idealista IFL is **source of truth** — sync updates SPA to match IFL (no write-back to Idealista)
 - [ ] On sync: base props not in IFL → `Deleted-Idealista`
 - [ ] On sync: IFL prop on different base → move to syncing base
-- [ ] On sync: IFL prop with eliminated status → restore to `Working`
+- [ ] On sync: IFL prop with eliminated status → restore to `Reset` (full property recalc)
 - [ ] On sync: IFL prop missing from SPA → add with syncing base
 - [ ] `markPropsRemovedFromIfl()` — mark by **base grp**, not only `sourceIfl` token
 - [ ] Server `/api/ifl-sync` same IFL-as-source-of-truth logic

@@ -641,7 +641,7 @@ export async function onRequest(context) {
         continue;
       }
       if (ELIM_STATUSES.has(sp.status)) {
-        sp.status = 'Working';
+        sp.status = 'Reset';
         touchField(sp, 'status');
         sp._v = now;
         dirty = true;
