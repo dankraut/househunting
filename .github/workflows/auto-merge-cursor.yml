@@ -56,39 +56,20 @@ jobs:
 
       - name: Mark draft PR ready for review
         if: steps.pr.outputs.skip == 'false' && steps.pr.outputs.draft == 'true'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const prNum = Number('${{ steps.pr.outputs.number }}');
-
-            async function markDraftReady(prNum) {
-              const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
-              if (!pr.draft) return;
-              // REST pulls.update({ draft: false }) is ignored by GitHub; use GraphQL.
-              await github.graphql(
-                `mutation($id: ID!) {
-                  markPullRequestAsReadyForReview(input: { pullRequestId: $id }) {
-                    pullRequest { number isDraft }
-                  }
-                }`,
-                { id: pr.node_id }
-              );
-            }
-
-            await markDraftReady(prNum);
-            for (let i = 0; i < 15; i++) {
-              const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
-              if (!pr.draft) {
-                core.info(`PR #${prNum} is ready for review.`);
-                return;
-              }
-              core.info(`Waiting for PR #${prNum} to leave draft… (${i + 1}/15)`);
-              await new Promise(r => setTimeout(r, 2000));
-            }
-            core.setFailed(`PR #${prNum} is still a draft after ready request.`);
-            return;
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr ready "${{ steps.pr.outputs.number }}"
+          for i in $(seq 1 15); do
+            if [ "$(gh pr view "${{ steps.pr.outputs.number }}" --json isDraft --jq .isDraft)" = "false" ]; then
+              echo "PR #${{ steps.pr.outputs.number }} is ready for review."
+              exit 0
+            fi
+            echo "Waiting for PR to leave draft… ($i/15)"
+            sleep 2
+          done
+          echo "PR #${{ steps.pr.outputs.number }} is still a draft after ready request." >&2
+          exit 1
 
       - name: Wait for Cloudflare Pages and merge
         if: steps.pr.outputs.skip == 'false'
@@ -100,33 +81,10 @@ jobs:
             const prNum = Number('${{ steps.pr.outputs.number }}');
             const requiredCheck = 'Cloudflare Pages';
 
-            async function markDraftReady(prNum) {
-              const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
-              if (!pr.draft) return;
-              await github.graphql(
-                `mutation($id: ID!) {
-                  markPullRequestAsReadyForReview(input: { pullRequestId: $id }) {
-                    pullRequest { number isDraft }
-                  }
-                }`,
-                { id: pr.node_id }
-              );
-            }
-
             let { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
             if (pr.draft) {
-              await markDraftReady(prNum);
-              for (let i = 0; i < 15; i++) {
-                ({ data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum }));
-                if (!pr.draft) break;
-                core.info(`Waiting for PR #${prNum} to leave draft… (${i + 1}/15)`);
-                await new Promise(r => setTimeout(r, 2000));
-              }
-              if (pr.draft) {
-                core.setFailed(`PR #${prNum} is still a draft; cannot merge.`);
-                return;
-              }
-              core.info(`PR #${prNum} marked ready for review.`);
+              core.setFailed(`PR #${prNum} is still a draft; cannot merge. Mark it ready first.`);
+              return;
             }
 
             for (let attempt = 0; attempt < 30; attempt++) {

@@ -6,7 +6,7 @@ Last updated: 2026-07-03
 
 | Component | Version | File |
 |-----------|---------|------|
-| SPA | v3.13.28 | js/config.js → SPA_VERSION |
+| SPA | v3.13.29 | js/config.js → SPA_VERSION |
 | Extension | v1.8.26 | extension/manifest.json |
 | API | (no semver) | functions/api/[[path]].js header comment |
 
@@ -90,7 +90,7 @@ Production only changes when a **cursor/\* PR merges to `main`**. If a PR is ope
 3. Re-run **Auto-merge cursor agent PRs** workflow (Actions tab → Run workflow) if checks passed but merge did not run.
 4. After merge: pull `main`, hard-refresh https://househunt.pages.dev; reload extension only if `extension/` changed.
 
-**Note:** GitHub REST `draft: false` does not undraft PRs; auto-merge uses GraphQL `markPullRequestAsReadyForReview`.
+**Note:** GitHub REST `draft: false` does not undraft PRs; auto-merge uses `gh pr ready` (GraphQL `markPullRequestAsReadyForReview` is unavailable on this repo token).
 
 **On `main` with local changes:** pass `-Description 'my-feature'` to create `cursor/my-feature-fb87`.
 
