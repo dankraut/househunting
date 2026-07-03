@@ -21,3 +21,4 @@ functions/api/[[path]].js|propOnBaseGrp|IFL delete by base group
 js/bootstrap.js|__hhModulesReady|Module bootstrap flag
 js/config.js|SPA_VERSION|SPA version constant
 js/config.js|LS_MXP_AIRPORT_BACKFILL|MXP airport backfill migration key
+extension/spa_relay.js|RELAY_IFL_SYNC|SPA content-script IFL relay

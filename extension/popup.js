@@ -1,4 +1,4 @@
-// popup.js — House Hunt Chrome Extension v1.8.20
+// popup.js — House Hunt Chrome Extension (see manifest.json for version)
 // MV3-compliant: no inline event handlers, all listeners via addEventListener
 
 let extracted = null;
@@ -7,6 +7,10 @@ let _bases = [];
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  const ver = chrome.runtime.getManifest().version;
+  const verEl = document.getElementById('ext-version');
+  if (verEl) verEl.textContent = `Idealista → SPA bridge · v${ver}`;
+
   document.getElementById('btn-extract').addEventListener('click', doExtract);
   document.getElementById('btn-send').addEventListener('click', doSend);
   document.getElementById('spa-url-input').addEventListener('change', e => {
@@ -40,6 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('tab-sync-btn')?.addEventListener('click', () => switchTab('sync'));
   document.getElementById('sync-modal-close')?.addEventListener('click', closeSyncModal);
   document.getElementById('sync-modal-x')?.addEventListener('click', closeSyncModal);
+  switchTab('sync');
   initSyncTab();
 
   // Load bases for the extract-tab base selector
@@ -159,11 +164,21 @@ async function doSend() {
 
   const payload = { ...extracted, grp };
   try {
-    await chrome.scripting.executeScript({
-      target: { tabId: spaTab.id },
-      func: payload => { window.postMessage({ type: 'HOUSEHUNT_BROKER', ...payload }, '*'); },
-      args: [payload],
-    });
+    let sent = false;
+    try {
+      const resp = await chrome.tabs.sendMessage(spaTab.id, { type: 'RELAY_BROKER', payload });
+      sent = !!resp?.ok;
+    } catch (e) {
+      if (!/Receiving end does not exist|Could not establish connection/i.test(e?.message || '')) throw e;
+    }
+    if (!sent) {
+      await chrome.scripting.executeScript({
+        target: { tabId: spaTab.id },
+        world: 'MAIN',
+        func: p => { window.postMessage({ type: 'HOUSEHUNT_BROKER', ...p }, '*'); },
+        args: [payload],
+      });
+    }
     setStatus('✓ Sent! Check the SPA tab.', 'ok');
     document.getElementById('btn-send').style.display = 'none';
     setTimeout(() => window.close(), 2000);
