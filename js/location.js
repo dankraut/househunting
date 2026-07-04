@@ -130,7 +130,7 @@ export function createLocationModule(api) {
     return null;
   }
 
-  async function syncEntityLocation(entity, { gps, address, isBase = false, mode = 'auto' } = {}) {
+  async function syncEntityLocation(entity, { gps, address, isBase = false, mode = 'auto', overwriteAddress = true } = {}) {
     const gpsIn = gps !== undefined ? String(gps).trim() : (isBase ? getBaseGps(entity) : getPropGps(entity));
     let addrIn = address !== undefined ? String(address).trim() : (isBase ? (entity.address || '').trim() : getPropAddress(entity));
 
@@ -156,25 +156,31 @@ export function createLocationModule(api) {
       if (!applyGpsToEntity(entity, gpsIn)) {
         return { ok: false, error: 'Invalid GPS coordinates' };
       }
-      const rev = await reverseGeocode(entity.lat, entity.lng);
-      if (rev) {
-        const label = formatItalianLocation(rev);
-        if (label) entity.address = label;
-        if (!isBase) {
-          if (rev.town) entity.town = rev.town;
-          if (rev.commune) entity.commune = rev.commune;
-          if (rev.prov) entity.prov = String(rev.prov).toUpperCase();
+      // Only reverse-geocode and update the address when it is blank or the
+      // caller has confirmed overwriting the existing address.
+      const hasExistingAddress = !!(entity.address && entity.address.trim());
+      if (!hasExistingAddress || overwriteAddress) {
+        const rev = await reverseGeocode(entity.lat, entity.lng);
+        if (rev) {
+          const label = formatItalianLocation(rev);
+          if (label) entity.address = label;
+          if (!isBase) {
+            if (rev.town) entity.town = rev.town;
+            if (rev.commune) entity.commune = rev.commune;
+            if (rev.prov) entity.prov = String(rev.prov).toUpperCase();
+          }
         }
       }
       return { ok: true, source: 'gps' };
     };
 
     if (mode === 'address') {
+      // GPS takes precedence — if GPS is already set, editing the address field
+      // does not touch coordinates (Rules 4 & 5).
+      if (gpsIn) return { ok: true, source: 'noop' };
       if (addrIn) return applyForward();
       entity.gps = '';
       clearEntityCoords(entity);
-      if (!addrIn && !gpsIn) return { ok: true, source: 'cleared' };
-      if (gpsIn) return applyReverse();
       return { ok: true, source: 'cleared' };
     }
 
@@ -349,13 +355,13 @@ export function createLocationModule(api) {
     }
   }
 
-  async function runLocSync(prefix, scratch, { gps, address, isBase, mode, onSuccess }) {
+  async function runLocSync(prefix, scratch, { gps, address, isBase, mode, overwriteAddress = true, onSuccess }) {
     if (_locSyncing) return { skipped: true };
     _locSyncing = true;
     setLocError(prefix, {});
     setLocLoading(prefix, true);
     try {
-      const r = await syncEntityLocation(scratch, { gps, address, isBase, mode });
+      const r = await syncEntityLocation(scratch, { gps, address, isBase, mode, overwriteAddress });
       if (!r.ok) {
         const err = r.error || 'Location lookup failed';
         if (mode === 'gps' || (mode === 'address' && !address)) {
