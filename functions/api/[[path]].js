@@ -13,7 +13,7 @@ const LOCK_TTL_SEC = 120;
 const MERGE_FIELDS = [
   'status', 'schedDate', 'schedTime', 'proposedDate', 'lastContacted',
   'firmName', 'firmPhone', 'broker', 'brokerPhone', 'brokerEmail',
-  'address', 'gps', 'userPlannedDate', 'userPlannedTime', 'notes', 'realtorUrl', 'sourceIfl', 'grp',
+  'address', 'gps', 'idealistaGps', 'userPlannedDate', 'userPlannedTime', 'notes', 'realtorUrl', 'sourceIfl', 'grp',
   'commune', 'town', 'prov', 'driveTimes', 'driveMiles', 'refAirport', 'name', 'price', 'rooms', 'size', 'lat', 'lng',
   'elevation', 'elevationCoordsKey',
 ];
