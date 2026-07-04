@@ -111,14 +111,14 @@ async function doExtract() {
     setField('f-name',   data.title       || null);
     setField('f-broker', data.broker      || null);
     setField('f-phone',  data.phone       || null);
-    setField('f-loc',    data.location    || null);
+    setField('f-loc',    data.location    || data.address || null);
     setField('f-town',   [data.town, data.prov ? `(${data.prov})` : null].filter(Boolean).join(' ') || null);
     setField('f-price',    data.price      ? formatPriceK(data.price)  : null);
     setField('f-rooms',    data.rooms      ? String(data.rooms)  : null);
     setField('f-size',     data.size       ? `${data.size} m²`  : null);
     setField('f-realtorUrl', data.realtorUrl || null);
 
-    const found = [data.broker, data.phone, data.location, data.price, data.rooms, data.size, data.town, data.realtorUrl]
+    const found = [data.broker, data.phone, data.location || data.address, data.price, data.rooms, data.size, data.town, data.realtorUrl]
       .filter(Boolean).length;
     setStatus(
       found > 0
@@ -465,6 +465,16 @@ function extractFromPage() {
   result.town   = strip(result.town);
   result.prov   = strip(result.prov);
   result.title  = strip(result.title);
+
+  // Full address / town — sent so the SPA can geocode a location even when the
+  // listing exposes no GPS coordinates (GPS fields accept towns/addresses).
+  (function () {
+    const parts = [result.commune, result.town].filter(Boolean);
+    let addr = parts.join(', ');
+    if (result.prov) addr += (addr ? ', ' : '') + String(result.prov).toUpperCase();
+    if (addr && !/italy/i.test(addr)) addr += ', Italy';
+    result.address = addr;
+  })();
 
   if (result.location) result.gps = result.location;
   return result;

@@ -54,6 +54,12 @@ export function createLocationModule(api) {
     return `${Number(lat.toFixed(6))},${Number(lng.toFixed(6))}`;
   }
 
+  /** True when the raw string parses as GPS coordinates (decimal or DMS). */
+  function isGpsCoords(raw) {
+    const [lat, lng] = parseGPS(raw);
+    return lat != null && lng != null;
+  }
+
   function formatItalianLocation(geo) {
     if (!geo) return '';
     const town = geo.town || geo.commune || '';
@@ -182,7 +188,24 @@ export function createLocationModule(api) {
 
     const applyReverse = async () => {
       if (!applyGpsToEntity(entity, gpsIn)) {
-        return { ok: false, error: 'Invalid GPS coordinates' };
+        // The GPS field holds free text (a town or full address) rather than
+        // coordinates — forward-geocode it so GPS inputs accept towns/addresses.
+        const geo = await geocodeAddress(gpsIn);
+        if (!geo) {
+          return { ok: false, error: 'Enter GPS coordinates, a town, or a full address' };
+        }
+        entity.lat = geo.lat;
+        entity.lng = geo.lng;
+        entity.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
+        const label = formatItalianLocation(geo);
+        if (label) entity.address = label;
+        else if (!entity.address) entity.address = gpsIn;
+        if (!isBase) {
+          if (geo.town) entity.town = geo.town;
+          if (geo.commune) entity.commune = geo.commune;
+          if (geo.prov) entity.prov = String(geo.prov).toUpperCase();
+        }
+        return { ok: true, source: 'geocode' };
       }
       if (addrIn && !overwriteTown) {
         applyAddressText(entity, addrIn, isBase);
@@ -399,7 +422,9 @@ export function createLocationModule(api) {
       let townOverwrite = overwriteTown;
       const hasGps = !!(gps && String(gps).trim());
       const hasAddr = !!(address && String(address).trim());
-      if (syncMode === 'gps' && hasGps && hasAddr && townOverwrite !== true) {
+      // Only prompt to replace the town when the GPS field holds real coordinates.
+      // Free-text (town/address) in the GPS field is geocoded and always wins.
+      if (syncMode === 'gps' && hasGps && hasAddr && isGpsCoords(gps) && townOverwrite !== true) {
         if (townOverwrite === false) {
           // caller declined overwrite
         } else if (typeof confirm === 'function') {
@@ -455,6 +480,7 @@ export function createLocationModule(api) {
     getBaseGps,
     clearEntityCoords,
     normalizeGpsString,
+    isGpsCoords,
     formatItalianLocation,
     applyGpsToEntity,
     geocodeAddress,

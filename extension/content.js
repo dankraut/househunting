@@ -245,8 +245,21 @@
     result.prov    = strip(result.prov);
     result.title   = strip(result.title);
 
+    // Full address / town — sent so the SPA can geocode a location even when the
+    // listing exposes no GPS coordinates (GPS fields accept towns/addresses).
+    result.address = buildFullAddress(result.commune, result.town, result.prov);
+
     if (result.location) result.gps = result.location;
     return result;
+  }
+
+  // Build "Commune, Town, PROV, Italy" from the parts scraped off a listing.
+  function buildFullAddress(commune, town, prov) {
+    const parts = [commune, town].filter(Boolean);
+    let addr = parts.join(', ');
+    if (prov) addr += (addr ? ', ' : '') + String(prov).toUpperCase();
+    if (addr && !/italy/i.test(addr)) addr += ', Italy';
+    return addr;
   }
 
   // ── Toast ────────────
