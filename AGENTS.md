@@ -27,7 +27,8 @@ All `/api/*` calls require `Authorization: Bearer jmjk05DK` (or `?tk=jmjk05DK`).
 - **Lint / pre-ship validation:** `bash scripts/smoke-check.sh` (checks regression markers in `scripts/smoke-markers.txt` and SPA/extension version alignment).
 - **Automated tests:** none in this repo.
 - **Build:** none (static assets + edge Functions).
-- The Windows ship tooling (`deploy.cmd`, `scripts/*.ps1`) is PowerShell/Windows-only and is only for the deploy pipeline; it is not needed to run or test locally.
+- **Ship (Cloud agents):** after editing, run `bash scripts/ship.sh` — it smoke-checks, commits, pushes the current `cursor/*` branch, and opens a **ready** (non-draft) PR via `gh`. Do **not** use draft PR tools or wait for manual approval; auto-merge runs when Cloudflare Pages passes (see `.github/workflows/auto-merge-cursor.yml`).
+- The Windows ship tooling (`deploy.cmd`, `scripts/*.ps1`) mirrors the same pipeline for Desktop.
 
 ### Chrome extension (optional)
 `extension/` is Manifest V3, loaded unpacked in Chrome. It scrapes Idealista and syncs to the SPA/API; testing it requires Chrome + an Idealista login, so it is not part of the automated local run.
