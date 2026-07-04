@@ -2,10 +2,17 @@ name: Auto-merge cursor agent PRs
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
   check_suite:
     types: [completed]
+  schedule:
+    # Safety sweep: promote stuck draft cursor/* PRs after Cloudflare Pages passes
+    - cron: '*/15 * * * *'
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Optional PR number to promote/merge (manual recovery)'
+        required: false
 
 permissions:
   contents: write
@@ -20,124 +27,203 @@ jobs:
   automerge:
     runs-on: ubuntu-latest
     steps:
-      - name: Find open cursor PR for this event
-        id: pr
+      - name: Promote draft cursor PRs and merge when Cloudflare Pages passes
         uses: actions/github-script@v7
         with:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            let pr = context.payload.pull_request;
-
-            if (!pr && context.payload.check_suite) {
-              const sha = context.payload.check_suite.head_sha;
-              const { data } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-                owner, repo, commit_sha: sha
-              });
-              pr = data.find(p =>
-                p.state === 'open' &&
-                p.head.ref.startsWith('cursor/')
-              );
-            }
-
-            if (!pr) {
-              core.setOutput('skip', 'true');
-              return;
-            }
-
-            core.setOutput('skip', 'false');
-            core.setOutput('number', String(pr.number));
-            core.setOutput('draft', String(!!pr.draft));
-            core.setOutput('sha', pr.head.sha);
-
-      - name: Exit if not a cursor PR
-        if: steps.pr.outputs.skip == 'true'
-        run: echo "No cursor/* PR to process."
-
-      - name: Mark draft PR ready for review
-        if: steps.pr.outputs.skip == 'false' && steps.pr.outputs.draft == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh pr ready "${{ steps.pr.outputs.number }}"
-          for i in $(seq 1 15); do
-            if [ "$(gh pr view "${{ steps.pr.outputs.number }}" --json isDraft --jq .isDraft)" = "false" ]; then
-              echo "PR #${{ steps.pr.outputs.number }} is ready for review."
-              exit 0
-            fi
-            echo "Waiting for PR to leave draft… ($i/15)"
-            sleep 2
-          done
-          echo "PR #${{ steps.pr.outputs.number }} is still a draft after ready request." >&2
-          exit 1
-
-      - name: Wait for Cloudflare Pages and merge
-        if: steps.pr.outputs.skip == 'false'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const prNum = Number('${{ steps.pr.outputs.number }}');
             const requiredCheck = 'Cloudflare Pages';
+            const manualPr = '${{ github.event.inputs.pr_number }}'.trim();
 
-            let { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
-            if (pr.draft) {
-              core.setFailed(`PR #${prNum} is still a draft; cannot merge. Mark it ready first.`);
-              return;
+            async function listOpenCursorPrs() {
+              const out = [];
+              for (let page = 1; page <= 5; page++) {
+                const { data } = await github.rest.pulls.list({
+                  owner, repo, state: 'open', per_page: 100, page,
+                });
+                if (!data.length) break;
+                out.push(...data.filter(p => p.head.ref.startsWith('cursor/')));
+                if (data.length < 100) break;
+              }
+              return out;
             }
 
-            for (let attempt = 0; attempt < 30; attempt++) {
-              const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
-              if (pr.merged) {
-                core.info('PR already merged.');
-                return;
-              }
-              if (!pr.mergeable && pr.mergeable_state === 'dirty') {
-                core.setFailed('PR has merge conflicts.');
-                return;
+            async function findPrsToProcess() {
+              if (manualPr) {
+                const n = Number(manualPr);
+                if (!Number.isFinite(n) || n <= 0) {
+                  core.setFailed(`Invalid pr_number: ${manualPr}`);
+                  return [];
+                }
+                return [n];
               }
 
-              const { data: checks } = await github.rest.checks.listForRef({
-                owner, repo, ref: pr.head.sha
-              });
-              const cf = checks.check_runs.find(c => c.name === requiredCheck);
+              let pr = context.payload.pull_request;
+              if (pr?.head?.ref?.startsWith('cursor/')) {
+                return [pr.number];
+              }
 
-              if (cf?.status === 'completed' && cf.conclusion === 'success') {
-                try {
-                  await github.rest.pulls.merge({
-                    owner, repo, pull_number: prNum, merge_method: 'squash'
-                  });
-                  core.info(`Merged PR #${prNum}.`);
-                } catch (e) {
-                  const msg = e?.message || String(e);
-                  const benign405 = /already merged|merge already in progress|still a draft/i.test(msg);
-                  if (benign405) {
-                    for (let i = 0; i < 15; i++) {
-                      const { data: prAfter } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
-                      if (prAfter.merged) {
-                        core.info(`PR #${prNum} merged by parallel automerge run.`);
-                        return;
-                      }
-                      core.info(`Waiting for PR #${prNum} merge to finish… (${i + 1}/15)`);
-                      await new Promise(r => setTimeout(r, 2000));
-                    }
+              if (context.payload.check_suite) {
+                const sha = context.payload.check_suite.head_sha;
+                const { data } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                  owner, repo, commit_sha: sha,
+                });
+                const hit = data.find(p => p.state === 'open' && p.head.ref.startsWith('cursor/'));
+                if (hit) return [hit.number];
+              }
+
+              if (context.eventName === 'schedule') {
+                const open = await listOpenCursorPrs();
+                const stuck = [];
+                for (const pr of open) {
+                  if (pr.draft) {
+                    stuck.push(pr.number);
+                    continue;
                   }
-                  const { data: prFinal } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
-                  if (prFinal.merged) {
-                    core.info(`PR #${prNum} merged by parallel automerge run.`);
-                  } else {
-                    core.setFailed(`Merge failed: ${msg}`);
+                  const { data: checks } = await github.rest.checks.listForRef({
+                    owner, repo, ref: pr.head.sha,
+                  });
+                  const cf = checks.check_runs.find(c => c.name === requiredCheck);
+                  if (cf?.status === 'completed' && cf.conclusion === 'success') {
+                    stuck.push(pr.number);
                   }
                 }
-                return;
-              }
-              if (cf?.status === 'completed' && cf.conclusion === 'failure') {
-                core.setFailed('Cloudflare Pages check failed.');
-                return;
+                return stuck;
               }
 
-              core.info(`Waiting for ${requiredCheck}… (${attempt + 1}/30)`);
-              await new Promise(r => setTimeout(r, 20000));
+              return [];
             }
-            core.setFailed('Timed out waiting for Cloudflare Pages.');
+
+            async function ensurePrReady(prNum) {
+              let { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+              if (!pr.draft) return pr;
+
+              core.info(`PR #${prNum} is draft — promoting to ready for review.`);
+
+              try {
+                await github.rest.pulls.update({
+                  owner, repo, pull_number: prNum, draft: false,
+                });
+              } catch (e) {
+                core.warning(`REST undraft failed for PR #${prNum}: ${e.message}`);
+              }
+
+              for (let i = 0; i < 10; i++) {
+                ({ data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum }));
+                if (!pr.draft) {
+                  core.info(`PR #${prNum} is ready (REST).`);
+                  return pr;
+                }
+                await new Promise(r => setTimeout(r, 2000));
+              }
+
+              try {
+                await github.graphql(
+                  `mutation($id: ID!) {
+                    markPullRequestAsReadyForReview(input: { pullRequestId: $id }) {
+                      pullRequest { isDraft }
+                    }
+                  }`,
+                  { id: pr.node_id }
+                );
+              } catch (e) {
+                core.warning(`GraphQL undraft failed for PR #${prNum}: ${e.message}`);
+              }
+
+              for (let i = 0; i < 10; i++) {
+                ({ data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum }));
+                if (!pr.draft) {
+                  core.info(`PR #${prNum} is ready (GraphQL).`);
+                  return pr;
+                }
+                await new Promise(r => setTimeout(r, 2000));
+              }
+
+              throw new Error(`PR #${prNum} is still a draft after undraft attempts`);
+            }
+
+            async function waitForCloudflareAndMerge(prNum) {
+              for (let attempt = 0; attempt < 30; attempt++) {
+                const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+                if (pr.merged) {
+                  core.info(`PR #${prNum} already merged.`);
+                  return true;
+                }
+                if (!pr.mergeable && pr.mergeable_state === 'dirty') {
+                  core.setFailed(`PR #${prNum} has merge conflicts.`);
+                  return false;
+                }
+
+                const { data: checks } = await github.rest.checks.listForRef({
+                  owner, repo, ref: pr.head.sha,
+                });
+                const cf = checks.check_runs.find(c => c.name === requiredCheck);
+
+                if (cf?.status === 'completed' && cf.conclusion === 'success') {
+                  try {
+                    await github.rest.pulls.merge({
+                      owner, repo, pull_number: prNum, merge_method: 'squash',
+                    });
+                    core.info(`Merged PR #${prNum}.`);
+                    return true;
+                  } catch (e) {
+                    const msg = e?.message || String(e);
+                    const benign = /already merged|merge already in progress|still a draft/i.test(msg);
+                    if (benign) {
+                      for (let i = 0; i < 15; i++) {
+                        const { data: prAfter } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+                        if (prAfter.merged) {
+                          core.info(`PR #${prNum} merged by parallel automerge run.`);
+                          return true;
+                        }
+                        core.info(`Waiting for PR #${prNum} merge to finish… (${i + 1}/15)`);
+                        await new Promise(r => setTimeout(r, 2000));
+                      }
+                    }
+                    const { data: prFinal } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+                    if (prFinal.merged) {
+                      core.info(`PR #${prNum} merged by parallel automerge run.`);
+                      return true;
+                    }
+                    core.setFailed(`Merge failed for PR #${prNum}: ${msg}`);
+                    return false;
+                  }
+                }
+
+                if (cf?.status === 'completed' && cf.conclusion === 'failure') {
+                  core.setFailed(`Cloudflare Pages check failed for PR #${prNum}.`);
+                  return false;
+                }
+
+                core.info(`PR #${prNum}: waiting for ${requiredCheck}… (${attempt + 1}/30)`);
+                await new Promise(r => setTimeout(r, 20000));
+              }
+
+              core.setFailed(`Timed out waiting for ${requiredCheck} on PR #${prNum}.`);
+              return false;
+            }
+
+            async function processPr(prNum) {
+              core.info(`Processing cursor PR #${prNum}…`);
+              const pr = await ensurePrReady(prNum);
+              if (!pr.head.ref.startsWith('cursor/')) {
+                core.info(`PR #${prNum} is not cursor/* — skipping.`);
+                return;
+              }
+              await waitForCloudflareAndMerge(prNum);
+            }
+
+            const prNumbers = await findPrsToProcess();
+            if (!prNumbers.length) {
+              core.info('No cursor/* PR to process.');
+              return;
+            }
+
+            for (const prNum of prNumbers) {
+              try {
+                await processPr(prNum);
+              } catch (e) {
+                core.setFailed(`PR #${prNum}: ${e.message}`);
+              }
+            }
