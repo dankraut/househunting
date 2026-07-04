@@ -180,9 +180,32 @@ export function createLocationModule(api) {
       return { ok: true, source: 'geocode' };
     };
 
+    // GPS field also accepts a town or full address: geocode it to coordinates.
+    const applyGpsAsAddress = async () => {
+      const geo = await geocodeAddress(gpsIn);
+      if (!geo) {
+        return { ok: false, error: 'Enter GPS coordinates, or a town / address that can be found' };
+      }
+      entity.lat = geo.lat;
+      entity.lng = geo.lng;
+      entity.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
+      if (addrIn && !overwriteTown) {
+        applyAddressText(entity, addrIn, isBase);
+      } else {
+        const label = formatItalianLocation(geo);
+        if (label) entity.address = label;
+        if (!isBase) {
+          if (geo.town) entity.town = geo.town;
+          if (geo.commune) entity.commune = geo.commune;
+          if (geo.prov) entity.prov = String(geo.prov).toUpperCase();
+        }
+      }
+      return { ok: true, source: 'gps-geocode' };
+    };
+
     const applyReverse = async () => {
       if (!applyGpsToEntity(entity, gpsIn)) {
-        return { ok: false, error: 'Invalid GPS coordinates' };
+        return applyGpsAsAddress();
       }
       if (addrIn && !overwriteTown) {
         applyAddressText(entity, addrIn, isBase);
@@ -404,7 +427,7 @@ export function createLocationModule(api) {
           // caller declined overwrite
         } else if (typeof confirm === 'function') {
           townOverwrite = confirm(
-            'Replace the existing town/location with the name from these GPS coordinates?'
+            'Replace the existing town/location with the place from the GPS field?'
           );
         }
       }
@@ -430,6 +453,7 @@ export function createLocationModule(api) {
       let msg = '';
       if (r.source === 'gps' && townOverwrite) msg = 'Town updated from GPS.';
       else if (r.source === 'geocode') msg = 'GPS updated from town.';
+      else if (r.source === 'gps-geocode') msg = 'GPS resolved from address.';
       else if (r.source === 'gps' && syncMode === 'address') msg = 'Town updated (GPS unchanged).';
       setLocSuccess(prefix, msg);
       if (onSuccess) onSuccess(scratch, r);
