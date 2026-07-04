@@ -466,6 +466,15 @@ function extractFromPage() {
   result.prov   = strip(result.prov);
   result.title  = strip(result.title);
 
+  // GPS also accepts a full address or town: when no map coordinates were found on
+  // the page, fall back to the scraped commune/town/province so the location value
+  // still resolves (the SPA geocodes non-coordinate GPS/location input).
+  if (!result.location) {
+    const addr = [result.commune, result.town].filter(Boolean).join(', ');
+    const full = result.prov && addr ? `${addr}, ${result.prov}` : (addr || result.town || '');
+    if (full) result.location = /italy/i.test(full) ? full : `${full}, Italy`;
+  }
+
   if (result.location) result.gps = result.location;
   return result;
 }

@@ -54,6 +54,12 @@ export function createLocationModule(api) {
     return `${Number(lat.toFixed(6))},${Number(lng.toFixed(6))}`;
   }
 
+  /** True when the string parses as GPS coordinates (not a free-text address/town). */
+  function isGpsCoords(raw) {
+    const [lat, lng] = parseGPS(raw);
+    return lat != null && lng != null;
+  }
+
   function formatItalianLocation(geo) {
     if (!geo) return '';
     const town = geo.town || geo.commune || '';
@@ -162,25 +168,39 @@ export function createLocationModule(api) {
     const gpsIn = gps !== undefined ? String(gps).trim() : (isBase ? getBaseGps(entity) : getPropGps(entity));
     let addrIn = address !== undefined ? String(address).trim() : (isBase ? (entity.address || '').trim() : getPropAddress(entity));
 
-    const applyForward = async () => {
-      if (!/italy/i.test(addrIn)) addrIn += ', Italy';
-      entity.address = addrIn;
-      const geo = await geocodeAddress(addrIn);
-      if (!geo) return { ok: false, error: 'Could not find coordinates for that town' };
+    // Forward-geocode a free-text query (address or town) into coordinates + labels.
+    const geocodeQueryInto = async (query) => {
+      let q = String(query || '').trim();
+      if (!q) return { ok: false, error: 'Enter an address, town, or GPS coordinates' };
+      if (!/italy/i.test(q)) q += ', Italy';
+      const geo = await geocodeAddress(q);
+      if (!geo) return { ok: false, error: 'Could not find coordinates for that address or town' };
       entity.lat = geo.lat;
       entity.lng = geo.lng;
       entity.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
       const label = formatItalianLocation(geo);
-      if (label) entity.address = label;
+      entity.address = label || q.replace(/,?\s*Italy\s*$/i, '').trim();
       if (!isBase) {
         if (geo.town) entity.town = geo.town;
         if (geo.commune) entity.commune = geo.commune;
         if (geo.prov) entity.prov = String(geo.prov).toUpperCase();
+        else if (!label) applyAddressText(entity, entity.address, isBase);
       }
       return { ok: true, source: 'geocode' };
     };
 
+    const applyForward = async () => {
+      if (!/italy/i.test(addrIn)) addrIn += ', Italy';
+      entity.address = addrIn;
+      return geocodeQueryInto(addrIn);
+    };
+
     const applyReverse = async () => {
+      // The GPS field also accepts a full address or town: if the entry is not
+      // parseable coordinates, forward-geocode it into GPS + location labels.
+      if (!isGpsCoords(gpsIn)) {
+        return geocodeQueryInto(gpsIn);
+      }
       if (!applyGpsToEntity(entity, gpsIn)) {
         return { ok: false, error: 'Invalid GPS coordinates' };
       }
@@ -399,7 +419,7 @@ export function createLocationModule(api) {
       let townOverwrite = overwriteTown;
       const hasGps = !!(gps && String(gps).trim());
       const hasAddr = !!(address && String(address).trim());
-      if (syncMode === 'gps' && hasGps && hasAddr && townOverwrite !== true) {
+      if (syncMode === 'gps' && hasGps && isGpsCoords(gps) && hasAddr && townOverwrite !== true) {
         if (townOverwrite === false) {
           // caller declined overwrite
         } else if (typeof confirm === 'function') {
@@ -455,6 +475,7 @@ export function createLocationModule(api) {
     getBaseGps,
     clearEntityCoords,
     normalizeGpsString,
+    isGpsCoords,
     formatItalianLocation,
     applyGpsToEntity,
     geocodeAddress,
