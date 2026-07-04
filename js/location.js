@@ -82,16 +82,33 @@ export function createLocationModule(api) {
     return true;
   }
 
-  async function geocodeAddress(query) {
-    if (!query || !query.trim()) return null;
-    let q = query.trim();
-    if (!/italy/i.test(q)) q += ', Italy';
+  function extractTownQuery(raw) {
+    if (!raw || !raw.trim()) return null;
+    const s = raw.trim().replace(/,?\s*Italy\s*$/i, '').trim();
+    const parts = s.split(',').map(p => p.trim()).filter(Boolean);
+    if (!parts.length) return null;
+    const last = parts[parts.length - 1];
+    const provInline = last.match(/^(.+?)\s+([A-Z]{2})$/);
+    if (provInline) return `${provInline[1].trim()}, ${provInline[2]}, Italy`;
+    if (/^[A-Z]{2}$/.test(last) && parts.length >= 2) {
+      return `${parts[parts.length - 2]}, ${last}, Italy`;
+    }
+    if (parts.length >= 2) return `${last}, Italy`;
+    const singleProv = parts[0].match(/^(.+?)\s+([A-Z]{2})$/);
+    if (singleProv) return `${singleProv[1].trim()}, ${singleProv[2]}, Italy`;
+    return `${parts[0]}, Italy`;
+  }
+
+  async function geocodeOneQuery(q) {
+    if (!q || !q.trim()) return null;
+    let query = q.trim();
+    if (!/italy/i.test(query)) query += ', Italy';
     try {
-      const { ok, data: d } = await api.geocode(q);
+      const { ok, data: d } = await api.geocode(query);
       if (ok && d?.lat != null && d?.lng != null) return d;
     } catch (e) {}
     try {
-      const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=it`, { headers: { 'Accept-Language': 'en' } });
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=it`, { headers: { 'Accept-Language': 'en' } });
       if (r.ok) {
         const d = await r.json();
         if (d?.[0]) {
@@ -106,6 +123,20 @@ export function createLocationModule(api) {
         }
       }
     } catch (e) {}
+    return null;
+  }
+
+  async function geocodeAddress(query) {
+    if (!query || !query.trim()) return null;
+    let q = query.trim();
+    if (!/italy/i.test(q)) q += ', Italy';
+    const geo = await geocodeOneQuery(q);
+    if (geo) return geo;
+    const townQ = extractTownQuery(query);
+    if (townQ && townQ.toLowerCase() !== q.toLowerCase()) {
+      const townGeo = await geocodeOneQuery(townQ);
+      if (townGeo) return { ...townGeo, townFallback: true };
+    }
     return null;
   }
 
@@ -184,7 +215,7 @@ export function createLocationModule(api) {
         if (geo.commune) entity.commune = geo.commune;
         if (geo.prov) entity.prov = String(geo.prov).toUpperCase();
       }
-      return { ok: true, source: 'geocode' };
+      return { ok: true, source: geo.townFallback ? 'geocode-town-fallback' : 'geocode' };
     };
 
     const applyGpsText = async () => {
@@ -200,7 +231,7 @@ export function createLocationModule(api) {
         if (geo.commune) entity.commune = geo.commune;
         if (geo.prov) entity.prov = String(geo.prov).toUpperCase();
       }
-      return { ok: true, source: 'geocode' };
+      return { ok: true, source: geo.townFallback ? 'geocode-town-fallback' : 'geocode' };
     };
 
     const applyReverse = async () => {
@@ -469,6 +500,7 @@ export function createLocationModule(api) {
       }
       let msg = '';
       if (r.source === 'gps' && townOverwrite) msg = 'Town updated from GPS.';
+      else if (r.source === 'geocode-town-fallback') msg = 'Street not found — GPS set to town center.';
       else if (r.source === 'geocode') msg = syncMode === 'gps' ? 'GPS updated from location.' : 'GPS updated from town.';
       else if (r.source === 'gps' && syncMode === 'address') msg = 'Town updated (GPS unchanged).';
       setLocSuccess(prefix, msg);
