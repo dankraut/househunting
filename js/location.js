@@ -130,7 +130,7 @@ export function createLocationModule(api) {
     return null;
   }
 
-  async function syncEntityLocation(entity, { gps, address, isBase = false, mode = 'auto' } = {}) {
+  async function syncEntityLocation(entity, { gps, address, isBase = false, mode = 'auto', confirmTownOverwrite = null } = {}) {
     const gpsIn = gps !== undefined ? String(gps).trim() : (isBase ? getBaseGps(entity) : getPropGps(entity));
     let addrIn = address !== undefined ? String(address).trim() : (isBase ? (entity.address || '').trim() : getPropAddress(entity));
 
@@ -153,28 +153,54 @@ export function createLocationModule(api) {
     };
 
     const applyReverse = async () => {
+      // Rule 1: GPS coordinates entered → always use them.
       if (!applyGpsToEntity(entity, gpsIn)) {
         return { ok: false, error: 'Invalid GPS coordinates' };
       }
       const rev = await reverseGeocode(entity.lat, entity.lng);
       if (rev) {
         const label = formatItalianLocation(rev);
-        if (label) entity.address = label;
-        if (!isBase) {
-          if (rev.town) entity.town = rev.town;
-          if (rev.commune) entity.commune = rev.commune;
-          if (rev.prov) entity.prov = String(rev.prov).toUpperCase();
+        const hadTown = !!(addrIn && addrIn.trim());
+        // Rule 2: town/location blank → reverse look up and fill it (no prompt).
+        // Rule 3: town/location already filled → ask before overwriting it.
+        //          Either way the GPS coordinates are used.
+        let overwrite = true;
+        if (hadTown && label && label.trim() !== addrIn.trim() && typeof confirmTownOverwrite === 'function') {
+          try { overwrite = await confirmTownOverwrite(addrIn.trim(), label.trim()); }
+          catch (e) { overwrite = true; }
         }
+        if (overwrite) {
+          if (label) entity.address = label;
+          if (!isBase) {
+            if (rev.town) entity.town = rev.town;
+            if (rev.commune) entity.commune = rev.commune;
+            if (rev.prov) entity.prov = String(rev.prov).toUpperCase();
+          }
+          return { ok: true, source: 'gps', townOverwritten: hadTown };
+        }
+        // User declined: keep the existing town/location label; GPS still applied.
+        if (hadTown) entity.address = addrIn.trim();
+        return { ok: true, source: 'gps', townKept: true };
       }
       return { ok: true, source: 'gps' };
     };
 
     if (mode === 'address') {
+      // Rules 4 & 5: the town/location field only sets coordinates when there are
+      // NO GPS coordinates. Editing or entering a town must never change GPS.
+      if (gpsIn) {
+        applyGpsToEntity(entity, gpsIn);
+        if (addrIn) {
+          // Keep the user's typed town/location as the label; GPS unchanged.
+          entity.address = addrIn;
+          return { ok: true, source: 'gps-kept' };
+        }
+        // Town cleared while GPS present → reverse look up the town (Rule 2).
+        return applyReverse();
+      }
       if (addrIn) return applyForward();
       entity.gps = '';
       clearEntityCoords(entity);
-      if (!addrIn && !gpsIn) return { ok: true, source: 'cleared' };
-      if (gpsIn) return applyReverse();
       return { ok: true, source: 'cleared' };
     }
 
@@ -349,13 +375,13 @@ export function createLocationModule(api) {
     }
   }
 
-  async function runLocSync(prefix, scratch, { gps, address, isBase, mode, onSuccess }) {
+  async function runLocSync(prefix, scratch, { gps, address, isBase, mode, onSuccess, confirmTownOverwrite }) {
     if (_locSyncing) return { skipped: true };
     _locSyncing = true;
     setLocError(prefix, {});
     setLocLoading(prefix, true);
     try {
-      const r = await syncEntityLocation(scratch, { gps, address, isBase, mode });
+      const r = await syncEntityLocation(scratch, { gps, address, isBase, mode, confirmTownOverwrite });
       if (!r.ok) {
         const err = r.error || 'Location lookup failed';
         if (mode === 'gps' || (mode === 'address' && !address)) {
@@ -372,7 +398,10 @@ export function createLocationModule(api) {
         if (addrEl) addrEl.value = scratch.address || '';
         if (gpsEl) gpsEl.value = scratch.gps || '';
       }
-      const msg = r.source === 'gps' ? 'Town updated from GPS.' : r.source === 'geocode' ? 'GPS updated from town.' : '';
+      let msg = '';
+      if (r.source === 'gps') msg = r.townKept ? 'GPS coordinates kept; town left unchanged.' : 'Town updated from GPS.';
+      else if (r.source === 'gps-kept') msg = 'GPS coordinates kept unchanged.';
+      else if (r.source === 'geocode') msg = 'GPS updated from town.';
       setLocSuccess(prefix, msg);
       if (onSuccess) onSuccess(scratch, r);
       return r;
