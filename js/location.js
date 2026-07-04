@@ -130,7 +130,14 @@ export function createLocationModule(api) {
     return null;
   }
 
-  async function syncEntityLocation(entity, { gps, address, isBase = false, mode = 'auto' } = {}) {
+  // Location rules (properties & bases):
+  //  • GPS coordinates are always authoritative — never overwrite them from the town.
+  //  • GPS entered + town blank → reverse-look-up the town and fill the field.
+  //  • GPS entered + town not blank → ask before overwriting the existing town
+  //    (via confirmOverwriteTown); the GPS coordinates are used either way.
+  //  • Only geocode the town (deriving GPS from it) when there are NO GPS coordinates.
+  //  • Editing/entering the town must not change existing GPS coordinates.
+  async function syncEntityLocation(entity, { gps, address, isBase = false, mode = 'auto', confirmOverwriteTown } = {}) {
     const gpsIn = gps !== undefined ? String(gps).trim() : (isBase ? getBaseGps(entity) : getPropGps(entity));
     let addrIn = address !== undefined ? String(address).trim() : (isBase ? (entity.address || '').trim() : getPropAddress(entity));
 
@@ -152,9 +159,15 @@ export function createLocationModule(api) {
       return { ok: true, source: 'geocode' };
     };
 
-    const applyReverse = async () => {
+    // GPS is authoritative. When preserveTown is true we keep the existing
+    // town/address untouched; otherwise we reverse-look-up the town.
+    const applyReverse = async ({ preserveTown = false } = {}) => {
       if (!applyGpsToEntity(entity, gpsIn)) {
         return { ok: false, error: 'Invalid GPS coordinates' };
+      }
+      if (preserveTown) {
+        if (addrIn) entity.address = addrIn;
+        return { ok: true, source: addrIn ? 'gps-kept' : 'gps' };
       }
       const rev = await reverseGeocode(entity.lat, entity.lng);
       if (rev) {
@@ -169,23 +182,38 @@ export function createLocationModule(api) {
       return { ok: true, source: 'gps' };
     };
 
+    // Resolve whether an entered town should be overwritten by the reverse
+    // look-up. Blank town → always fill from GPS. Non-blank town → keep unless
+    // the caller supplies a confirm handler that says to overwrite.
+    const resolveGpsWithTown = async () => {
+      let preserveTown = !!addrIn;
+      if (addrIn && typeof confirmOverwriteTown === 'function') {
+        const overwrite = await confirmOverwriteTown();
+        preserveTown = !overwrite;
+      }
+      return applyReverse({ preserveTown });
+    };
+
+    // User edited the town/location field.
     if (mode === 'address') {
+      // Rule: entering/editing the town must never change existing GPS.
+      if (gpsIn) return applyReverse({ preserveTown: !!addrIn });
       if (addrIn) return applyForward();
       entity.gps = '';
       clearEntityCoords(entity);
-      if (!addrIn && !gpsIn) return { ok: true, source: 'cleared' };
-      if (gpsIn) return applyReverse();
       return { ok: true, source: 'cleared' };
     }
 
+    // User edited the GPS field.
     if (mode === 'gps') {
-      if (gpsIn) return applyReverse();
+      if (gpsIn) return resolveGpsWithTown();
       entity.gps = '';
       clearEntityCoords(entity);
       return { ok: true, source: 'cleared' };
     }
 
-    if (gpsIn) return applyReverse();
+    // Auto (save / migration): GPS wins when present.
+    if (gpsIn) return resolveGpsWithTown();
     entity.gps = '';
     clearEntityCoords(entity);
     if (!addrIn) return { ok: true, source: 'cleared' };
@@ -349,13 +377,13 @@ export function createLocationModule(api) {
     }
   }
 
-  async function runLocSync(prefix, scratch, { gps, address, isBase, mode, onSuccess }) {
+  async function runLocSync(prefix, scratch, { gps, address, isBase, mode, onSuccess, confirmOverwriteTown }) {
     if (_locSyncing) return { skipped: true };
     _locSyncing = true;
     setLocError(prefix, {});
     setLocLoading(prefix, true);
     try {
-      const r = await syncEntityLocation(scratch, { gps, address, isBase, mode });
+      const r = await syncEntityLocation(scratch, { gps, address, isBase, mode, confirmOverwriteTown });
       if (!r.ok) {
         const err = r.error || 'Location lookup failed';
         if (mode === 'gps' || (mode === 'address' && !address)) {
@@ -372,7 +400,9 @@ export function createLocationModule(api) {
         if (addrEl) addrEl.value = scratch.address || '';
         if (gpsEl) gpsEl.value = scratch.gps || '';
       }
-      const msg = r.source === 'gps' ? 'Town updated from GPS.' : r.source === 'geocode' ? 'GPS updated from town.' : '';
+      const msg = r.source === 'gps' ? 'Town updated from GPS.'
+        : r.source === 'gps-kept' ? 'GPS coordinates applied — town kept.'
+        : r.source === 'geocode' ? 'GPS updated from town.' : '';
       setLocSuccess(prefix, msg);
       if (onSuccess) onSuccess(scratch, r);
       return r;
