@@ -26,7 +26,7 @@ window.getApiToken = getApiToken;
 const locNames = [
   'parseGPS', 'buildAddressFromParts', 'getPropAddress', 'getPropGps', 'getBaseGps',
   'clearEntityCoords', 'normalizeGpsString', 'formatItalianLocation', 'applyGpsToEntity',
-  'geocodeAddress', 'reverseGeocode', 'syncEntityLocation', 'resolvePropCoords',
+  'geocodeAddress', 'reverseGeocode', 'syncEntityLocation', 'resolveLocSyncMode', 'resolvePropCoords',
   'resolveStayBaseCoords', 'migratePropLocation',
   'setLocLoading', 'setLocError', 'setLocSuccess', 'clearLocUi', 'runLocSync',
   'isLocSyncing', 'debouncedLocBlur',
