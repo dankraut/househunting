@@ -1,12 +1,12 @@
 # PROJECT_STATE — House Hunt (source of truth for agents & deploy)
 
-Last updated: 2026-07-03
+Last updated: 2026-07-04
 
 ## Current versions
 
 | Component | Version | File |
 |-----------|---------|------|
-| SPA | v3.13.37 | js/config.js → SPA_VERSION |
+| SPA | v3.13.38 | js/config.js → SPA_VERSION |
 | Extension | v1.8.26 | extension/manifest.json |
 | API | (no semver) | functions/api/[[path]].js header comment |
 

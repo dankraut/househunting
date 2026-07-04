@@ -213,7 +213,14 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 .map-props-row{display:flex;gap:4px;padding:5px 6px;border-bottom:1px solid rgba(0,0,0,.05);cursor:grab;align-items:center;user-select:none}
 .map-props-row:active{cursor:grabbing}
 .map-props-row.map-props-locked{cursor:not-allowed;opacity:.65}
-.map-props-row.timing-violation{background:#FFF8E1;border-left:3px solid #F5A623}
+.map-props-row.schedule-violation,.dp-leg.schedule-violation{background:var(--red-bg);border-left:3px solid var(--red-bdr)}
+.map-props-row.timing-violation{background:var(--red-bg);border-left:3px solid var(--red-bdr)}
+.map-props-drag-handle{cursor:grab;color:var(--text3);font-size:12px;flex-shrink:0;padding:0 3px;user-select:none;touch-action:none}
+.map-props-day-untimed{font-size:9px;font-weight:500;color:var(--text3);margin:4px 0 2px;padding-left:4px;font-style:italic}
+.prop-leg-popup{position:fixed;z-index:10060;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:10px 12px;font-size:11px;max-width:min(280px,90vw);line-height:1.5}
+.prop-leg-popup .plp-title{font-weight:600;color:var(--adriat);margin-bottom:4px}
+.prop-leg-popup .plp-links{margin-top:6px;display:flex;gap:10px}
+.prop-leg-popup .plp-links a{color:var(--adriat);font-weight:500}
 .map-props-row.shaded{opacity:.5}
 .map-props-row.sortable-ghost{opacity:.35}
 .map-props-row.sortable-chosen{opacity:.85;background:var(--adriat-bg)!important}
@@ -232,7 +239,7 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 .map-day-opt{display:flex;align-items:center;gap:6px;padding:4px 10px;font-size:11px;cursor:pointer;white-space:nowrap}
 .map-day-opt:hover{background:var(--bg2)}
 #map-status{font-size:11px;color:var(--adriat);min-width:80px}
-.dp-drag-handle{cursor:grab;color:var(--text3);font-size:14px;flex-shrink:0;padding:0 2px;user-select:none}
+.dp-drag-handle{cursor:grab;color:var(--text3);font-size:14px;flex-shrink:0;padding:0 2px;user-select:none;touch-action:none;min-width:28px;min-height:28px;display:inline-flex;align-items:center;justify-content:center}
 .dp-leg.dp-stop:hover{background:var(--bg2)}
 .dp-actions{display:flex;gap:4px;flex-shrink:0}
 /* Day Planning */
@@ -323,6 +330,8 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
   .dp-leg-meta{flex-basis:100%;padding-left:72px}
   .dp-leg.dp-start .dp-leg-meta,.dp-leg.dp-end .dp-leg-meta{padding-left:0}
   .map-props-row{align-items:flex-start}
+  .map-props-drag-handle{font-size:16px;min-width:36px;min-height:36px}
+  .dp-drag-handle{font-size:18px;min-width:40px;min-height:40px}
   .map-props-name{white-space:normal;line-height:1.35}
   .map-sched-mix-legend{font-size:8px;padding:2px 5px;max-width:min(200px,calc(100vw - 32px))}
   .map-controls{gap:6px}
@@ -915,7 +924,7 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 
 <script type="module" src="js/bootstrap.js"></script>
 <script>
-// ═══ SPA v3.13.37 — app core (config/api/location in js/) ═══════════════════════
+// ═══ SPA v3.13.38 — app core (config/api/location in js/) ═══════════════════════
 
 const PROPS_RAW=[{"id":30278342,"name":"Tuscania Villa","town":"Tuscania","prov":"VT","price":780,"rooms":10,"size":300,"grp":1,"fco":72,"cdp":80,"caf":140,"spo":105,"man":45,"url":"https://www.idealista.it/immobile/30278342/","lat":42.418,"lng":11.875,"plannedDate":"2026-07-09","plannedTime":"10:30 AM"},{"id":34998463,"name":"Vetralla Villa","town":"Vetralla","prov":"VT","price":670,"rooms":12,"size":509,"grp":1,"fco":75,"cdp":95,"caf":155,"spo":95,"man":70,"url":"https://www.idealista.it/immobile/34998463/","lat":42.32,"lng":12.05,"plannedDate":"2026-07-09","plannedTime":"11:30 AM"},{"id":35809714,"name":"Canino Villa","town":"Canino","prov":"VT","price":870,"rooms":7,"size":380,"grp":1,"fco":78,"cdp":80,"caf":130,"spo":115,"man":30,"url":"https://www.idealista.it/immobile/35809714/","lat":42.468,"lng":11.744,"plannedDate":"2026-07-09","plannedTime":"9:30 AM"},{"id":26448701,"name":"Montecastrilli Villa","town":"Montecastrilli","prov":"TR","price":820,"rooms":19,"size":480,"grp":1,"fco":85,"cdp":70,"caf":120,"spo":30,"man":105,"url":"https://www.idealista.it/immobile/26448701/","lat":42.649,"lng":12.487,"plannedDate":"2026-07-06","plannedTime":"11:00 AM"},{"id":21658129,"name":"Manciano SP159","town":"Manciano","prov":"GR","price":850,"rooms":18,"size":379,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":0,"url":"https://www.idealista.it/immobile/21658129/","lat":42.595,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"8:45 AM"},{"id":18085022,"name":"Manciano Scansanese","town":"Manciano","prov":"GR","price":870,"rooms":10,"size":520,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/18085022/","lat":42.605,"lng":11.52,"plannedDate":"2026-07-10","plannedTime":"9:30 AM"},{"id":33646557,"name":"Manciano Montemerano","town":"Manciano","prov":"GR","price":698,"rooms":8,"size":430,"grp":1,"fco":95,"cdp":75,"caf":125,"spo":130,"man":10,"url":"https://www.idealista.it/immobile/33646557/","lat":42.544,"lng":11.57,"plannedDate":"2026-07-10","plannedTime":"10:20 AM"},{"id":32530331,"name":"Manciano Saturnia","town":"Manciano","prov":"GR","price":720,"rooms":10,"size":395,"grp":1,"fco":95,"cdp":80,"caf":125,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/32530331/","lat":42.555,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"11:10 AM"},{"id":27864548,"name":"Baschi Villa","town":"Baschi","prov":"TR","price":780,"rooms":10,"size":580,"grp":1,"fco":99,"cdp":45,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/27864548/","lat":42.675,"lng":12.212,"plannedDate":"2026-06-26","plannedTime":"12:15 PM"},{"id":34980477,"name":"Baschi Civitella","town":"Baschi","prov":"TR","price":990,"rooms":15,"size":450,"grp":1,"fco":99,"cdp":50,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/34980477/","lat":42.67,"lng":12.205,"plannedDate":"2026-06-26","plannedTime":"1:05 PM"},{"id":35860173,"name":"Todi Piagge Casale","town":"Todi","prov":"PG","price":825,"rooms":10,"size":300,"grp":1,"fco":102,"cdp":50,"caf":100,"spo":35,"man":100,"url":"https://www.idealista.it/immobile/35860173/","lat":42.775,"lng":12.412,"plannedDate":"2026-07-07","plannedTime":"9:00 AM"},{"id":35822412,"name":"Todi Collarezzo","town":"Todi","prov":"PG","price":850,"rooms":10,"size":351,"grp":1,"fco":102,"cdp":55,"caf":100,"spo":35,"man":105,"url":"https://www.idealista.it/immobile/35822412/","lat":42.782,"lng":12.43,"plannedDate":"2026-07-07","plannedTime":"10:00 AM"},{"id":34024712,"name":"San Venanzo Civitella","town":"San Venanzo","prov":"TR","price":845,"rooms":18,"size":815,"grp":1,"fco":105,"cdp":30,"caf":80,"spo":55,"man":90,"url":"https://www.idealista.it/immobile/34024712/","lat":42.87,"lng":12.265,"plannedDate":"","plannedTime":""},{"id":33903982,"name":"Scansano Fonte Guerra","town":"Scansano","prov":"GR","price":790,"rooms":12,"size":475,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/33903982/","lat":42.683,"lng":11.34,"plannedDate":"2026-07-10","plannedTime":"12:30 PM"},{"id":35951463,"name":"Scansano Montorgiali","town":"Scansano","prov":"GR","price":960,"rooms":8,"size":390,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35951463/","lat":42.69,"lng":11.332,"plannedDate":"2026-07-09","plannedTime":"3:00 PM"},{"id":35048730,"name":"Scansano Agriturismo","town":"Scansano","prov":"GR","price":630,"rooms":7,"size":390,"grp":1,"fco":105,"cdp":85,"caf":120,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35048730/","lat":42.676,"lng":11.321,"plannedDate":"2026-07-09","plannedTime":"3:50 PM"},{"id":35397327,"name":"Sorano Piancasale","town":"Sorano","prov":"GR","price":700,"rooms":24,"size":480,"grp":1,"fco":108,"cdp":50,"caf":100,"spo":110,"man":25,"url":"https://www.idealista.it/immobile/35397327/","lat":42.685,"lng":11.713,"plannedDate":"","plannedTime":""},{"id":21287742,"name":"Ferentillo Rustico","town":"Ferentillo","prov":"TR","price":645,"rooms":12,"size":650,"grp":1,"fco":110,"cdp":100,"caf":145,"spo":20,"man":140,"url":"https://www.idealista.it/immobile/21287742/","lat":42.623,"lng":12.798,"plannedDate":"2026-07-06","plannedTime":"9:00 AM"},{"id":10679967,"name":"Semproniano Rustico","town":"Semproniano","prov":"GR","price":720,"rooms":11,"size":355,"grp":1,"fco":110,"cdp":70,"caf":115,"spo":130,"man":5,"url":"https://www.idealista.it/immobile/10679967/","lat":42.623,"lng":11.537,"plannedDate":"","plannedTime":""},{"id":34882496,"name":"Spoleto Baiano","town":"Spoleto","prov":"PG","price":980,"rooms":17,"size":451,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":135,"url":"https://www.idealista.it/immobile/34882496/","lat":42.722,"lng":12.718,"plannedDate":"2026-07-05","plannedTime":"8:45 AM"},{"id":30865904,"name":"Spoleto Terzo La Pieve","town":"Spoleto","prov":"PG","price":900,"rooms":11,"size":350,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":130,"url":"https://www.idealista.it/immobile/30865904/","lat":42.715,"lng":12.708,"plannedDate":"2026-07-05","plannedTime":"9:45 AM"},{"id":35103506,"name":"Montefalco Fabbri","town":"Montefalco","prov":"PG","price":910,"rooms":16,"size":450,"grp":1,"fco":121,"cdp":70,"caf":105,"spo":25,"man":130,"url":"https://www.idealista.it/immobile/35103506/","lat":42.89,"lng":12.652,"plannedDate":"2026-07-04","plannedTime":"12:30 PM"},{"id":35432103,"name":"Deruta Tiberina","town":"Deruta","prov":"PG","price":790,"rooms":12,"size":320,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/35432103/","lat":42.982,"lng":12.419,"plannedDate":"2026-07-04","plannedTime":"10:00 AM"},{"id":33533240,"name":"Deruta Tiberina 203","town":"Deruta","prov":"PG","price":685,"rooms":22,"size":611,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/33533240/","lat":42.981,"lng":12.421,"plannedDate":"2026-07-04","plannedTime":"10:50 AM"},{"id":27988041,"name":"Deruta Centro Casale","town":"Deruta","prov":"PG","price":650,"rooms":12,"size":400,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/27988041/","lat":42.982,"lng":12.416,"plannedDate":"","plannedTime":""},{"id":29370809,"name":"Deruta Castelleone","town":"Deruta","prov":"PG","price":890,"rooms":12,"size":316,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/29370809/","lat":42.984,"lng":12.413,"plannedDate":"","plannedTime":""},{"id":34783987,"name":"Bettona Villa","town":"Bettona","prov":"PG","price":850,"rooms":20,"size":484,"grp":1,"fco":129,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/34783987/","lat":42.992,"lng":12.43,"plannedDate":"2026-06-27","plannedTime":"11:00 AM"},{"id":34843857,"name":"Santa Fiora Monte Amiata","town":"Santa Fiora","prov":"GR","price":978,"rooms":12,"size":520,"grp":1,"fco":130,"cdp":50,"caf":85,"spo":125,"man":40,"url":"https://www.idealista.it/immobile/34843857/","lat":42.834,"lng":11.587,"plannedDate":"","plannedTime":""},{"id":34979131,"name":"Corciano Migiana","town":"Corciano","prov":"PG","price":830,"rooms":13,"size":700,"grp":1,"fco":133,"cdp":40,"caf":55,"spo":75,"man":115,"url":"https://www.idealista.it/immobile/34979131/","lat":43.11,"lng":12.289,"plannedDate":"","plannedTime":""},{"id":35300665,"name":"Perugia Olmo","town":"Perugia","prov":"PG","price":675,"rooms":5,"size":425,"grp":2,"fco":138,"cdp":50,"caf":70,"spo":60,"man":125,"url":"https://www.idealista.it/immobile/35300665/","lat":43.085,"lng":12.442,"plannedDate":"2026-06-25","plannedTime":"12:30 PM"},{"id":35456752,"name":"Perugia Eugubina","town":"Perugia","prov":"PG","price":650,"rooms":21,"size":953,"grp":2,"fco":138,"cdp":50,"caf":60,"spo":70,"man":125,"url":"https://www.idealista.it/immobile/35456752/","lat":43.138,"lng":12.408,"plannedDate":"2026-06-25","plannedTime":"1:15 PM"},{"id":32456550,"name":"Perugia Colli Albani","town":"Perugia","prov":"PG","price":650,"rooms":10,"size":530,"grp":2,"fco":138,"cdp":50,"caf":65,"spo":65,"man":125,"url":"https://www.idealista.it/immobile/32456550/","lat":43.093,"lng":12.415,"plannedDate":"2026-06-25","plannedTime":"2:15 PM"},{"id":16393910,"name":"Perugia Solfagnano","town":"Perugia","prov":"PG","price":1100,"rooms":16,"size":725,"grp":2,"fco":138,"cdp":45,"caf":50,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/16393910/","lat":43.155,"lng":12.33,"plannedDate":"2026-06-26","plannedTime":"2:30 PM"},{"id":34105542,"name":"Perugia Monte Tezio","town":"Perugia","prov":"PG","price":890,"rooms":10,"size":500,"grp":2,"fco":138,"cdp":45,"caf":55,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/34105542/","lat":43.148,"lng":12.34,"plannedDate":"2026-06-26","plannedTime":"3:15 PM"},{"id":33928859,"name":"Assisi Porziano","town":"Assisi","prov":"PG","price":580,"rooms":12,"size":485,"grp":2,"fco":148,"cdp":70,"caf":85,"spo":50,"man":140,"url":"https://www.idealista.it/immobile/33928859/","lat":43.07,"lng":12.612,"plannedDate":"2026-07-03","plannedTime":"11:30 AM"},{"id":35247592,"name":"Lisciano Niccone Villa","town":"Lisciano Niccone","prov":"PG","price":1050,"rooms":12,"size":520,"grp":2,"fco":148,"cdp":50,"caf":25,"spo":105,"man":120,"url":"https://www.idealista.it/immobile/35247592/","lat":43.265,"lng":12.125,"plannedDate":"2026-06-27","plannedTime":"9:30 AM"},{"id":35456269,"name":"Umbertide Casale","town":"Umbertide","prov":"PG","price":1150,"rooms":15,"size":700,"grp":2,"fco":148,"cdp":60,"caf":45,"spo":95,"man":140,"url":"https://www.idealista.it/immobile/35456269/","lat":43.297,"lng":12.332,"plannedDate":"2026-07-03","plannedTime":"8:45 AM"},{"id":34939305,"name":"Umbertide Preggio","town":"Umbertide","prov":"PG","price":895,"rooms":16,"size":320,"grp":2,"fco":148,"cdp":60,"caf":40,"spo":100,"man":135,"url":"https://www.idealista.it/immobile/34939305/","lat":43.312,"lng":12.29,"plannedDate":"2026-07-03","plannedTime":"9:30 AM"},{"id":23044407,"name":"Foiano della Chiana","town":"Foiano","prov":"AR","price":750,"rooms":12,"size":500,"grp":2,"fco":150,"cdp":50,"caf":20,"spo":125,"man":105,"url":"https://www.idealista.it/immobile/23044407/","lat":43.251,"lng":11.819,"plannedDate":"2026-06-30","plannedTime":"11:30 AM"},{"id":33291507,"name":"Cortona Fratticciola","town":"Cortona","prov":"AR","price":870,"rooms":10,"size":311,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":110,"man":115,"url":"https://www.idealista.it/immobile/33291507/","lat":43.264,"lng":12.002,"plannedDate":"2026-06-28","plannedTime":"11:00 AM"},{"id":33311877,"name":"Cortona Cegliolo Villa","town":"Cortona","prov":"AR","price":980,"rooms":11,"size":400,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/33311877/","lat":43.27,"lng":12.0,"plannedDate":"2026-06-30","plannedTime":"10:30 AM"},{"id":35710302,"name":"Cortona Cegliolo Casale","town":"Cortona","prov":"AR","price":590,"rooms":7,"size":460,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/35710302/","lat":43.272,"lng":11.992,"plannedDate":"","plannedTime":""},{"id":24846822,"name":"CaF Val di Chio","town":"Castiglion Fiorentino","prov":"AR","price":1000,"rooms":12,"size":760,"grp":2,"fco":155,"cdp":55,"caf":0,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/24846822/","lat":43.335,"lng":11.942,"plannedDate":"2026-06-28","plannedTime":"8:45 AM"},{"id":34980495,"name":"CaF Santa Cristina","town":"Castiglion Fiorentino","prov":"AR","price":900,"rooms":12,"size":800,"grp":2,"fco":155,"cdp":55,"caf":5,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/34980495/","lat":43.325,"lng":11.938,"plannedDate":"2026-06-28","plannedTime":"9:30 AM"},{"id":31961655,"name":"Monteroni d'Arbia","town":"Monteroni d'Arbia","prov":"SI","price":980,"rooms":12,"size":480,"grp":2,"fco":155,"cdp":75,"caf":60,"spo":160,"man":95,"url":"https://www.idealista.it/immobile/31961655/","lat":43.227,"lng":11.415,"plannedDate":"2026-07-01","plannedTime":"12:00 PM"},{"id":26833080,"name":"Capolona Pieve SG","town":"Capolona","prov":"AR","price":890,"rooms":9,"size":420,"grp":2,"fco":158,"cdp":90,"caf":35,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/26833080/","lat":43.559,"lng":11.86,"plannedDate":"2026-07-01","plannedTime":"9:45 AM"},{"id":35651252,"name":"Capolona Caliano","town":"Capolona","prov":"AR","price":595,"rooms":10,"size":350,"grp":2,"fco":158,"cdp":90,"caf":30,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/35651252/","lat":43.554,"lng":11.856,"plannedDate":"2026-07-01","plannedTime":"9:00 AM"}];
 const _propsRawById = new Map(PROPS_RAW.map(p => [p.id, p]));
@@ -961,9 +970,13 @@ let _mapSelectedDays = new Set();
 let _mapDayFilterManual = false;
 let _mapShadedPropIds = new Set();
 let _mapManualOrder = {};
+let _mapTempUnscheduled = new Set();
 let _mapSortables = {};
+let _propLegPopupEl = null;
+let _propLegPopupTimer = null;
 let _dpSortableScheduled = null;
-let _dpSortableExcluded = null;
+let _dpSortableUntimed = null;
+let _dpSortableUnscheduled = null;
 let _dpMapObj = null, _dpMapInited = false;
 let _dpLastPlan = null;
 let _dpSelectedPid = null;
@@ -1320,6 +1333,136 @@ function getPropRouteSchedule(p) {
 function getPropRouteDate(p) {
   return getPropRouteSchedule(p).date;
 }
+
+function isMapTempUnscheduled(p) {
+  return !!(p && _mapTempUnscheduled.has(p.id));
+}
+
+function hasPropTimeOnDay(p, date) {
+  return parseTimeToMinutes(getPropDayTime(p, date)) != null;
+}
+
+function isPropDateOnlyOnDay(p, date) {
+  return isPropOnDay(p, date) && !hasPropTimeOnDay(p, date);
+}
+
+function getStopViolationReasons(s, plan) {
+  const reasons = [];
+  if (s.cantReach) reasons.push('unreachable');
+  if (s.late) reasons.push('late');
+  if (s.noTimeToView) reasons.push('past day end');
+  if (s.tightToNext) reasons.push('conflicts with next');
+  if (s.noPlannedTime) reasons.push('no planned time');
+  if (s.timeOrderViolation) reasons.push('out of time order');
+  if (s.driveCapViolation) reasons.push('drive over cap');
+  if (s.infeasible && plan?.overBudget) reasons.push('over drive budget');
+  if (s.dateViolation) reasons.push('wrong day');
+  return reasons;
+}
+
+function stopHasViolation(s, plan) {
+  return getStopViolationReasons(s, plan).length > 0 || !!s.infeasible;
+}
+
+async function annotateRouteStopsFeasibility(stops, date, endpoints, base) {
+  if (!stops.length) return;
+  let curLat = endpoints?.startLat ?? null;
+  let curLng = endpoints?.startLng ?? null;
+  let curMin = DAY_START_MIN;
+  const day = getDayForDate(date);
+  for (let i = 0; i < stops.length; i++) {
+    const s = stops[i];
+    const p = s.p;
+    await resolvePropCoords(p, false);
+    const plannedMin = parseTimeToMinutes(getPropDayTime(p, date));
+    const noPlannedTime = plannedMin == null;
+    const drive = (curLat != null && p.lat != null) ? await calcDriveLeg(curLat, curLng, p.lat, p.lng) : s.drive;
+    if (drive != null) s.drive = drive;
+    const arriveMin = drive != null ? curMin + drive : (plannedMin ?? null);
+    const late = arriveMin != null && plannedMin != null && arriveMin > plannedMin + 5;
+    const startViewMin = arriveMin != null ? (plannedMin != null ? Math.max(arriveMin, plannedMin) : arriveMin) : null;
+    const departMin = startViewMin != null ? startViewMin + VIEWING_MIN : null;
+    const cantReach = p.lat == null || (curLat != null && drive == null);
+    const noTimeToView = departMin != null && departMin > DAY_END_MIN;
+    const nextPlanned = i < stops.length - 1
+      ? parseTimeToMinutes(getPropDayTime(stops[i + 1].p, date))
+      : null;
+    const tightToNext = departMin != null && nextPlanned != null && departMin > nextPlanned;
+    const driveToBase = day?.base ? getPropDriveToBase(p, day.base) : null;
+    const dateViolation = !!(day?.base && p.grp !== day.base && !isTransitBase(getBase(day.base)));
+    s.plannedMin = plannedMin;
+    s.arriveMin = arriveMin;
+    s.departMin = departMin;
+    s.late = late;
+    s.cantReach = cantReach;
+    s.noTimeToView = noTimeToView;
+    s.tightToNext = tightToNext;
+    s.noPlannedTime = noPlannedTime;
+    s.driveCapViolation = driveToBase != null && driveToBase > DRIVE_CAP;
+    s.dateViolation = !!dateViolation;
+    s.infeasible = cantReach || noTimeToView || late || tightToNext || noPlannedTime || s.driveCapViolation || s.dateViolation;
+    if (p.lat != null && departMin != null) {
+      curLat = p.lat; curLng = p.lng; curMin = departMin;
+    } else if (plannedMin != null) {
+      curMin = plannedMin + VIEWING_MIN;
+    }
+  }
+  markTimingOrderViolations(stops, date);
+  for (const s of stops) {
+    if (s.timeOrderViolation) s.infeasible = true;
+  }
+}
+
+function hidePropLegPopup() {
+  if (_propLegPopupEl) { _propLegPopupEl.remove(); _propLegPopupEl = null; }
+}
+
+function showPropLegPopup(pid, anchorEl, driveMin) {
+  const p = getProp(pid);
+  if (!p || !anchorEl) return;
+  hidePropLegPopup();
+  const el = document.createElement('div');
+  el.className = 'prop-leg-popup';
+  const driveLine = driveMin != null ? `${driveMin} min drive to property` : 'Drive time unknown';
+  const idealista = p.url ? `<a href="${escHtml(p.url)}" target="_blank" rel="noopener">Idealista</a>` : '';
+  const details = `<a href="#" onclick="openDetailModal(${p.id});hidePropLegPopup();return false">Details</a>`;
+  el.innerHTML = `<div class="plp-title">${escHtml(p.name)}</div><div>${driveLine}</div><div class="plp-links">${idealista}${idealista && details ? ' · ' : ''}${details}</div>`;
+  document.body.appendChild(el);
+  const rect = anchorEl.getBoundingClientRect();
+  const popW = el.offsetWidth;
+  let left = Math.min(rect.left, window.innerWidth - popW - 8);
+  let top = rect.bottom + 6;
+  if (top + el.offsetHeight > window.innerHeight - 8) top = rect.top - el.offsetHeight - 6;
+  el.style.left = Math.max(8, left) + 'px';
+  el.style.top = Math.max(8, top) + 'px';
+  _propLegPopupEl = el;
+}
+
+function bindPropLegInteraction(el, pid, driveMin) {
+  if (!el || el.dataset.legBound) return;
+  el.dataset.legBound = '1';
+  let pressTimer = null;
+  const show = e => {
+    if (e?.target?.closest('.map-props-drag-handle,.dp-drag-handle,.dp-actions,.t-btn')) return;
+    showPropLegPopup(pid, el, driveMin);
+  };
+  el.addEventListener('click', e => {
+    if (e.target.closest('.map-props-drag-handle,.dp-drag-handle,.dp-actions,.t-btn')) return;
+    show(e);
+  });
+  el.addEventListener('touchstart', e => {
+    if (e.target.closest('.map-props-drag-handle,.dp-drag-handle,.dp-actions,.t-btn')) return;
+    pressTimer = setTimeout(() => show(e), 450);
+  }, { passive: true });
+  el.addEventListener('touchend', () => { if (pressTimer) clearTimeout(pressTimer); });
+  el.addEventListener('touchmove', () => { if (pressTimer) clearTimeout(pressTimer); });
+}
+
+document.addEventListener('click', e => {
+  if (_propLegPopupEl && !_propLegPopupEl.contains(e.target) && !e.target.closest('.map-props-row,.dp-leg.dp-stop')) {
+    hidePropLegPopup();
+  }
+});
 
 // ─── Storage & multi-user sync ───────────────────────────────────────────────
 function _ensureClientId() {
@@ -3841,6 +3984,35 @@ function getDpExcludedSet(date) {
   return _dpExcluded[date];
 }
 
+function getDpUnscheduledProps(date, baseAbbr) {
+  const excluded = getDpExcludedSet(date);
+  const seen = new Set();
+  const result = [];
+  for (const id of excluded) {
+    const p = getProp(id);
+    if (p && !seen.has(p.id)) { result.push(p); seen.add(p.id); }
+  }
+  for (const p of state.props) {
+    if (ELIM_STATUSES.has(p.status)) continue;
+    if (!baseAbbr || p.grp !== baseAbbr) continue;
+    if (!isPropOnActiveBase(p)) continue;
+    if (getPropRouteDate(p)) continue;
+    if (seen.has(p.id)) continue;
+    result.push(p);
+    seen.add(p.id);
+  }
+  return result.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+}
+
+function _bindDpLegPopups() {
+  document.querySelectorAll('#dp-timeline .dp-leg.dp-stop[data-pid]').forEach(row => {
+    const pid = parseInt(row.dataset.pid, 10);
+    const meta = row.querySelector('.dp-leg-meta')?.textContent || '';
+    const m = meta.match(/(\d+)m drive/);
+    bindPropLegInteraction(row, pid, m ? parseInt(m[1], 10) : null);
+  });
+}
+
 function _pruneDpExcluded(date, validIds) {
   const ex = getDpExcludedSet(date);
   for (const id of [...ex]) {
@@ -3894,11 +4066,14 @@ async function computeDayPlan(date, bustCache = false, opts = {}) {
       ? parseTimeToMinutes(getPropDayTime(props[i + 1], date))
       : null;
     const tightToNext = departMin != null && nextPlanned != null && departMin > nextPlanned;
-    const infeasible = cantReach || noTimeToView || late || tightToNext || noPlannedTime;
+    const driveToBase = day?.base ? getPropDriveToBase(p, day.base) : null;
+    const dateViolation = !!(day?.base && p.grp !== day.base && !isTransitBase(getBase(day.base)));
+    const driveCapViolation = driveToBase != null && driveToBase > DRIVE_CAP;
+    const infeasible = cantReach || noTimeToView || late || tightToNext || noPlannedTime || driveCapViolation || dateViolation;
     stops.push({
       p, seq: i + 1, plannedMin, drive, arriveMin, departMin, late, cantReach,
       noTimeToView, tightToNext, noPlannedTime, infeasible, locked: getPropRouteSchedule(p).locked && getPropRouteDate(p) === date,
-      timeOrderViolation: false,
+      timeOrderViolation: false, driveCapViolation, dateViolation,
     });
     if (p.lat != null && departMin != null) {
       curLat = p.lat; curLng = p.lng; curMin = departMin;
@@ -3908,6 +4083,9 @@ async function computeDayPlan(date, bustCache = false, opts = {}) {
   }
 
   markTimingOrderViolations(stops, date);
+  for (const s of stops) {
+    if (s.timeOrderViolation) s.infeasible = true;
+  }
 
   let returnDrive = null, returnArrive = null, returnOver = false;
   const lastDepart = stops.length ? stops[stops.length - 1].departMin : DAY_START_MIN;
@@ -4011,6 +4189,10 @@ async function computeSuggestedDayRoute(date, bustCache = false, opts = {}) {
   }
 
   const overBudget = budget != null && usedDrive > budget;
+  if (overBudget) {
+    for (const s of stops) s.infeasible = true;
+  }
+  await annotateRouteStopsFeasibility(stops, date, endpoints, base);
   if (overBudget) {
     for (const s of stops) s.infeasible = true;
   }
@@ -4247,15 +4429,13 @@ async function renderDayPlan(forceRecalc = false, resetOrder = false, syncMapTab
     if (ep) {
       html += `<div class="dp-leg dp-start"><span class="dp-leg-time">${formatMinToTime(DAY_START_MIN)}</span><span class="dp-leg-name">${escHtml(ep.startLabel)} — depart</span></div>`;
     }
+    const timedStops = plan.stops.filter(s => !s.noPlannedTime);
+    const untimedStops = plan.stops.filter(s => s.noPlannedTime);
     html += '<div id="dp-scheduled-list" class="dp-sort-list">';
-    for (const s of plan.stops) {
-      const cls = s.infeasible ? 'dp-infeasible' : (s.late ? 'dp-warn' : 'dp-ok');
-      const reasons = [];
-      if (s.cantReach) reasons.push('unreachable');
-      if (s.late) reasons.push('late');
-      if (s.noTimeToView) reasons.push('past day end');
-      if (s.tightToNext) reasons.push('conflicts with next');
-      if (s.noPlannedTime) reasons.push('no planned time');
+    for (const s of timedStops) {
+      const viol = stopHasViolation(s, plan);
+      const cls = viol ? 'schedule-violation' : (s.late ? 'dp-warn' : 'dp-ok');
+      const reasons = getStopViolationReasons(s, plan);
       html += `<div class="dp-leg dp-stop ${cls}${s.locked ? ' dp-locked' : ''}${_dpSelectedPid === s.p.id ? ' dp-selected' : ''}" data-pid="${s.p.id}" onclick="selectDpStop(${s.p.id}, event)">
       ${s.locked
         ? '<span style="opacity:.3;width:14px;flex-shrink:0;text-align:center" title="Scheduled — locked">🔒</span>'
@@ -4265,27 +4445,43 @@ async function renderDayPlan(forceRecalc = false, resetOrder = false, syncMapTab
       <span class="dp-leg-meta">${s.drive != null ? s.drive + 'm drive' : '—'} · arr ${formatMinToTime(s.arriveMin)} · ${VIEWING_MIN}m view</span>
       ${reasons.length ? `<span class="dp-leg-meta" style="color:var(--red)">${reasons.join(', ')}</span>` : ''}
       <span class="dp-actions" onclick="event.stopPropagation()">
-        ${!s.locked ? `<button class="t-btn t-btn-red" style="font-size:9px;padding:1px 5px" title="Move to Not Included" onclick="dpExcludeFromPlan(${s.p.id})">✕</button>` : ''}
+        ${!s.locked ? `<button class="t-btn t-btn-red" style="font-size:9px;padding:1px 5px" title="Move to Unscheduled" onclick="dpExcludeFromPlan(${s.p.id})">✕</button>` : ''}
         <button class="t-btn t-btn-blue" style="font-size:9px;padding:1px 5px" onclick="openDetailModal(${s.p.id})">✏</button>
       </span>
     </div>`;
     }
     html += '</div>';
+    if (untimedStops.length) {
+      html += `<div class="dp-section-head" style="margin-top:6px">No time — bottom of day</div><div id="dp-untimed-list" class="dp-sort-list">`;
+      for (const s of untimedStops) {
+        const viol = stopHasViolation(s, plan);
+        html += `<div class="dp-leg dp-stop dp-excluded${viol ? ' schedule-violation' : ''}${_dpSelectedPid === s.p.id ? ' dp-selected' : ''}" data-pid="${s.p.id}" onclick="selectDpStop(${s.p.id}, event)">
+        <span class="dp-drag-handle" title="Drag to reorder" onclick="event.stopPropagation()">⠿</span>
+        <span class="dp-leg-time">—</span>
+        <span class="dp-leg-name${dpLegNameClass(s.p, date, false)}">${escHtml(s.p.name)}</span>
+        <span class="dp-leg-meta">date only · no planned time</span>
+        <span class="dp-actions" onclick="event.stopPropagation()">
+          <button class="t-btn t-btn-red" style="font-size:9px;padding:1px 5px" title="Move to Unscheduled" onclick="dpExcludeFromPlan(${s.p.id})">✕</button>
+          <button class="t-btn t-btn-blue" style="font-size:9px;padding:1px 5px" onclick="openDetailModal(${s.p.id})">✏</button>
+        </span>
+      </div>`;
+      }
+      html += '</div>';
+    }
     if (ep) {
       const retCls = plan.returnOver ? 'dp-infeasible' : 'dp-end';
       html += `<div class="dp-leg ${retCls}"><span class="dp-leg-time">${formatMinToTime(plan.returnArrive)}</span><span class="dp-leg-name">${escHtml(ep.endLabel)} — arrive${plan.returnDrive != null ? ` (${plan.returnDrive}m drive)` : ''}</span>${plan.returnOver ? '<span class="dp-leg-meta" style="color:var(--red)">past day end</span>' : ''}</div>`;
     }
-    const excluded = plan.excluded || [];
-    const dayPropCount = plan.stops.length + excluded.length;
-    if (dayPropCount) {
-      html += `<div class="dp-excluded-section"><div class="dp-section-head">Not Included (${excluded.length})</div><div id="dp-excluded-list" class="dp-sort-list">`;
-      for (const p of excluded) {
+    const unscheduled = getDpUnscheduledProps(date, base?.abbr);
+    if (unscheduled.length) {
+      html += `<div class="dp-excluded-section"><div class="dp-section-head">Unscheduled (${unscheduled.length})</div><div id="dp-unscheduled-list" class="dp-sort-list">`;
+      for (const p of unscheduled) {
         const t = formatTimeDisplay(getPropDayTime(p, date)) || formatTimeDisplay(getPropProposedTime(p)) || '—';
         html += `<div class="dp-leg dp-stop dp-excluded${_dpSelectedPid === p.id ? ' dp-selected' : ''}" data-pid="${p.id}" onclick="selectDpStop(${p.id}, event)">
-        <span class="dp-drag-handle" title="Drag to schedule or reorder" onclick="event.stopPropagation()">⠿</span>
+        <span class="dp-drag-handle" title="Drag to schedule" onclick="event.stopPropagation()">⠿</span>
         <span class="dp-leg-time"></span>
         <span class="dp-leg-name${dpLegNameClass(p, date, false)}">${escHtml(p.name)}</span>
-        <span class="dp-leg-meta">${t !== '—' ? t : 'no planned time'}</span>
+        <span class="dp-leg-meta">${t !== '—' ? t : 'no date'}</span>
         <span class="dp-actions" onclick="event.stopPropagation()">
           <button class="t-btn t-btn-blue" style="font-size:9px;padding:1px 5px" onclick="openDetailModal(${p.id})">✏</button>
         </span>
@@ -4299,6 +4495,7 @@ async function renderDayPlan(forceRecalc = false, resetOrder = false, syncMapTab
     if (!_dpMapInited) initDayPlanMap();
     if (_dpMapObj) await drawDayPlanOnMap(_dpMapObj, plan);
     _initDpDnd(date);
+    _bindDpLegPopups();
     if (_dpMobileView === 'map' && isGeoMobileLayout()) _invalidateGeoMaps();
     if (syncMapTabFilters) {
       try {
@@ -4324,7 +4521,8 @@ async function renderDayPlan(forceRecalc = false, resetOrder = false, syncMapTab
 function _initDpDnd(date) {
   const scheduled = document.getElementById('dp-scheduled-list');
   if (_dpSortableScheduled) { _dpSortableScheduled.destroy(); _dpSortableScheduled = null; }
-  if (_dpSortableExcluded) { _dpSortableExcluded.destroy(); _dpSortableExcluded = null; }
+  if (_dpSortableUntimed) { _dpSortableUntimed.destroy(); _dpSortableUntimed = null; }
+  if (_dpSortableUnscheduled) { _dpSortableUnscheduled.destroy(); _dpSortableUnscheduled = null; }
   if (!scheduled) return;
   if (typeof Sortable === 'undefined') {
     console.warn('Sortable.js not loaded — day plan drag-and-drop disabled');
@@ -4340,29 +4538,57 @@ function _initDpDnd(date) {
     preventOnFilter: true,
     ghostClass: 'sortable-ghost',
     chosenClass: 'sortable-chosen',
+    delay: 120,
+    delayOnTouchOnly: true,
+    touchStartThreshold: 4,
     onEnd: () => dpSyncOrder(date),
   };
   _dpSortableScheduled = Sortable.create(scheduled, sortOpts);
-  const excludedList = document.getElementById('dp-excluded-list');
-  if (excludedList) {
-    _dpSortableExcluded = Sortable.create(excludedList, {
-      ...sortOpts,
-      filter: '.dp-actions,.t-btn',
-    });
+  const untimedList = document.getElementById('dp-untimed-list');
+  if (untimedList) {
+    _dpSortableUntimed = Sortable.create(untimedList, { ...sortOpts, filter: '.dp-actions,.t-btn' });
+  }
+  const unschedList = document.getElementById('dp-unscheduled-list');
+  if (unschedList) {
+    _dpSortableUnscheduled = Sortable.create(unschedList, { ...sortOpts, filter: '.dp-actions,.t-btn' });
   }
 }
 
 function dpSyncOrder(date) {
   const scheduled = document.getElementById('dp-scheduled-list');
   if (!scheduled) return;
-  const activeIds = [...scheduled.querySelectorAll('.dp-leg.dp-stop[data-pid]')]
+  const timedIds = [...scheduled.querySelectorAll('.dp-leg.dp-stop[data-pid]')]
     .map(el => parseInt(el.dataset.pid, 10));
-  const excludedEl = document.getElementById('dp-excluded-list');
-  const excludedIds = excludedEl
-    ? [...excludedEl.querySelectorAll('.dp-leg.dp-stop[data-pid]')].map(el => parseInt(el.dataset.pid, 10))
+  const untimedEl = document.getElementById('dp-untimed-list');
+  const untimedIds = untimedEl
+    ? [...untimedEl.querySelectorAll('.dp-leg.dp-stop[data-pid]')].map(el => parseInt(el.dataset.pid, 10))
     : [];
-  _dpManualOrder[date] = activeIds;
-  _dpExcluded[date] = new Set(excludedIds);
+  const unschedEl = document.getElementById('dp-unscheduled-list');
+  const unschedIds = unschedEl
+    ? [...unschedEl.querySelectorAll('.dp-leg.dp-stop[data-pid]')].map(el => parseInt(el.dataset.pid, 10))
+    : [];
+  const onDayBefore = new Set(getDayProperties(date, getDayForDate(date)?.base).map(p => p.id));
+  _dpManualOrder[date] = [...timedIds, ...untimedIds];
+  const excluded = getDpExcludedSet(date);
+  excluded.clear();
+  for (const id of unschedIds) {
+    if (onDayBefore.has(id)) excluded.add(id);
+  }
+  for (const id of [...timedIds, ...untimedIds]) {
+    if (!onDayBefore.has(id)) {
+      const p = getProp(id);
+      if (p && !getPropRouteDate(p)) {
+        const err = validatePropProposedDate(p, date);
+        if (!err) {
+          p.proposedDate = date;
+          p.proposedTime = '';
+          touchPropFields(p, ['proposedDate', 'proposedTime']);
+          saveToStorage();
+        }
+      }
+      excluded.delete(id);
+    }
+  }
   delete _dayPlanCache[date];
   delete _dayPlanCache[date + '_as_scheduled'];
   delete _dayPlanCache[date + '_suggested'];
@@ -4694,39 +4920,31 @@ function propMatchesMapBase(p, baseAbbr) {
 
 function getMapUnscheduledProps(baseF, statusFilter, dayFilter, routeMode, dayPlans) {
   if (!baseF) return [];
-  if (routeMode === 'suggested') {
-    if (isMapMultiDayPartialDayFilter(baseF, dayFilter)) return [];
-    const inPlan = new Set();
-    for (const plan of dayPlans || []) {
-      for (const s of plan.stops || []) inPlan.add(s.p.id);
-      for (const sk of plan.skipped || []) inPlan.add(sk.p.id);
+  const inDayColumn = new Set();
+  for (const plan of dayPlans || []) {
+    for (const s of plan.stops || []) {
+      if (!_mapTempUnscheduled.has(s.p.id) && getPropRouteDate(s.p)) inDayColumn.add(s.p.id);
     }
-    return state.props.filter(p => {
-      if (inPlan.has(p.id)) return false;
-      return propMatchesMapFilters(p, baseF, dayFilter, statusFilter) && propMatchesMapBase(p, baseF);
-    });
+    for (const sk of plan.skipped || []) {
+      if (!_mapTempUnscheduled.has(sk.p.id) && getPropRouteDate(sk.p)) inDayColumn.add(sk.p.id);
+    }
   }
-  const routeDays = getMapEffectiveRouteDays();
-  if (routeDays.length !== 1) return [];
-  const date = routeDays[0];
-  if (baseF === UNASSIGNED_GRP) {
-    return state.props.filter(p => {
-      if (!isPropMapEligible(p, statusFilter) || !isUnassignedProp(p)) return false;
-      if (getPropRouteDate(p) && isPropOnDay(p, date)) {
-        return parseTimeToMinutes(getPropDayTime(p, date)) == null;
-      }
-      return !getPropRouteDate(p);
-    });
+  const panelDates = getMapPanelDayDates(baseF);
+  for (const date of panelDates) {
+    for (const p of getMapDayUntimedProps(date, baseF, statusFilter, dayPlans)) inDayColumn.add(p.id);
   }
   return state.props.filter(p => {
     if (!isPropMapEligible(p, statusFilter)) return false;
-    if (!(isPropOnActiveBase(p) || (isTransitBase(getBase(baseF)) && p.grp === baseF))) return false;
     if (!propMatchesMapBase(p, baseF)) return false;
-    const rd = getPropRouteDate(p);
-    if (rd) {
-      if (!isPropOnDay(p, date)) return false;
-      return parseTimeToMinutes(getPropDayTime(p, date)) == null;
+    if (_mapTempUnscheduled.has(p.id)) return true;
+    if (inDayColumn.has(p.id)) return false;
+    if (routeMode === 'timed') {
+      if (getPropRouteDate(p)) return false;
+      if (getPropProposedDate(p)) return false;
+      return propMatchesMapFilters(p, baseF, dayFilter, statusFilter);
     }
+    if (getPropRouteDate(p)) return false;
+    if (isMapMultiDayPartialDayFilter(baseF, dayFilter)) return false;
     return propMatchesMapFilters(p, baseF, dayFilter, statusFilter);
   });
 }
@@ -4855,31 +5073,91 @@ function getMapRouteDay() {
 
 /** Day columns shown in the map properties panel (for drag targets). */
 function getMapPanelDayDates(baseF) {
+  if (!baseF) return [];
+  const baseDays = getDaysForBase(baseF);
   const routeDays = getMapEffectiveRouteDays().length ? getMapEffectiveRouteDays() : getMapRouteDays();
   if (routeDays.length) return routeDays;
-  const baseDays = getDaysForBase(baseF);
-  return baseDays.length > 1 ? baseDays.map(d => d.date) : [];
+  if (baseDays.length === 1) return [baseDays[0].date];
+  return baseDays.map(d => d.date);
 }
 
 function _mapPropRowLocked(p) {
-  return isPropLockedScheduled(p);
+  if (!isMapAsScheduledMode()) return false;
+  return getPropRouteSchedule(p).locked;
 }
 
 function _mapDropZoneDate(el) {
   if (!el) return null;
   if (el.id === 'map-props-unsched') return '';
   if (el.id === 'map-props-listed') return null;
+  if (el.dataset?.date != null && el.dataset.date !== '') return el.dataset.date;
+  if (el.classList?.contains('map-props-sort-untimed') && el.dataset?.date) return el.dataset.date;
+  if (el.classList?.contains('map-props-sort-timed') && el.dataset?.date) return el.dataset.date;
   if (el.dataset?.date != null) return el.dataset.date;
   return null;
 }
 
+function _mapDropZoneKind(el) {
+  if (!el) return '';
+  if (el.id === 'map-props-unsched') return 'unsched';
+  if (el.classList?.contains('map-props-sort-untimed')) return 'untimed';
+  if (el.classList?.contains('map-props-sort-timed')) return 'timed';
+  return 'day';
+}
+
+function getMapDayUntimedProps(date, baseF, statusFilter, dayPlans) {
+  const inTimed = new Set();
+  for (const plan of dayPlans || []) {
+    if (plan.date !== date) continue;
+    for (const s of plan.stops || []) {
+      if (hasPropTimeOnDay(s.p, date)) inTimed.add(s.p.id);
+    }
+  }
+  return getDayProperties(date, baseF).filter(p => {
+    if (_mapTempUnscheduled.has(p.id)) return false;
+    if (inTimed.has(p.id)) return false;
+    if (!isPropDateOnlyOnDay(p, date)) return false;
+    return isPropMapEligible(p, statusFilter) && propMatchesMapBaseForPlan(p, baseF, date);
+  });
+}
+
+function getMapDayTimedStops(plan, date, baseF, statusFilter) {
+  if (!plan) return [];
+  return (plan.stops || []).filter(s => {
+    if (!hasPropTimeOnDay(s.p, date)) return false;
+    if (_mapTempUnscheduled.has(s.p.id)) return false;
+    return isPropMapEligible(s.p, statusFilter) && propMatchesMapBaseForPlan(s.p, baseF, date);
+  });
+}
+
+function buildMapDayRowsWithoutPlan(date, baseF, statusFilter) {
+  const props = getDayProperties(date, baseF).filter(p => {
+    if (_mapTempUnscheduled.has(p.id)) return false;
+    return isPropMapEligible(p, statusFilter) && propMatchesMapBaseForPlan(p, baseF, date);
+  });
+  const timed = props.filter(p => hasPropTimeOnDay(p, date));
+  const untimed = props.filter(p => !hasPropTimeOnDay(p, date));
+  timed.sort((a, b) => _timeSortProps(a, b, date));
+  return { timed: timed.map((p, i) => ({ p, seq: i + 1, drive: null, infeasible: false })), untimed };
+}
+
 function syncMapManualOrdersFromDom(baseF) {
-  document.querySelectorAll('.map-props-sort').forEach(el => {
+  document.querySelectorAll('.map-props-sort-timed,.map-props-sort-untimed,.map-props-sort').forEach(el => {
     const date = el.dataset.date;
     if (!date) return;
     const ids = [...el.querySelectorAll('.map-props-row')].map(r => parseInt(r.dataset.pid, 10)).filter(Boolean);
     const key = _mapOrderKey(baseF, date);
-    if (ids.length) _mapManualOrder[key] = ids;
+    const existing = _mapManualOrder[key] || [];
+    const otherZone = el.classList.contains('map-props-sort-timed')
+      ? document.querySelector(`.map-props-sort-untimed[data-date="${date}"]`)
+      : el.classList.contains('map-props-sort-untimed')
+        ? document.querySelector(`.map-props-sort-timed[data-date="${date}"]`)
+        : null;
+    const otherIds = otherZone
+      ? [...otherZone.querySelectorAll('.map-props-row')].map(r => parseInt(r.dataset.pid, 10)).filter(Boolean)
+      : [];
+    const merged = el.classList.contains('map-props-sort-timed') ? [...ids, ...otherIds] : [...otherIds, ...ids];
+    if (merged.length) _mapManualOrder[key] = merged;
     else delete _mapManualOrder[key];
   });
 }
@@ -4889,35 +5167,23 @@ function onMapPropsDrop(evt, baseF) {
   const p = getProp(pid);
   if (!p) { refreshMap(); return; }
   const asScheduled = isMapAsScheduledMode();
+  const toKind = _mapDropZoneKind(evt.to);
+  const fromKind = _mapDropZoneKind(evt.from);
+  const toDate = _mapDropZoneDate(evt.to);
+  const fromDate = _mapDropZoneDate(evt.from);
+
   if (asScheduled) {
-    if (evt.from !== evt.to || _mapPropRowLocked(p)) {
-      refreshMap();
-      return;
-    }
+    if (_mapPropRowLocked(p)) { refreshMap(); return; }
+    if (toKind === 'unsched' || fromKind === 'unsched') { refreshMap(); return; }
+    if (toDate !== fromDate) { refreshMap(); return; }
     syncMapManualOrdersFromDom(baseF);
     refreshMap();
     return;
   }
-  if (_mapPropRowLocked(p) && evt.from !== evt.to) {
-    alert('Scheduled appointments cannot be moved.');
-    refreshMap();
-    return;
-  }
-  const toDate = _mapDropZoneDate(evt.to);
-  const fromDate = _mapDropZoneDate(evt.from);
-  if (toDate !== null && fromDate !== null && toDate !== fromDate) {
-    if (toDate) {
-      const err = validatePropProposedDate(p, toDate);
-      if (err) { alert(err); refreshMap(); return; }
-      p.proposedDate = toDate;
-      p.proposedTime = '';
-      p.userPlannedDate = '';
-      p.userPlannedTime = '';
-      touchPropFields(p, ['proposedDate', 'proposedTime']);
-      delete _dayPlanCache[toDate];
-      delete _dayPlanCache[toDate + '_as_scheduled'];
-      delete _dayPlanCache[toDate + '_suggested'];
-      delete _dayPlanCache[toDate + '_suggested_anchored'];
+
+  if (toKind === 'unsched' || (toDate === '' && evt.to?.id === 'map-props-unsched')) {
+    if (isPropLockedScheduled(p)) {
+      _mapTempUnscheduled.add(pid);
     } else {
       p.proposedDate = '';
       p.proposedTime = '';
@@ -4930,8 +5196,53 @@ function onMapPropsDrop(evt, baseF) {
         delete _dayPlanCache[fromDate + '_suggested'];
         delete _dayPlanCache[fromDate + '_suggested_anchored'];
       }
+      saveToStorage();
     }
-    saveToStorage();
+    syncMapManualOrdersFromDom(baseF);
+    refreshMap();
+    return;
+  }
+
+  if (fromKind === 'unsched' || (fromDate === '' && evt.from?.id === 'map-props-unsched')) {
+    _mapTempUnscheduled.delete(pid);
+  }
+
+  if (toDate !== null && fromDate !== null && toDate !== fromDate) {
+    if (toDate) {
+      const err = validatePropProposedDate(p, toDate);
+      if (err) { alert(err); refreshMap(); return; }
+      if (isPropLockedScheduled(p)) {
+        _mapTempUnscheduled.delete(pid);
+      } else {
+        p.proposedDate = toDate;
+        p.proposedTime = '';
+        p.userPlannedDate = '';
+        p.userPlannedTime = '';
+        touchPropFields(p, ['proposedDate', 'proposedTime']);
+      }
+      delete _dayPlanCache[toDate];
+      delete _dayPlanCache[toDate + '_as_scheduled'];
+      delete _dayPlanCache[toDate + '_suggested'];
+      delete _dayPlanCache[toDate + '_suggested_anchored'];
+    } else {
+      if (isPropLockedScheduled(p)) {
+        _mapTempUnscheduled.add(pid);
+      } else {
+        p.proposedDate = '';
+        p.proposedTime = '';
+        p.userPlannedDate = '';
+        p.userPlannedTime = '';
+        touchPropFields(p, ['proposedDate', 'proposedTime']);
+      }
+      if (fromDate) {
+        delete _dayPlanCache[fromDate];
+        delete _dayPlanCache[fromDate + '_as_scheduled'];
+        delete _dayPlanCache[fromDate + '_suggested'];
+        delete _dayPlanCache[fromDate + '_suggested_anchored'];
+      }
+      saveToStorage();
+    }
+    if (!isPropLockedScheduled(p)) saveToStorage();
   }
   syncMapManualOrdersFromDom(baseF);
   refreshMap();
@@ -5241,20 +5552,36 @@ function _mapOrderKey(baseF, date) {
   return `${baseF || ''}|${date || ''}`;
 }
 
-function _mapPropsRowHtml(p, { date = '', seq = '', meta = '', shaded = false, extraCls = '', timingViolation = false, scheduleKind = null } = {}) {
+function _mapPropsRowHtml(p, { date = '', seq = '', meta = '', shaded = false, extraCls = '', timingViolation = false, scheduleKind = null, plan = null, stop = null, driveMin = null } = {}) {
   const locked = _mapPropRowLocked(p);
   const lockCls = locked ? ' map-props-locked' : '';
   const shadeCls = shaded ? ' shaded' : '';
-  const timingCls = timingViolation ? ' timing-violation' : '';
+  const viol = stop ? stopHasViolation(stop, plan) : timingViolation;
+  const violCls = viol ? ' schedule-violation' : '';
   const seqHtml = seq !== '' ? `<span class="map-props-seq">${seq}</span>` : '';
   const sk = scheduleKind ?? (date ? getPropScheduleKind(p, date) : getPropScheduleKind(p, null));
   const nameCls = sk === 'scheduled' ? ' scheduled-name' : (sk === 'proposed' ? ' proposed-name' : '');
-  const title = locked ? 'Scheduled — cannot move' : (timingViolation ? 'Out of time order' : '');
-  return `<div class="map-props-row${extraCls}${lockCls}${shadeCls}${timingCls}" data-pid="${p.id}"${date ? ` data-date="${date}"` : ''}${title ? ` title="${title}"` : ''}>
+  const reasons = stop ? getStopViolationReasons(stop, plan) : (timingViolation ? ['out of time order'] : []);
+  const title = locked ? 'Scheduled — locked in as-scheduled mode' : (reasons.length ? reasons.join(', ') : '');
+  const handle = locked
+    ? '<span style="opacity:.3;width:14px;flex-shrink:0;text-align:center" title="Locked">🔒</span>'
+    : '<span class="map-props-drag-handle" title="Drag to reorder">⠿</span>';
+  const dm = driveMin != null ? driveMin : (stop?.drive ?? null);
+  return `<div class="map-props-row${extraCls}${lockCls}${shadeCls}${violCls}" data-pid="${p.id}"${date ? ` data-date="${date}"` : ''}${title ? ` title="${escHtml(title)}"` : ''}>
+    ${handle}
     ${seqHtml}
     <span class="map-props-name${nameCls}" title="${escHtml(p.name)}">${escHtml(p.name)}</span>
-    <span class="map-props-meta">${meta || '—'}</span>
+    <span class="map-props-meta">${meta || '—'}${dm != null ? ` · ${dm}m` : ''}</span>
   </div>`;
+}
+
+function _bindMapPropsLegPopups() {
+  document.querySelectorAll('#map-props-panel .map-props-row[data-pid]').forEach(row => {
+    const pid = parseInt(row.dataset.pid, 10);
+    const meta = row.querySelector('.map-props-meta')?.textContent || '';
+    const m = meta.match(/(\d+)m/);
+    bindPropLegInteraction(row, pid, m ? parseInt(m[1], 10) : null);
+  });
 }
 
 function renderMapPropsPanel({ baseF, dayPlans, unscheduled, listed, shadedIds, loading }) {
@@ -5268,109 +5595,80 @@ function renderMapPropsPanel({ baseF, dayPlans, unscheduled, listed, shadedIds, 
     panel.innerHTML = '<div style="padding:10px;color:var(--text3)">Loading properties…</div>';
     return;
   }
+  const statusFilter = getMapStatusFilter();
   const plans = dayPlans?.length ? dayPlans : [];
   const planByDate = Object.fromEntries(plans.map(p => [p.date, p]));
   const panelDayDates = getMapPanelDayDates(baseF);
   let html = '<div class="map-props-section" id="map-props-ordered">';
-  if (panelDayDates.length) {
-    for (const date of panelDayDates) {
+  const datesToRender = panelDayDates.length ? panelDayDates : plans.map(p => p.date);
+  if (datesToRender.length) {
+    for (const date of datesToRender) {
       const plan = planByDate[date];
       const dayLbl = getDayForDate(date)?.label || date;
       const lineColor = plan?.lineColor || '#2C5F7A';
       html += `<div class="map-props-day" style="color:${lineColor}">${escHtml(dayLbl)}</div>`;
-      html += `<div class="map-props-sort" data-date="${date}">`;
+      const timedStops = plan
+        ? getMapDayTimedStops(plan, date, baseF, statusFilter)
+        : buildMapDayRowsWithoutPlan(date, baseF, statusFilter).timed;
+      html += `<div class="map-props-sort map-props-sort-timed" data-date="${date}">`;
+      for (const s of timedStops) {
+        const t = formatTimeDisplay(getPropDayTime(s.p, date)) || '—';
+        const ob = s.infeasible && plan?.overBudget ? ' · over budget' : '';
+        html += _mapPropsRowHtml(s.p, {
+          date, seq: s.seq, meta: `${t}${ob}`, shaded: shadedIds?.has(s.p.id),
+          extraCls: s.infeasible ? ' skipped' : '', plan, stop: s,
+        });
+      }
       if (plan) {
-        for (const s of plan.stops) {
-          const t = formatTimeDisplay(getPropDayTime(s.p, date)) || '—';
-          const ob = s.infeasible && plan.overBudget ? ' · over budget' : '';
-          const rowCls = (s.infeasible ? ' skipped' : '') + (s.timeOrderViolation ? ' timing-violation' : '');
-          html += _mapPropsRowHtml(s.p, { date, seq: s.seq, meta: `${t}${ob}`, shaded: shadedIds?.has(s.p.id), extraCls: rowCls, timingViolation: !!s.timeOrderViolation });
-        }
         for (const sk of (plan.skipped || [])) {
+          if (!hasPropTimeOnDay(sk.p, date)) continue;
           const t = formatTimeDisplay(getPropDayTime(sk.p, date)) || '—';
-          html += _mapPropsRowHtml(sk.p, { date, seq: '—', meta: `${t} · ${escHtml(sk.reason)}`, shaded: shadedIds?.has(sk.p.id), extraCls: ' skipped' });
+          html += _mapPropsRowHtml(sk.p, {
+            date, seq: '—', meta: `${t} · ${escHtml(sk.reason)}`, shaded: shadedIds?.has(sk.p.id), extraCls: ' skipped',
+          });
         }
       }
       html += '</div>';
+      const untimed = plan
+        ? getMapDayUntimedProps(date, baseF, statusFilter, plans)
+        : buildMapDayRowsWithoutPlan(date, baseF, statusFilter).untimed;
+      if (untimed.length) {
+        html += `<div class="map-props-day-untimed">No time — bottom of day</div>`;
+        html += `<div class="map-props-sort map-props-sort-untimed" data-date="${date}">`;
+        for (const p of untimed) {
+          const sk = getPropScheduleKind(p, date);
+          const lbl = sk === 'scheduled' ? 'scheduled' : (sk === 'proposed' ? 'proposed' : '—');
+          html += _mapPropsRowHtml(p, { date, meta: lbl, shaded: shadedIds?.has(p.id) });
+        }
+        html += '</div>';
+      }
     }
   } else if (!plans.length) {
     const hint = isMapAsScheduledMode()
       ? 'Select exactly one day for the as-scheduled route.'
-      : 'Select day(s) and route mode to optimize viewing order.';
+      : 'Select a base to show scheduled and proposed properties by date.';
     html += `<div style="color:var(--text3);padding:4px 0">${hint}</div>`;
-  } else {
-    for (const plan of plans) {
-      const dayLbl = getDayForDate(plan.date)?.label || plan.date;
-      html += `<div class="map-props-day" style="color:${plan.lineColor || '#2C5F7A'}">${escHtml(dayLbl)}</div>`;
-      html += `<div class="map-props-sort" data-date="${plan.date}">`;
-      for (const s of plan.stops) {
-        const t = formatTimeDisplay(getPropDayTime(s.p, plan.date)) || '—';
-        const ob = s.infeasible && plan.overBudget ? ' · over budget' : '';
-        const rowCls = (s.infeasible ? ' skipped' : '') + (s.timeOrderViolation ? ' timing-violation' : '');
-        html += _mapPropsRowHtml(s.p, { date: plan.date, seq: s.seq, meta: `${t}${ob}`, shaded: shadedIds?.has(s.p.id), extraCls: rowCls, timingViolation: !!s.timeOrderViolation });
-      }
-      for (const sk of (plan.skipped || [])) {
-        const t = formatTimeDisplay(getPropDayTime(sk.p, plan.date)) || '—';
-        html += _mapPropsRowHtml(sk.p, { date: plan.date, seq: '—', meta: `${t} · ${escHtml(sk.reason)}`, shaded: shadedIds?.has(sk.p.id), extraCls: ' skipped' });
-      }
-      html += '</div>';
-    }
   }
   html += '</div>';
   const unsched = unscheduled || [];
-  const listedAll = listed || [];
-  const unschedIds = new Set(unsched.map(p => p.id));
-  const extras = listedAll.filter(p => !unschedIds.has(p.id));
-  if (!plans.length && listedAll.length) {
-    html += `<div class="map-props-section"><h4>Properties</h4><div id="map-props-listed">`;
-    const sortedAll = [...listedAll].sort((a, b) => {
-      const ad = getPropRouteDate(a) || getPropProposedDate(a) || 'zzzz';
-      const bd = getPropRouteDate(b) || getPropProposedDate(b) || 'zzzz';
-      if (ad !== bd) return ad.localeCompare(bd);
+  if (unsched.length) {
+    html += `<div class="map-props-section"><h4>Unscheduled</h4><div id="map-props-unsched" data-date="">`;
+    const sorted = [...unsched].sort((a, b) => {
+      if (_mapTempUnscheduled.has(a.id) && !_mapTempUnscheduled.has(b.id)) return -1;
+      if (!_mapTempUnscheduled.has(a.id) && _mapTempUnscheduled.has(b.id)) return 1;
       return String(a.name).localeCompare(String(b.name));
     });
-    for (const p of sortedAll) {
-      const d = getPropRouteDate(p) || getPropProposedDate(p);
-      html += _mapPropsRowHtml(p, { meta: d || '—', shaded: shadedIds?.has(p.id) });
+    for (const p of sorted) {
+      const note = _mapTempUnscheduled.has(p.id) ? 'temp unsched' : '—';
+      html += _mapPropsRowHtml(p, { meta: note, shaded: shadedIds?.has(p.id) });
     }
     html += '</div></div>';
-  } else {
-    if (extras.length) {
-      html += `<div class="map-props-section"><h4>Other properties</h4><div id="map-props-listed">`;
-      const sortedExtras = [...extras].sort((a, b) => {
-        const ad = getPropRouteDate(a) || getPropProposedDate(a) || 'zzzz';
-        const bd = getPropRouteDate(b) || getPropProposedDate(b) || 'zzzz';
-        if (ad !== bd) return ad.localeCompare(bd);
-        return String(a.name).localeCompare(String(b.name));
-      });
-      for (const p of sortedExtras) {
-        const d = getPropRouteDate(p) || getPropProposedDate(p);
-        html += _mapPropsRowHtml(p, { meta: d || '—', shaded: shadedIds?.has(p.id) });
-      }
-      html += '</div></div>';
-    }
-    if (unsched.length) {
-      html += `<div class="map-props-section"><h4>Unscheduled</h4><div id="map-props-unsched" data-date="">`;
-      const sorted = [...unsched].sort((a, b) => {
-        const ad = getPropProposedDate(a) || 'zzzz';
-        const bd = getPropProposedDate(b) || 'zzzz';
-        if (ad !== bd) return ad.localeCompare(bd);
-        const at = parseTimeToMinutes(getPropProposedTime(a)) ?? 99999;
-        const bt = parseTimeToMinutes(getPropProposedTime(b)) ?? 99999;
-        return at - bt || String(a.name).localeCompare(String(b.name));
-      });
-      for (const p of sorted) {
-        const d = getPropProposedDate(p);
-        html += _mapPropsRowHtml(p, { meta: d || '—', shaded: shadedIds?.has(p.id) });
-      }
-      html += '</div></div>';
-    }
-  }
-  if (!plans.length && !listedAll.length) {
+  } else if (!datesToRender.length && !plans.length) {
     html += '<div style="padding:8px 0;color:var(--text3)">No properties match this base filter.</div>';
   }
   panel.innerHTML = html;
   initMapPropsSortable(baseF);
+  _bindMapPropsLegPopups();
 }
 
 function initMapPropsSortable(baseF) {
@@ -5378,25 +5676,41 @@ function initMapPropsSortable(baseF) {
   _mapSortables = {};
   if (typeof Sortable === 'undefined') return;
   const asScheduled = isMapAsScheduledMode();
-  const dayZones = [...document.querySelectorAll('.map-props-sort')];
+  const dayDates = [...document.querySelectorAll('.map-props-sort-timed')].map(el => el.dataset.date).filter(Boolean);
   const unsched = document.getElementById('map-props-unsched');
-  const listed = document.getElementById('map-props-listed');
-  const enableCross = !asScheduled && dayZones.length >= 1 && (unsched || dayZones.length > 1);
-  const group = enableCross ? { name: 'map-props', pull: true, put: true } : undefined;
-  const zones = [...dayZones, unsched, listed].filter(Boolean);
-  zones.forEach((el, idx) => {
-    const key = el.id || el.dataset.date || `zone-${idx}`;
-    _mapSortables[key] = Sortable.create(el, {
-      group,
-      animation: 120,
-      draggable: '.map-props-row',
-      filter: '.map-props-locked',
-      preventOnFilter: true,
-      ghostClass: 'sortable-ghost',
-      chosenClass: 'sortable-chosen',
-      onEnd: evt => onMapPropsDrop(evt, baseF),
+  const sortOptsBase = {
+    animation: 120,
+    handle: '.map-props-drag-handle',
+    draggable: '.map-props-row:not(.map-props-locked)',
+    filter: '.map-props-locked',
+    preventOnFilter: true,
+    ghostClass: 'sortable-ghost',
+    chosenClass: 'sortable-chosen',
+    delay: 120,
+    delayOnTouchOnly: true,
+    touchStartThreshold: 4,
+    onEnd: evt => onMapPropsDrop(evt, baseF),
+  };
+  if (asScheduled) {
+    for (const date of dayDates) {
+      const timed = document.querySelector(`.map-props-sort-timed[data-date="${date}"]`);
+      const untimed = document.querySelector(`.map-props-sort-untimed[data-date="${date}"]`);
+      const group = { name: 'map-as-' + date, pull: true, put: true };
+      [timed, untimed].filter(Boolean).forEach((el, idx) => {
+        const key = (el.classList.contains('map-props-sort-timed') ? 't-' : 'u-') + date;
+        _mapSortables[key] = Sortable.create(el, { ...sortOptsBase, group });
+      });
+    }
+  } else {
+    const crossGroup = { name: 'map-props', pull: true, put: true };
+    document.querySelectorAll('.map-props-sort-timed,.map-props-sort-untimed').forEach((el, idx) => {
+      const key = (el.classList.contains('map-props-sort-timed') ? 't-' : 'u-') + (el.dataset.date || String(idx));
+      _mapSortables[key] = Sortable.create(el, { ...sortOptsBase, group: crossGroup });
     });
-  });
+    if (unsched) {
+      _mapSortables['unsched'] = Sortable.create(unsched, { ...sortOptsBase, group: crossGroup });
+    }
+  }
 }
 
 function refreshMap(opts) {
