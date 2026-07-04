@@ -79,6 +79,8 @@ Production reaches **Cloudflare Pages only when a PR merges to `main`**. Direct 
 | 5 | Auto-merge when Cloudflare Pages passes | same workflow |
 | 6 | Pull `main`; refresh SPA; reload extension if needed | user pulls locally |
 
+Draft PRs from Cloud/Android agents are **auto-promoted** by `.github/workflows/auto-merge-cursor.yml` (REST/GraphQL undraft — no `gh` CLI in CI). A **15-minute cron sweep** retries any stuck draft `cursor/*` PRs once Cloudflare Pages is green.
+
 `deploy.ps1` / `push.ps1`: commit → push branch (never `main`) → open PR via `gh` → `.github/workflows/auto-merge-cursor.yml` squash-merges.
 
 ### Stuck deploy (Cloudflare not updating)
@@ -86,11 +88,11 @@ Production reaches **Cloudflare Pages only when a PR merges to `main`**. Direct 
 Production only changes when a **cursor/\* PR merges to `main`**. If a PR is open but Cloudflare is stale:
 
 1. Open the PR on GitHub — confirm **Cloudflare Pages** check is green.
-2. If the PR is still **Draft**, run `gh pr ready <number>` (or click "Ready for review"). Draft PRs block auto-merge.
-3. Re-run **Auto-merge cursor agent PRs** workflow (Actions tab → Run workflow) if checks passed but merge did not run.
+2. Auto-merge promotes **draft** `cursor/*` PRs via GitHub API (REST then GraphQL). A cron job re-runs every 15 minutes for stuck drafts or green-but-unmerged PRs.
+3. Manual recovery: Actions → **Auto-merge cursor agent PRs** → Run workflow → optional `pr_number`.
 4. After merge: pull `main`, hard-refresh https://househunt.pages.dev; reload extension only if `extension/` changed.
 
-**Note:** GitHub REST `draft: false` does not undraft PRs; auto-merge uses `gh pr ready` (GraphQL `markPullRequestAsReadyForReview` is unavailable on this repo token).
+**Note:** The old `gh pr ready` shell step failed in CI (`fatal: not a git repository`) — replaced with API-based undraft in the workflow.
 
 **On `main` with local changes:** pass `-Description 'my-feature'` to create `cursor/my-feature-fb87`.
 
