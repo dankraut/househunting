@@ -1,0 +1,107 @@
+name: Auto-open cursor agent PRs
+
+on:
+  push:
+    branches:
+      - 'cursor/**'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to open PR for (defaults to triggering ref)'
+        required: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: open-cursor-pr-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open ready PR for cursor branch
+        uses: actions/github-script@v7
+        env:
+          SHIP_TOKEN: ${{ secrets.GH_PAT || secrets.CURSOR_SHIP_TOKEN }}
+        with:
+          github-token: ${{ secrets.GH_PAT || secrets.CURSOR_SHIP_TOKEN || github.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const branch = '${{ github.event.inputs.branch }}'.trim()
+              || context.ref.replace(/^refs\/heads\//, '');
+
+            if (!branch.startsWith('cursor/')) {
+              core.info(`Skipping non-cursor branch: ${branch}`);
+              return;
+            }
+            if (branch === 'main') {
+              core.info('Skipping main.');
+              return;
+            }
+
+            const { data: existing } = await github.rest.pulls.list({
+              owner, repo, state: 'open', head: `${owner}:${branch}`, per_page: 5,
+            });
+            if (existing.length) {
+              core.info(`Open PR already exists: ${existing[0].html_url}`);
+              if (existing[0].draft) await undraft(existing[0].number);
+              return;
+            }
+
+            const { data: compare } = await github.rest.repos.compareCommitsWithBasehead({
+              owner, repo, basehead: `main...${branch}`,
+            });
+            if (!compare.ahead_by) {
+              core.info(`Branch ${branch} has no commits ahead of main.`);
+              return;
+            }
+
+            const title = compare.commits.length === 1
+              ? compare.commits[0].commit.message.split('\n')[0]
+              : `Ship ${branch}`;
+
+            const body = [
+              'Opened automatically when a `cursor/*` branch was pushed (Cloud agent ship pipeline).',
+              '',
+              '- Auto-merge runs when **Cloudflare Pages** passes (see `auto-merge-cursor.yml`).',
+              '- Do not merge or push to `main` manually.',
+            ].join('\n');
+
+            try {
+              const { data: pr } = await github.rest.pulls.create({
+                owner, repo, title, head: branch, base: 'main', body,
+              });
+              core.info(`Created PR #${pr.number}: ${pr.html_url}`);
+              if (pr.draft) await undraft(pr.number);
+            } catch (e) {
+              const msg = e?.message || String(e);
+              if (/not permitted to create or approve pull requests/i.test(msg)) {
+                core.warning(
+                  'GitHub Actions cannot create PRs until repo setting is enabled: '
+                  + `https://github.com/${owner}/${repo}/settings/actions `
+                  + '(Workflow permissions → allow Actions to create/approve pull requests). '
+                  + 'Or add repo secret GH_PAT with repo scope.'
+                );
+                core.setFailed(msg);
+                return;
+              }
+              throw e;
+            }
+
+            async function undraft(prNum) {
+              const { data: fresh } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+              if (!fresh.draft) return;
+              core.info(`Promoting draft PR #${prNum} to ready.`);
+              await github.graphql(
+                `mutation($pullRequestId: ID!) {
+                  markPullRequestReadyForReview(input: { pullRequestId: $pullRequestId }) {
+                    pullRequest { number isDraft }
+                  }
+                }`,
+                { pullRequestId: fresh.node_id }
+              );
+            }

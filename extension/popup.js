@@ -466,6 +466,13 @@ function extractFromPage() {
   result.prov   = strip(result.prov);
   result.title  = strip(result.title);
 
+  if (!result.location && (result.town || result.commune)) {
+    const parts = [result.commune, result.town].filter(Boolean);
+    let addr = parts.join(', ');
+    if (result.prov) addr += (addr ? ', ' : '') + result.prov.toUpperCase();
+    if (addr && !/italy/i.test(addr)) addr += ', Italy';
+    result.location = addr;
+  }
   if (result.location) result.gps = result.location;
   return result;
 }

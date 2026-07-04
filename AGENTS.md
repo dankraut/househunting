@@ -27,7 +27,14 @@ All `/api/*` calls require `Authorization: Bearer jmjk05DK` (or `?tk=jmjk05DK`).
 - **Lint / pre-ship validation:** `bash scripts/smoke-check.sh` (checks regression markers in `scripts/smoke-markers.txt` and SPA/extension version alignment).
 - **Automated tests:** none in this repo.
 - **Build:** none (static assets + edge Functions).
-- The Windows ship tooling (`deploy.cmd`, `scripts/*.ps1`) is PowerShell/Windows-only and is only for the deploy pipeline; it is not needed to run or test locally.
+### Ship (Cloud agents)
+
+After editing, run `bash scripts/ship.sh` (smoke check → commit → push → open PR).
+
+**One-time repo setup** so PRs open automatically on push: see [`.github/CLOUD_SHIP_SETUP.md`](.github/CLOUD_SHIP_SETUP.md) — enable *Allow GitHub Actions to create and approve pull requests* in [Actions settings](https://github.com/dankraut/househunting/settings/actions), or add a `GH_PAT` secret.
+
+Do **not** leave PRs as drafts; `auto-merge-cursor.yml` merges when Cloudflare Pages passes.
+- The Windows ship tooling (`deploy.cmd`, `scripts/*.ps1`) mirrors the same pipeline for Desktop.
 
 ### Chrome extension (optional)
 `extension/` is Manifest V3, loaded unpacked in Chrome. It scrapes Idealista and syncs to the SPA/API; testing it requires Chrome + an Idealista login, so it is not part of the automated local run.
