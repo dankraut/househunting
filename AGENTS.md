@@ -27,7 +27,7 @@ All `/api/*` calls require `Authorization: Bearer jmjk05DK` (or `?tk=jmjk05DK`).
 - **Lint / pre-ship validation:** `bash scripts/smoke-check.sh` (checks regression markers in `scripts/smoke-markers.txt` and SPA/extension version alignment).
 - **Automated tests:** none in this repo.
 - **Build:** none (static assets + edge Functions).
-- **Ship (Cloud agents):** after editing, run `bash scripts/ship.sh` — it smoke-checks, commits, pushes the current `cursor/*` branch, and opens a **ready** (non-draft) PR via `gh`. Do **not** use draft PR tools or wait for manual approval; auto-merge runs when Cloudflare Pages passes (see `.github/workflows/auto-merge-cursor.yml`).
+- **Ship (Cloud agents):** after editing, run `bash scripts/ship.sh` — it smoke-checks, commits, and pushes the current `cursor/*` branch. PR creation uses `gh` when available; otherwise **`.github/workflows/auto-open-cursor-pr.yml`** opens a ready PR on push. Do **not** use draft PR tools or wait for manual approval; auto-merge runs when Cloudflare Pages passes.
 - The Windows ship tooling (`deploy.cmd`, `scripts/*.ps1`) mirrors the same pipeline for Desktop.
 
 ### Chrome extension (optional)

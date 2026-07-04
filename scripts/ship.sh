@@ -106,7 +106,18 @@ if [[ -z "$PR_BODY" ]]; then
 fi
 
 echo "==> Opening pull request"
-pr_url="$("$GH" pr create --base "$MAIN_BRANCH" --head "$branch" --title "$PR_TITLE" --body "$PR_BODY")"
-echo "    Created PR: $pr_url"
-"$GH" pr ready "$pr_url" 2>/dev/null || true
-echo "$pr_url"
+set +e
+pr_out="$("$GH" pr create --base "$MAIN_BRANCH" --head "$branch" --title "$PR_TITLE" --body "$PR_BODY" 2>&1)"
+pr_rc=$?
+set -e
+if [[ $pr_rc -eq 0 ]]; then
+  echo "    Created PR: $pr_out"
+  "$GH" pr ready "$pr_out" 2>/dev/null || true
+  echo "$pr_out"
+else
+  echo "    gh pr create unavailable: $pr_out"
+  echo "    Push triggers .github/workflows/auto-open-cursor-pr.yml to open the PR."
+  remote="$(git remote get-url origin)"
+  repo_path="$(echo "$remote" | sed -E 's#.*github.com[:/](.+/.+)(\.git)?$#\1#')"
+  echo "    Manual: https://github.com/${repo_path}/compare/main...${branch}?expand=1"
+fi
