@@ -24,7 +24,7 @@ window.HHPropConflict = HHPropConflict;
 window.getApiToken = getApiToken;
 
 const locNames = [
-  'parseGPS', 'buildAddressFromParts', 'getPropAddress', 'getPropGps', 'getBaseGps',
+  'parseGPS', 'isCoordinateGps', 'buildAddressFromParts', 'getPropAddress', 'getPropGps', 'getBaseGps',
   'clearEntityCoords', 'normalizeGpsString', 'formatItalianLocation', 'applyGpsToEntity',
   'geocodeAddress', 'reverseGeocode', 'syncEntityLocation', 'resolveLocSyncMode', 'resolvePropCoords',
   'resolveStayBaseCoords', 'migratePropLocation',
