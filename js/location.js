@@ -130,7 +130,35 @@ export function createLocationModule(api) {
     return null;
   }
 
-  async function syncEntityLocation(entity, { gps, address, isBase = false, mode = 'auto' } = {}) {
+  /** Pick sync mode: GPS always wins when coordinates are present. */
+  function resolveLocSyncMode({ gps, address, fromField } = {}) {
+    const hasGps = !!(gps && String(gps).trim());
+    const hasAddr = !!(address && String(address).trim());
+    if (fromField === 'gps') return hasGps ? 'gps' : 'auto';
+    if (fromField === 'address') return 'address';
+    if (hasGps) return 'gps';
+    return hasAddr ? 'address' : 'auto';
+  }
+
+  function applyAddressText(entity, addr, isBase) {
+    if (!addr) return;
+    entity.address = addr;
+    if (isBase) return;
+    const provM = addr.match(/,\s*([A-Z]{2})\b/);
+    if (provM) entity.prov = provM[1];
+    const sansItaly = addr.replace(/,?\s*Italy\s*$/i, '').trim();
+    const parts = sansItaly.split(',').map(s => s.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      entity.town = parts[parts.length - 1];
+      if (parts.length >= 3) entity.commune = parts[parts.length - 2];
+    } else if (parts.length === 1) {
+      entity.town = parts[0];
+    }
+  }
+
+  async function syncEntityLocation(entity, {
+    gps, address, isBase = false, mode = 'auto', overwriteTown = false,
+  } = {}) {
     const gpsIn = gps !== undefined ? String(gps).trim() : (isBase ? getBaseGps(entity) : getPropGps(entity));
     let addrIn = address !== undefined ? String(address).trim() : (isBase ? (entity.address || '').trim() : getPropAddress(entity));
 
@@ -156,6 +184,10 @@ export function createLocationModule(api) {
       if (!applyGpsToEntity(entity, gpsIn)) {
         return { ok: false, error: 'Invalid GPS coordinates' };
       }
+      if (addrIn && !overwriteTown) {
+        applyAddressText(entity, addrIn, isBase);
+        return { ok: true, source: 'gps' };
+      }
       const rev = await reverseGeocode(entity.lat, entity.lng);
       if (rev) {
         const label = formatItalianLocation(rev);
@@ -165,16 +197,22 @@ export function createLocationModule(api) {
           if (rev.commune) entity.commune = rev.commune;
           if (rev.prov) entity.prov = String(rev.prov).toUpperCase();
         }
+      } else if (addrIn) {
+        applyAddressText(entity, addrIn, isBase);
       }
       return { ok: true, source: 'gps' };
     };
 
+    const applyAddressOnly = () => {
+      if (addrIn) applyAddressText(entity, addrIn, isBase);
+      return { ok: true, source: 'gps' };
+    };
+
     if (mode === 'address') {
+      if (gpsIn) return applyAddressOnly();
       if (addrIn) return applyForward();
       entity.gps = '';
       clearEntityCoords(entity);
-      if (!addrIn && !gpsIn) return { ok: true, source: 'cleared' };
-      if (gpsIn) return applyReverse();
       return { ok: true, source: 'cleared' };
     }
 
@@ -186,10 +224,10 @@ export function createLocationModule(api) {
     }
 
     if (gpsIn) return applyReverse();
+    if (addrIn) return applyForward();
     entity.gps = '';
     clearEntityCoords(entity);
-    if (!addrIn) return { ok: true, source: 'cleared' };
-    return applyForward();
+    return { ok: true, source: 'cleared' };
   }
 
   async function resolvePropCoords(p) {
@@ -349,17 +387,34 @@ export function createLocationModule(api) {
     }
   }
 
-  async function runLocSync(prefix, scratch, { gps, address, isBase, mode, onSuccess }) {
+  async function runLocSync(prefix, scratch, {
+    gps, address, isBase, mode, overwriteTown, onSuccess, fromField,
+  } = {}) {
     if (_locSyncing) return { skipped: true };
     _locSyncing = true;
     setLocError(prefix, {});
     setLocLoading(prefix, true);
     try {
-      const r = await syncEntityLocation(scratch, { gps, address, isBase, mode });
+      const syncMode = mode || resolveLocSyncMode({ gps, address, fromField });
+      let townOverwrite = overwriteTown;
+      const hasGps = !!(gps && String(gps).trim());
+      const hasAddr = !!(address && String(address).trim());
+      if (syncMode === 'gps' && hasGps && hasAddr && townOverwrite !== true) {
+        if (townOverwrite === false) {
+          // caller declined overwrite
+        } else if (typeof confirm === 'function') {
+          townOverwrite = confirm(
+            'Replace the existing town/location with the name from these GPS coordinates?'
+          );
+        }
+      }
+      const r = await syncEntityLocation(scratch, {
+        gps, address, isBase, mode: syncMode, overwriteTown: !!townOverwrite,
+      });
       if (!r.ok) {
         const err = r.error || 'Location lookup failed';
-        if (mode === 'gps' || (mode === 'address' && !address)) {
-          setLocError(prefix, { gps: mode === 'gps' ? err : undefined, address: mode === 'address' ? err : undefined, general: err });
+        if (syncMode === 'gps' || (syncMode === 'address' && !address)) {
+          setLocError(prefix, { gps: syncMode === 'gps' ? err : undefined, address: syncMode === 'address' ? err : undefined, general: err });
         } else {
           setLocError(prefix, { address: err, general: err });
         }
@@ -369,10 +424,13 @@ export function createLocationModule(api) {
       if (ids) {
         const addrEl = document.getElementById(ids.address);
         const gpsEl = document.getElementById(ids.gps);
-        if (addrEl) addrEl.value = scratch.address || '';
+        if (addrEl) addrEl.value = scratch.address || address || '';
         if (gpsEl) gpsEl.value = scratch.gps || '';
       }
-      const msg = r.source === 'gps' ? 'Town updated from GPS.' : r.source === 'geocode' ? 'GPS updated from town.' : '';
+      let msg = '';
+      if (r.source === 'gps' && townOverwrite) msg = 'Town updated from GPS.';
+      else if (r.source === 'geocode') msg = 'GPS updated from town.';
+      else if (r.source === 'gps' && syncMode === 'address') msg = 'Town updated (GPS unchanged).';
       setLocSuccess(prefix, msg);
       if (onSuccess) onSuccess(scratch, r);
       return r;
@@ -401,6 +459,7 @@ export function createLocationModule(api) {
     applyGpsToEntity,
     geocodeAddress,
     reverseGeocode,
+    resolveLocSyncMode,
     syncEntityLocation,
     resolvePropCoords,
     resolveStayBaseCoords,
