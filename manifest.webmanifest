@@ -1,0 +1,15 @@
+{
+  "name": "Italy House Hunting",
+  "short_name": "House Hunt",
+  "description": "Plan property viewings, routes, and schedules across Italy.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FAF7F2",
+  "theme_color": "#2C5F7A",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
