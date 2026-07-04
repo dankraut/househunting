@@ -3169,7 +3169,10 @@ async function saveDetailModal() {
     let overwriteTown = false;
     if (gpsIn && gpsIn !== oldGps) {
       locMode = 'gps';
-      if (addrIn && isGpsCoords(gpsIn)) {
+      // Only prompt when the user changed the coordinates but kept the existing
+      // town (the genuine conflict). If the address also changed — e.g. a town
+      // was typed into the GPS field and resolved on blur — honor it silently.
+      if (addrIn && addrIn === oldAddr && isGpsCoords(gpsIn)) {
         overwriteTown = confirm(
           'Replace the existing town/location with the name from these GPS coordinates?'
         );
@@ -6458,11 +6461,13 @@ async function saveBaseForm() {
   migrateBaseLocation(saved);
   if (baseType === 'stay') {
     const oldGps = existing ? getBaseGps(existing) : '';
+    const oldAddr = existing ? (existing.address || '').trim() : '';
     let locMode;
     let overwriteTown = false;
     if (gps && gps !== oldGps) {
       locMode = 'gps';
-      if (address && isGpsCoords(gps)) {
+      // Only prompt when the coordinates changed but the town was kept as-is.
+      if (address && address === oldAddr && isGpsCoords(gps)) {
         overwriteTown = confirm(
           'Replace the existing town/location with the name from these GPS coordinates?'
         );
