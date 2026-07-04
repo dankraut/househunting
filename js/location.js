@@ -182,7 +182,20 @@ export function createLocationModule(api) {
 
     const applyReverse = async () => {
       if (!applyGpsToEntity(entity, gpsIn)) {
-        return { ok: false, error: 'Invalid GPS coordinates' };
+        // gpsIn is not valid coordinates — try geocoding it as a town/address
+        const geo = await geocodeAddress(gpsIn);
+        if (!geo) return { ok: false, error: 'Enter GPS coordinates (e.g. 42.418, 11.875) or a recognisable town/address' };
+        entity.lat = geo.lat;
+        entity.lng = geo.lng;
+        entity.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
+        const label = formatItalianLocation(geo);
+        if (label) entity.address = label;
+        if (!isBase) {
+          if (geo.town) entity.town = geo.town;
+          if (geo.commune) entity.commune = geo.commune;
+          if (geo.prov) entity.prov = String(geo.prov).toUpperCase();
+        }
+        return { ok: true, source: 'geocode' };
       }
       if (addrIn && !overwriteTown) {
         applyAddressText(entity, addrIn, isBase);
@@ -400,7 +413,11 @@ export function createLocationModule(api) {
       const hasGps = !!(gps && String(gps).trim());
       const hasAddr = !!(address && String(address).trim());
       if (syncMode === 'gps' && hasGps && hasAddr && townOverwrite !== true) {
-        if (townOverwrite === false) {
+        const [gpsCheckLat] = parseGPS(gps);
+        if (gpsCheckLat == null) {
+          // GPS field has a town/address text — geocode will set both fields; no prompt needed
+          townOverwrite = true;
+        } else if (townOverwrite === false) {
           // caller declined overwrite
         } else if (typeof confirm === 'function') {
           townOverwrite = confirm(
