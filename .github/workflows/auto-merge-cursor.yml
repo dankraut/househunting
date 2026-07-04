@@ -99,44 +99,41 @@ jobs:
               let { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
               if (!pr.draft) return pr;
 
-              core.info(`PR #${prNum} is draft — promoting to ready for review.`);
+              core.info(`PR #${prNum} is draft — promoting via GraphQL markPullRequestReadyForReview.`);
 
-              try {
-                await github.rest.pulls.update({
-                  owner, repo, pull_number: prNum, draft: false,
-                });
-              } catch (e) {
-                core.warning(`REST undraft failed for PR #${prNum}: ${e.message}`);
-              }
-
-              for (let i = 0; i < 10; i++) {
-                ({ data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum }));
-                if (!pr.draft) {
-                  core.info(`PR #${prNum} is ready (REST).`);
-                  return pr;
-                }
-                await new Promise(r => setTimeout(r, 2000));
-              }
-
-              try {
-                await github.graphql(
-                  `mutation($id: ID!) {
-                    markPullRequestAsReadyForReview(input: { pullRequestId: $id }) {
-                      pullRequest { isDraft }
+              // REST PATCH ignores draft:false; undraft requires GraphQL (see GitHub docs).
+              const undraftViaGraphql = async () => {
+                const { data: fresh } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+                const result = await github.graphql(
+                  `mutation($pullRequestId: ID!) {
+                    markPullRequestReadyForReview(input: { pullRequestId: $pullRequestId }) {
+                      pullRequest { number isDraft }
                     }
                   }`,
-                  { id: pr.node_id }
+                  { pullRequestId: fresh.node_id }
                 );
-              } catch (e) {
-                core.warning(`GraphQL undraft failed for PR #${prNum}: ${e.message}`);
+                const out = result?.markPullRequestReadyForReview?.pullRequest;
+                if (!out || out.isDraft) {
+                  throw new Error(`GraphQL undraft did not clear draft flag for PR #${prNum}`);
+                }
+                core.info(`PR #${prNum} is ready (GraphQL).`);
+                return out;
+              };
+
+              for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                  await undraftViaGraphql();
+                  break;
+                } catch (e) {
+                  if (attempt === 2) throw new Error(`PR #${prNum} is still a draft after undraft attempts: ${e.message}`);
+                  core.warning(`Undraft attempt ${attempt + 1} failed for PR #${prNum}: ${e.message}`);
+                  await new Promise(r => setTimeout(r, 2000));
+                }
               }
 
               for (let i = 0; i < 10; i++) {
                 ({ data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum }));
-                if (!pr.draft) {
-                  core.info(`PR #${prNum} is ready (GraphQL).`);
-                  return pr;
-                }
+                if (!pr.draft) return pr;
                 await new Promise(r => setTimeout(r, 2000));
               }
 
