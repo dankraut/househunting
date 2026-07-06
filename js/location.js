@@ -43,6 +43,69 @@ export function createLocationModule(api) {
     return (p.gps && String(p.gps).trim()) ? String(p.gps).trim() : '';
   }
 
+  function getPropCalcGps(p) {
+    return (p.calcGps && String(p.calcGps).trim()) ? String(p.calcGps).trim() : '';
+  }
+
+  function clearPropCalcGps(p) {
+    if (!p) return;
+    p.calcGps = '';
+  }
+
+  function getPropTownQuery(p) {
+    if (!p) return '';
+    const built = buildAddressFromParts(p.commune, p.town, p.prov);
+    return built || (p.town ? `${p.town}${p.prov ? ', ' + p.prov : ''}, Italy` : '');
+  }
+
+  function formatPropTownDisplay(p) {
+    if (!p) return '';
+    const town = (p.town || p.commune || '').trim();
+    const prov = (p.prov || '').trim().toUpperCase();
+    if (town && prov) return `${town}, ${prov}`;
+    if (town) return town;
+    const addr = (p.address || '').trim();
+    if (addr) return addr.replace(/,?\s*Italy\s*$/i, '').trim();
+    return '';
+  }
+
+  function applyTownTextToProp(p, raw) {
+    if (!p || !raw || !String(raw).trim()) return;
+    const sansItaly = String(raw).trim().replace(/,?\s*Italy\s*$/i, '').trim();
+    const parts = sansItaly.split(',').map(s => s.trim()).filter(Boolean);
+    if (!parts.length) return;
+    if (parts.length >= 2 && /^[A-Z]{2}$/.test(parts[parts.length - 1])) {
+      p.prov = parts[parts.length - 1];
+      p.town = parts[parts.length - 2];
+      if (parts.length >= 3) p.commune = parts[parts.length - 3];
+    } else {
+      p.town = parts[parts.length - 1];
+      if (parts.length >= 2) p.commune = parts[parts.length - 2];
+    }
+    const label = formatPropTownDisplay(p);
+    if (label) p.address = label + ', Italy';
+  }
+
+  async function syncCalcGpsFromTown(p) {
+    const q = getPropTownQuery(p);
+    if (!q) {
+      clearPropCalcGps(p);
+      if (!getPropGps(p)) clearEntityCoords(p);
+      return { ok: true, source: 'cleared' };
+    }
+    const geo = await geocodeAddress(q);
+    if (!geo) return { ok: false, error: 'Could not find coordinates for that town' };
+    p.calcGps = normalizeGpsString(`${geo.lat},${geo.lng}`);
+    p.lat = geo.lat;
+    p.lng = geo.lng;
+    if (geo.town) p.town = geo.town;
+    if (geo.commune) p.commune = geo.commune;
+    if (geo.prov) p.prov = String(geo.prov).toUpperCase();
+    const label = formatItalianLocation(geo);
+    if (label) p.address = label;
+    return { ok: true, source: 'calc-gps' };
+  }
+
   function getBaseGps(b) {
     return (b && b.gps && String(b.gps).trim()) ? String(b.gps).trim() : '';
   }
@@ -198,24 +261,34 @@ export function createLocationModule(api) {
     gps, address, isBase = false, mode = 'auto', overwriteTown = false,
   } = {}) {
     const gpsIn = gps !== undefined ? String(gps).trim() : (isBase ? getBaseGps(entity) : getPropGps(entity));
-    let addrIn = address !== undefined ? String(address).trim() : (isBase ? (entity.address || '').trim() : getPropAddress(entity));
+    let addrIn = address !== undefined ? String(address).trim() : (isBase ? (entity.address || '').trim() : formatPropTownDisplay(entity));
 
     const applyForward = async () => {
-      if (!/italy/i.test(addrIn)) addrIn += ', Italy';
-      entity.address = addrIn;
-      const geo = await geocodeAddress(addrIn);
-      if (!geo) return { ok: false, error: 'Could not find coordinates for that town' };
-      entity.lat = geo.lat;
-      entity.lng = geo.lng;
-      entity.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
-      const label = formatItalianLocation(geo);
-      if (label) entity.address = label;
-      if (!isBase) {
-        if (geo.town) entity.town = geo.town;
-        if (geo.commune) entity.commune = geo.commune;
-        if (geo.prov) entity.prov = String(geo.prov).toUpperCase();
+      if (!isBase) applyTownTextToProp(entity, addrIn);
+      const q = isBase ? (addrIn && !/italy/i.test(addrIn) ? addrIn + ', Italy' : addrIn) : getPropTownQuery(entity);
+      if (!q) {
+        if (!isBase) {
+          clearPropCalcGps(entity);
+          if (!getPropGps(entity)) clearEntityCoords(entity);
+        } else {
+          entity.gps = '';
+          clearEntityCoords(entity);
+        }
+        return { ok: true, source: 'cleared' };
       }
-      return { ok: true, source: geo.townFallback ? 'geocode-town-fallback' : 'geocode' };
+      if (isBase) {
+        if (!/italy/i.test(addrIn)) addrIn += ', Italy';
+        entity.address = addrIn;
+        const geo = await geocodeAddress(addrIn);
+        if (!geo) return { ok: false, error: 'Could not find coordinates for that town' };
+        entity.lat = geo.lat;
+        entity.lng = geo.lng;
+        entity.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
+        const label = formatItalianLocation(geo);
+        if (label) entity.address = label;
+        return { ok: true, source: geo.townFallback ? 'geocode-town-fallback' : 'geocode' };
+      }
+      return syncCalcGpsFromTown(entity);
     };
 
     const applyGpsText = async () => {
@@ -224,6 +297,7 @@ export function createLocationModule(api) {
       entity.lat = geo.lat;
       entity.lng = geo.lng;
       entity.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
+      clearPropCalcGps(entity);
       const label = formatItalianLocation(geo);
       if (label) entity.address = label;
       if (!isBase) {
@@ -239,8 +313,9 @@ export function createLocationModule(api) {
         if (!applyGpsToEntity(entity, gpsIn)) {
           return { ok: false, error: 'Invalid GPS coordinates' };
         }
-        if (addrIn && !overwriteTown) {
-          applyAddressText(entity, addrIn, isBase);
+        if (!isBase) clearPropCalcGps(entity);
+        if (addrIn && !overwriteTown && !isBase) {
+          applyTownTextToProp(entity, addrIn);
           return { ok: true, source: 'gps' };
         }
         const rev = await reverseGeocode(entity.lat, entity.lng);
@@ -252,22 +327,32 @@ export function createLocationModule(api) {
             if (rev.commune) entity.commune = rev.commune;
             if (rev.prov) entity.prov = String(rev.prov).toUpperCase();
           }
-        } else if (addrIn) {
+        } else if (addrIn && !isBase) {
+          applyTownTextToProp(entity, addrIn);
+        } else if (addrIn && isBase) {
           applyAddressText(entity, addrIn, isBase);
         }
         return { ok: true, source: 'gps' };
       }
-      return applyGpsText();
+      return isBase ? applyGpsText() : applyGpsText();
     };
 
     const applyAddressOnly = () => {
-      if (addrIn) applyAddressText(entity, addrIn, isBase);
+      if (addrIn) {
+        if (isBase) applyAddressText(entity, addrIn, isBase);
+        else applyTownTextToProp(entity, addrIn);
+      }
       return { ok: true, source: 'gps' };
     };
 
     if (mode === 'address') {
-      if (gpsIn) return applyAddressOnly();
+      if (!isBase && gpsIn) return applyAddressOnly();
       if (addrIn) return applyForward();
+      if (!isBase) {
+        clearPropCalcGps(entity);
+        if (!getPropGps(entity)) clearEntityCoords(entity);
+        return { ok: true, source: 'cleared' };
+      }
       entity.gps = '';
       clearEntityCoords(entity);
       return { ok: true, source: 'cleared' };
@@ -275,6 +360,10 @@ export function createLocationModule(api) {
 
     if (mode === 'gps') {
       if (gpsIn) return applyReverse();
+      if (!isBase) {
+        entity.gps = '';
+        return syncCalcGpsFromTown(entity);
+      }
       entity.gps = '';
       clearEntityCoords(entity);
       return { ok: true, source: 'cleared' };
@@ -282,6 +371,12 @@ export function createLocationModule(api) {
 
     if (gpsIn) return applyReverse();
     if (addrIn) return applyForward();
+    if (!isBase) {
+      clearPropCalcGps(entity);
+      entity.gps = '';
+      clearEntityCoords(entity);
+      return { ok: true, source: 'cleared' };
+    }
     entity.gps = '';
     clearEntityCoords(entity);
     return { ok: true, source: 'cleared' };
@@ -301,24 +396,32 @@ export function createLocationModule(api) {
         p.lat = geo.lat;
         p.lng = geo.lng;
         p.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
+        clearPropCalcGps(p);
         return { lat: geo.lat, lng: geo.lng };
+      }
+    }
+    const calc = getPropCalcGps(p);
+    if (calc) {
+      const [lat, lng] = parseGPS(calc);
+      if (lat != null && lng != null) {
+        p.lat = lat;
+        p.lng = lng;
+        return { lat, lng };
       }
     }
     if (p.lat != null && p.lng != null) {
       return { lat: p.lat, lng: p.lng };
     }
-    const addr = getPropAddress(p);
-    if (!addr) {
+    const townQ = getPropTownQuery(p);
+    if (!townQ) {
       clearEntityCoords(p);
       return null;
     }
-    const geo = await geocodeAddress(addr);
-    if (geo) {
-      p.lat = geo.lat;
-      p.lng = geo.lng;
-      return { lat: geo.lat, lng: geo.lng };
+    const r = await syncCalcGpsFromTown(p);
+    if (r.ok && p.lat != null && p.lng != null) {
+      return { lat: p.lat, lng: p.lng };
     }
-    if (!gps) clearEntityCoords(p);
+    if (!gps && !calc) clearEntityCoords(p);
     return null;
   }
 
@@ -361,14 +464,22 @@ export function createLocationModule(api) {
       if (norm) p.gps = norm;
       delete p.location;
     }
+    if (!p.calcGps) p.calcGps = '';
     if (!p.address || !p.address.trim()) {
       const built = buildAddressFromParts(p.commune, p.town, p.prov);
       if (built) p.address = built;
     }
     if (getPropGps(p)) {
       applyGpsToEntity(p, p.gps);
+    } else if (getPropCalcGps(p)) {
+      const [lat, lng] = parseGPS(p.calcGps);
+      if (lat != null && lng != null) {
+        p.lat = lat;
+        p.lng = lng;
+      }
     } else if (p.lat != null && p.lng != null) {
-      p.gps = normalizeGpsString(`${p.lat},${p.lng}`);
+      p.calcGps = normalizeGpsString(`${p.lat},${p.lng}`);
+      p.gps = '';
     } else {
       p.gps = '';
       clearEntityCoords(p);
@@ -495,13 +606,14 @@ export function createLocationModule(api) {
       if (ids) {
         const addrEl = document.getElementById(ids.address);
         const gpsEl = document.getElementById(ids.gps);
-        if (addrEl) addrEl.value = scratch.address || address || '';
-        if (gpsEl) gpsEl.value = scratch.gps || '';
+        if (addrEl) addrEl.value = isBase ? (scratch.address || address || '') : formatPropTownDisplay(scratch);
+        if (gpsEl) gpsEl.value = scratch.gps || getPropGps(scratch) || '';
       }
       let msg = '';
       if (r.source === 'gps' && townOverwrite) msg = 'Town updated from GPS.';
-      else if (r.source === 'geocode-town-fallback') msg = 'Street not found — GPS set to town center.';
-      else if (r.source === 'geocode') msg = syncMode === 'gps' ? 'GPS updated from location.' : 'GPS updated from town.';
+      else if (r.source === 'geocode-town-fallback') msg = 'Street not found — coordinates set to town center.';
+      else if (r.source === 'geocode') msg = syncMode === 'gps' ? 'GPS updated from location.' : 'Map pin updated from town.';
+      else if (r.source === 'calc-gps') msg = 'Map pin calculated from town.';
       else if (r.source === 'gps' && syncMode === 'address') msg = 'Town updated (GPS unchanged).';
       setLocSuccess(prefix, msg);
       if (onSuccess) onSuccess(scratch, r);
@@ -525,6 +637,12 @@ export function createLocationModule(api) {
     buildAddressFromParts,
     getPropAddress,
     getPropGps,
+    getPropCalcGps,
+    clearPropCalcGps,
+    getPropTownQuery,
+    formatPropTownDisplay,
+    applyTownTextToProp,
+    syncCalcGpsFromTown,
     getBaseGps,
     clearEntityCoords,
     normalizeGpsString,
