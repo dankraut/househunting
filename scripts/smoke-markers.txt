@@ -4,7 +4,8 @@
 index.html|date-asc|Unified Date sort dropdown option
 index.html|geo-view-toggle|Map/DayPlan mobile view toggles
 index.html|setMapView|Map view switcher function
-index.html|setDpView|Day plan view switcher function
+index.html|resetMapPlanningState|Map route reset to property details
+index.html|sortBasesByDate|Base dropdown date ordering
 index.html|syncGeoLayouts|Responsive layout sync
 index.html|_mapRefreshGen|Map refresh stale-run guard
 index.html|_safeJsonParse|Safe localStorage JSON parse
