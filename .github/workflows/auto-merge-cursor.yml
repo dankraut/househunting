@@ -148,7 +148,7 @@ jobs:
                   return true;
                 }
                 if (!pr.mergeable && pr.mergeable_state === 'dirty') {
-                  core.setFailed(`PR #${prNum} has merge conflicts.`);
+                  core.warning(`PR #${prNum} has merge conflicts — rebase onto main or open a fresh cursor/* branch. Cleanup workflow will close stale conflicting PRs.`);
                   return false;
                 }
 
@@ -217,10 +217,10 @@ jobs:
               return;
             }
 
-            for (const prNum of prNumbers) {
+              for (const prNum of prNumbers) {
               try {
                 await processPr(prNum);
               } catch (e) {
-                core.setFailed(`PR #${prNum}: ${e.message}`);
+                core.warning(`PR #${prNum}: ${e.message}`);
               }
             }

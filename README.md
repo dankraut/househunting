@@ -40,7 +40,7 @@ Production updates **only when a PR merges to `main`**. Cloudflare Pages then de
 
 ### Ship command (Desktop — same path as Cursor Cloud)
 
-One command commits, pushes a `cursor/*-fb87` branch, opens a PR, and relies on auto-merge when Cloudflare Pages passes.
+One command commits, pushes a `cursor/*-<suffix>` branch, opens a PR, and relies on auto-merge when Cloudflare Pages passes.
 
 | How | Command |
 |-----|---------|
@@ -61,7 +61,7 @@ One command commits, pushes a `cursor/*-fb87` branch, opens a PR, and relies on 
 **Workflow (Desktop = Cloud agent):**
 
 1. `git checkout main && git pull`
-2. `git checkout -b cursor/my-feature-fb87` (or let `-Description` create the branch from `main`)
+2. `git checkout -b cursor/my-feature-288c` (or `cursor/my-feature-fb87` from Desktop `-Description`)
 3. Edit, run smoke check, bump SPA version (Extension only if `extension/` changed)
 4. `.\scripts\deploy.ps1` → push branch → open PR
 5. GitHub Actions auto-merge squash-merges when **Cloudflare Pages** check succeeds

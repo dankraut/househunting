@@ -10,7 +10,7 @@
 
 ## Ship pipeline (Desktop = Cloud = GitHub → Cloudflare)
 - **Never push or merge directly to `main`.** Branch protection requires a PR and a passing Cloudflare Pages check.
-- **Branch naming:** `cursor/<description>-fb87` (same convention as Cursor Cloud agents).
+- **Branch naming:** `cursor/<description>-<suffix>` (e.g. `288c` Cloud agents, `fb87` Desktop deploy.ps1)
 - **Ship steps:** edit on branch → smoke check → bump versions → `.\scripts\deploy.ps1` (or Run Task **Ship**) → PR opens → `.github/workflows/auto-merge-cursor.yml` squash-merges when Cloudflare Pages succeeds.
 - **After merge:** GitHub Desktop Pull on `main`; hard-refresh SPA; if `extension/` changed, pull and Reload unpacked extension in Chrome.
 - Bump **Extension** version only when files under `extension/` change; always bump **SPA** version when shipping SPA/API changes.

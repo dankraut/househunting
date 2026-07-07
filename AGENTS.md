@@ -29,7 +29,7 @@ All `/api/*` calls require `Authorization: Bearer jmjk05DK` (or `?tk=jmjk05DK`).
 - **Build:** none (static assets + edge Functions).
 ### Ship (Cloud agents)
 
-After editing, run `bash scripts/ship.sh` (smoke check → commit → push → open PR).
+After editing, run `bash scripts/ship.sh` (smoke check → commit → push → open PR). Branch: `cursor/<description>-<suffix>` (e.g. `-288c`, `-fb87`).
 
 **One-time repo setup** so PRs open automatically on push: see [`.github/CLOUD_SHIP_SETUP.md`](.github/CLOUD_SHIP_SETUP.md) — enable *Allow GitHub Actions to create and approve pull requests* in [Actions settings](https://github.com/dankraut/househunting/settings/actions), or add a `GH_PAT` secret.
 
