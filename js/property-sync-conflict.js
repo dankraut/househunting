@@ -2,7 +2,7 @@
 import { PERSIST_FIELDS } from './config.js';
 
 const DISPLAY_FIELDS = ['name', 'status', 'address', 'gps', 'price', 'rooms', 'size',
-  'broker', 'brokerPhone', 'notes', 'userPlannedDate', 'userPlannedTime', 'schedDate', 'schedTime'];
+  'broker', 'brokerPhone', 'notes', 'visitDate', 'visitTime', 'userPlannedDate', 'userPlannedTime', 'schedDate', 'schedTime'];
 
 export function createPropSyncConflict() {
   let _snapshot = null;
