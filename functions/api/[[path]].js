@@ -523,7 +523,7 @@ export async function onRequest(context) {
     if (!iflToken) return json({ error: 'Missing iflToken' }, 400);
     const iflIds = new Set(properties.map(p => String(p.id)));
     const propMap = Object.fromEntries(properties.map(p => [String(p.id), p]));
-    const ELIM_STATUSES = new Set(['Unavailable', 'Unresponsive', 'Rejected', 'Duplicate', 'Deleted', 'Deleted-Idealista']);
+    const ELIM_STATUSES = new Set(['Under Agreement/Sold', 'Unresponsive', 'Rejected', 'Unable To See', 'Duplicate', 'Deleted', 'Deleted-Idealista']);
     const dataRaw = await env.HH_KV.get('data');
     if (!dataRaw) {
       const toAddEmpty = properties.filter(p => !p.discarded);
