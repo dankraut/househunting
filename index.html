@@ -5491,7 +5491,7 @@ function getMapUnscheduledProps(baseSet, statusFilter, dayFilter, routeMode, day
     if (inDayColumn.has(p.id)) return false;
     if (routeMode === 'timed') {
       if (getPropRouteDate(p)) return false;
-      if (getPropProposedDate(p)) return false;
+      if (getPropVisitDate(p)) return false;
       return propMatchesMapFilters(p, baseSet, dayFilter, statusFilter);
     }
     if (getPropRouteDate(p)) return false;
