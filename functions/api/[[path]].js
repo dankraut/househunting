@@ -11,7 +11,7 @@ const MAX_SNAPSHOTS = 20;
 const LOCK_TTL_SEC = 120;
 
 const MERGE_FIELDS = [
-  'status', 'schedDate', 'schedTime', 'proposedDate', 'lastContacted',
+  'status', 'visitDate', 'visitTime', 'schedDate', 'schedTime', 'proposedDate', 'proposedTime', 'lastContacted',
   'firmName', 'firmPhone', 'broker', 'brokerPhone', 'brokerEmail',
   'address', 'gps', 'idealistaGps', 'userPlannedDate', 'userPlannedTime', 'notes', 'realtorUrl', 'sourceIfl', 'grp',
   'commune', 'town', 'prov', 'driveTimes', 'driveMiles', 'refAirport', 'name', 'price', 'rooms', 'size', 'lat', 'lng',

@@ -92,8 +92,9 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 .tile-top{display:flex;align-items:flex-start;gap:8px;padding:10px 12px 6px}
 .tile-body{padding:0 12px 8px;display:flex;flex-direction:column;gap:4px}
 .tile-name{font-weight:600;font-size:13px;line-height:1.3}
+.tile-name-btn{background:none;border:none;padding:0;font:inherit;font-weight:600;color:var(--text);text-align:left;cursor:pointer}
+.tile-name-btn:hover{color:var(--adriat);text-decoration:underline}
 .tile-name a{color:var(--text)}
-.tile-name a:hover{color:var(--adriat)}
 .tile-sub{font-size:11px;color:var(--text3)}
 .tile-status-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px}
 .tile-date-chip{font-size:10px;padding:1px 7px;border-radius:8px;font-weight:500}
@@ -132,6 +133,14 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 .modal-close{font-size:20px;color:var(--text3);padding:0 4px;line-height:1}
 .modal-close:hover{color:var(--red)}
 .modal-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+#detail-modal .modal-body{gap:6px;padding:10px 14px}
+#detail-modal .sect-label{margin:2px 0 0;padding-top:5px}
+#detail-modal .tile-field label{font-size:9px}
+#detail-modal .tile-field input,#detail-modal .tile-field select,#detail-modal .tile-field textarea{font-size:11px;padding:3px 6px}
+#detail-modal .tile-field-row{gap:6px}
+#detail-modal .field-hint{font-size:10px;line-height:1.3}
+#detail-modal #dm-drive-times,#detail-modal #dm-elevation{font-size:11px;padding:6px 8px}
+#detail-modal .dm-top-row .tile-field{min-width:0}
 .modal-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:#fff}
 .btn-primary{padding:7px 16px;background:var(--adriat);color:#fff;border-radius:4px;font-size:12px;font-weight:500}
 .btn-primary:hover{background:var(--adriat-lt)}
@@ -426,9 +435,9 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 <div id="tab-map" class="tab-panel">
   <div class="map-controls">
     <label>Status <select id="map-status-filter" onchange="refreshMap()" title="Filter properties by status">
+      <option value="scheduled">Scheduled</option>
       <option value="sched-tbs" selected>Scheduled + TBS</option>
       <option value="all">Active</option>
-      <option value="scheduled">Scheduled</option>
     </select></label>
     <span class="map-day-wrap" id="map-base-wrap">
       <label>Bases</label>
@@ -526,6 +535,24 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
       <div class="tile-field-row">
         <div class="tile-field"><label>Property Name</label><input id="dm-name" type="text" autocomplete="off" oninput="dmMarkDirty()"></div>
       </div>
+      <div class="tile-field-row dm-top-row">
+        <div class="tile-field"><label>Status</label>
+          <select id="dm-status" onchange="dmMarkDirty()"></select>
+        </div>
+        <div class="tile-field"><label>Base</label>
+          <select id="dm-grp" onchange="dmMarkDirty()"></select>
+        </div>
+      </div>
+      <div class="tile-field-row dm-top-row">
+        <div class="tile-field"><label>Visit Date</label><input id="dm-visit-date" type="date" oninput="dmMarkDirty()"></div>
+        <div class="tile-field"><label>Visit Time</label>
+          <div class="hh-time-field">
+            <input id="dm-visit-time" class="hh-time-input" type="text" inputmode="numeric" placeholder="HH:mm" maxlength="5" oninput="dmMarkDirty()">
+            <button type="button" class="hh-time-pick-btn" title="Pick time" onclick="openTimePickerFor('dm-visit-time')">🕐</button>
+          </div>
+        </div>
+        <div class="tile-field"><label>Last Contacted</label><input id="dm-last-contacted" type="date" oninput="dmMarkDirty()"></div>
+      </div>
 
       <div class="sect-label">Location</div>
       <div class="tile-field">
@@ -579,37 +606,6 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
       </div>
       <div id="dm-broker-fetch-status" style="font-size:10px;color:var(--text3);margin-top:2px"></div>
       <div class="tile-field"><label>Broker Email</label><input id="dm-broker-email" type="email" autocomplete="off" oninput="dmMarkDirty()"></div>
-
-      <div class="sect-label">Status &amp; Scheduling</div>
-      <div class="tile-field-row">
-        <div class="tile-field"><label>Status</label>
-          <select id="dm-status" onchange="dmMarkDirty()"></select>
-        </div>
-        <div class="tile-field"><label>Base (Group)</label>
-          <select id="dm-grp" onchange="dmMarkDirty()"></select>
-        </div>
-      </div>
-      <div class="tile-field-row">
-        <div class="tile-field"><label>Proposed Date</label><input id="dm-proposed-date" type="date" oninput="dmMarkDirty()"></div>
-        <div class="tile-field"><label>Proposed Time</label>
-          <div class="hh-time-field">
-            <input id="dm-proposed-time" class="hh-time-input" type="text" inputmode="numeric" placeholder="HH:mm" maxlength="5" oninput="dmMarkDirty()">
-            <button type="button" class="hh-time-pick-btn" title="Pick time" onclick="openTimePickerFor('dm-proposed-time')">🕐</button>
-          </div>
-        </div>
-      </div>
-      <div class="tile-field-row">
-        <div class="tile-field"><label>Last Contacted</label><input id="dm-last-contacted" type="date" oninput="dmMarkDirty()"></div>
-      </div>
-      <div class="tile-field-row">
-        <div class="tile-field"><label>Scheduled Date</label><input id="dm-sched-date" type="date" oninput="dmMarkDirty()"></div>
-        <div class="tile-field"><label>Scheduled Time</label>
-          <div class="hh-time-field">
-            <input id="dm-sched-time" class="hh-time-input" type="text" inputmode="numeric" placeholder="HH:mm" maxlength="5" oninput="dmMarkDirty()">
-            <button type="button" class="hh-time-pick-btn" title="Pick time" onclick="openTimePickerFor('dm-sched-time')">🕐</button>
-          </div>
-        </div>
-      </div>
 
       <div class="sect-label">Drive Times</div>
       <div id="dm-drive-times" style="font-size:11px;color:var(--text2);background:var(--bg2);padding:8px 10px;border-radius:4px;border:1px solid var(--border)">
@@ -919,7 +915,7 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 
 <script type="module" src="js/bootstrap.js"></script>
 <script>
-// ═══ SPA v3.13.51 — app core (config/api/location in js/) ═══════════════════════
+// ═══ SPA v3.13.52 — app core (config/api/location in js/) ═══════════════════════
 
 const PROPS_RAW=[{"id":30278342,"name":"Tuscania Villa","town":"Tuscania","prov":"VT","price":780,"rooms":10,"size":300,"grp":1,"fco":72,"cdp":80,"caf":140,"spo":105,"man":45,"url":"https://www.idealista.it/immobile/30278342/","lat":42.418,"lng":11.875,"plannedDate":"2026-07-09","plannedTime":"10:30 AM"},{"id":34998463,"name":"Vetralla Villa","town":"Vetralla","prov":"VT","price":670,"rooms":12,"size":509,"grp":1,"fco":75,"cdp":95,"caf":155,"spo":95,"man":70,"url":"https://www.idealista.it/immobile/34998463/","lat":42.32,"lng":12.05,"plannedDate":"2026-07-09","plannedTime":"11:30 AM"},{"id":35809714,"name":"Canino Villa","town":"Canino","prov":"VT","price":870,"rooms":7,"size":380,"grp":1,"fco":78,"cdp":80,"caf":130,"spo":115,"man":30,"url":"https://www.idealista.it/immobile/35809714/","lat":42.468,"lng":11.744,"plannedDate":"2026-07-09","plannedTime":"9:30 AM"},{"id":26448701,"name":"Montecastrilli Villa","town":"Montecastrilli","prov":"TR","price":820,"rooms":19,"size":480,"grp":1,"fco":85,"cdp":70,"caf":120,"spo":30,"man":105,"url":"https://www.idealista.it/immobile/26448701/","lat":42.649,"lng":12.487,"plannedDate":"2026-07-06","plannedTime":"11:00 AM"},{"id":21658129,"name":"Manciano SP159","town":"Manciano","prov":"GR","price":850,"rooms":18,"size":379,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":0,"url":"https://www.idealista.it/immobile/21658129/","lat":42.595,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"8:45 AM"},{"id":18085022,"name":"Manciano Scansanese","town":"Manciano","prov":"GR","price":870,"rooms":10,"size":520,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/18085022/","lat":42.605,"lng":11.52,"plannedDate":"2026-07-10","plannedTime":"9:30 AM"},{"id":33646557,"name":"Manciano Montemerano","town":"Manciano","prov":"GR","price":698,"rooms":8,"size":430,"grp":1,"fco":95,"cdp":75,"caf":125,"spo":130,"man":10,"url":"https://www.idealista.it/immobile/33646557/","lat":42.544,"lng":11.57,"plannedDate":"2026-07-10","plannedTime":"10:20 AM"},{"id":32530331,"name":"Manciano Saturnia","town":"Manciano","prov":"GR","price":720,"rooms":10,"size":395,"grp":1,"fco":95,"cdp":80,"caf":125,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/32530331/","lat":42.555,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"11:10 AM"},{"id":27864548,"name":"Baschi Villa","town":"Baschi","prov":"TR","price":780,"rooms":10,"size":580,"grp":1,"fco":99,"cdp":45,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/27864548/","lat":42.675,"lng":12.212,"plannedDate":"2026-06-26","plannedTime":"12:15 PM"},{"id":34980477,"name":"Baschi Civitella","town":"Baschi","prov":"TR","price":990,"rooms":15,"size":450,"grp":1,"fco":99,"cdp":50,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/34980477/","lat":42.67,"lng":12.205,"plannedDate":"2026-06-26","plannedTime":"1:05 PM"},{"id":35860173,"name":"Todi Piagge Casale","town":"Todi","prov":"PG","price":825,"rooms":10,"size":300,"grp":1,"fco":102,"cdp":50,"caf":100,"spo":35,"man":100,"url":"https://www.idealista.it/immobile/35860173/","lat":42.775,"lng":12.412,"plannedDate":"2026-07-07","plannedTime":"9:00 AM"},{"id":35822412,"name":"Todi Collarezzo","town":"Todi","prov":"PG","price":850,"rooms":10,"size":351,"grp":1,"fco":102,"cdp":55,"caf":100,"spo":35,"man":105,"url":"https://www.idealista.it/immobile/35822412/","lat":42.782,"lng":12.43,"plannedDate":"2026-07-07","plannedTime":"10:00 AM"},{"id":34024712,"name":"San Venanzo Civitella","town":"San Venanzo","prov":"TR","price":845,"rooms":18,"size":815,"grp":1,"fco":105,"cdp":30,"caf":80,"spo":55,"man":90,"url":"https://www.idealista.it/immobile/34024712/","lat":42.87,"lng":12.265,"plannedDate":"","plannedTime":""},{"id":33903982,"name":"Scansano Fonte Guerra","town":"Scansano","prov":"GR","price":790,"rooms":12,"size":475,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/33903982/","lat":42.683,"lng":11.34,"plannedDate":"2026-07-10","plannedTime":"12:30 PM"},{"id":35951463,"name":"Scansano Montorgiali","town":"Scansano","prov":"GR","price":960,"rooms":8,"size":390,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35951463/","lat":42.69,"lng":11.332,"plannedDate":"2026-07-09","plannedTime":"3:00 PM"},{"id":35048730,"name":"Scansano Agriturismo","town":"Scansano","prov":"GR","price":630,"rooms":7,"size":390,"grp":1,"fco":105,"cdp":85,"caf":120,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35048730/","lat":42.676,"lng":11.321,"plannedDate":"2026-07-09","plannedTime":"3:50 PM"},{"id":35397327,"name":"Sorano Piancasale","town":"Sorano","prov":"GR","price":700,"rooms":24,"size":480,"grp":1,"fco":108,"cdp":50,"caf":100,"spo":110,"man":25,"url":"https://www.idealista.it/immobile/35397327/","lat":42.685,"lng":11.713,"plannedDate":"","plannedTime":""},{"id":21287742,"name":"Ferentillo Rustico","town":"Ferentillo","prov":"TR","price":645,"rooms":12,"size":650,"grp":1,"fco":110,"cdp":100,"caf":145,"spo":20,"man":140,"url":"https://www.idealista.it/immobile/21287742/","lat":42.623,"lng":12.798,"plannedDate":"2026-07-06","plannedTime":"9:00 AM"},{"id":10679967,"name":"Semproniano Rustico","town":"Semproniano","prov":"GR","price":720,"rooms":11,"size":355,"grp":1,"fco":110,"cdp":70,"caf":115,"spo":130,"man":5,"url":"https://www.idealista.it/immobile/10679967/","lat":42.623,"lng":11.537,"plannedDate":"","plannedTime":""},{"id":34882496,"name":"Spoleto Baiano","town":"Spoleto","prov":"PG","price":980,"rooms":17,"size":451,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":135,"url":"https://www.idealista.it/immobile/34882496/","lat":42.722,"lng":12.718,"plannedDate":"2026-07-05","plannedTime":"8:45 AM"},{"id":30865904,"name":"Spoleto Terzo La Pieve","town":"Spoleto","prov":"PG","price":900,"rooms":11,"size":350,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":130,"url":"https://www.idealista.it/immobile/30865904/","lat":42.715,"lng":12.708,"plannedDate":"2026-07-05","plannedTime":"9:45 AM"},{"id":35103506,"name":"Montefalco Fabbri","town":"Montefalco","prov":"PG","price":910,"rooms":16,"size":450,"grp":1,"fco":121,"cdp":70,"caf":105,"spo":25,"man":130,"url":"https://www.idealista.it/immobile/35103506/","lat":42.89,"lng":12.652,"plannedDate":"2026-07-04","plannedTime":"12:30 PM"},{"id":35432103,"name":"Deruta Tiberina","town":"Deruta","prov":"PG","price":790,"rooms":12,"size":320,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/35432103/","lat":42.982,"lng":12.419,"plannedDate":"2026-07-04","plannedTime":"10:00 AM"},{"id":33533240,"name":"Deruta Tiberina 203","town":"Deruta","prov":"PG","price":685,"rooms":22,"size":611,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/33533240/","lat":42.981,"lng":12.421,"plannedDate":"2026-07-04","plannedTime":"10:50 AM"},{"id":27988041,"name":"Deruta Centro Casale","town":"Deruta","prov":"PG","price":650,"rooms":12,"size":400,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/27988041/","lat":42.982,"lng":12.416,"plannedDate":"","plannedTime":""},{"id":29370809,"name":"Deruta Castelleone","town":"Deruta","prov":"PG","price":890,"rooms":12,"size":316,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/29370809/","lat":42.984,"lng":12.413,"plannedDate":"","plannedTime":""},{"id":34783987,"name":"Bettona Villa","town":"Bettona","prov":"PG","price":850,"rooms":20,"size":484,"grp":1,"fco":129,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/34783987/","lat":42.992,"lng":12.43,"plannedDate":"2026-06-27","plannedTime":"11:00 AM"},{"id":34843857,"name":"Santa Fiora Monte Amiata","town":"Santa Fiora","prov":"GR","price":978,"rooms":12,"size":520,"grp":1,"fco":130,"cdp":50,"caf":85,"spo":125,"man":40,"url":"https://www.idealista.it/immobile/34843857/","lat":42.834,"lng":11.587,"plannedDate":"","plannedTime":""},{"id":34979131,"name":"Corciano Migiana","town":"Corciano","prov":"PG","price":830,"rooms":13,"size":700,"grp":1,"fco":133,"cdp":40,"caf":55,"spo":75,"man":115,"url":"https://www.idealista.it/immobile/34979131/","lat":43.11,"lng":12.289,"plannedDate":"","plannedTime":""},{"id":35300665,"name":"Perugia Olmo","town":"Perugia","prov":"PG","price":675,"rooms":5,"size":425,"grp":2,"fco":138,"cdp":50,"caf":70,"spo":60,"man":125,"url":"https://www.idealista.it/immobile/35300665/","lat":43.085,"lng":12.442,"plannedDate":"2026-06-25","plannedTime":"12:30 PM"},{"id":35456752,"name":"Perugia Eugubina","town":"Perugia","prov":"PG","price":650,"rooms":21,"size":953,"grp":2,"fco":138,"cdp":50,"caf":60,"spo":70,"man":125,"url":"https://www.idealista.it/immobile/35456752/","lat":43.138,"lng":12.408,"plannedDate":"2026-06-25","plannedTime":"1:15 PM"},{"id":32456550,"name":"Perugia Colli Albani","town":"Perugia","prov":"PG","price":650,"rooms":10,"size":530,"grp":2,"fco":138,"cdp":50,"caf":65,"spo":65,"man":125,"url":"https://www.idealista.it/immobile/32456550/","lat":43.093,"lng":12.415,"plannedDate":"2026-06-25","plannedTime":"2:15 PM"},{"id":16393910,"name":"Perugia Solfagnano","town":"Perugia","prov":"PG","price":1100,"rooms":16,"size":725,"grp":2,"fco":138,"cdp":45,"caf":50,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/16393910/","lat":43.155,"lng":12.33,"plannedDate":"2026-06-26","plannedTime":"2:30 PM"},{"id":34105542,"name":"Perugia Monte Tezio","town":"Perugia","prov":"PG","price":890,"rooms":10,"size":500,"grp":2,"fco":138,"cdp":45,"caf":55,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/34105542/","lat":43.148,"lng":12.34,"plannedDate":"2026-06-26","plannedTime":"3:15 PM"},{"id":33928859,"name":"Assisi Porziano","town":"Assisi","prov":"PG","price":580,"rooms":12,"size":485,"grp":2,"fco":148,"cdp":70,"caf":85,"spo":50,"man":140,"url":"https://www.idealista.it/immobile/33928859/","lat":43.07,"lng":12.612,"plannedDate":"2026-07-03","plannedTime":"11:30 AM"},{"id":35247592,"name":"Lisciano Niccone Villa","town":"Lisciano Niccone","prov":"PG","price":1050,"rooms":12,"size":520,"grp":2,"fco":148,"cdp":50,"caf":25,"spo":105,"man":120,"url":"https://www.idealista.it/immobile/35247592/","lat":43.265,"lng":12.125,"plannedDate":"2026-06-27","plannedTime":"9:30 AM"},{"id":35456269,"name":"Umbertide Casale","town":"Umbertide","prov":"PG","price":1150,"rooms":15,"size":700,"grp":2,"fco":148,"cdp":60,"caf":45,"spo":95,"man":140,"url":"https://www.idealista.it/immobile/35456269/","lat":43.297,"lng":12.332,"plannedDate":"2026-07-03","plannedTime":"8:45 AM"},{"id":34939305,"name":"Umbertide Preggio","town":"Umbertide","prov":"PG","price":895,"rooms":16,"size":320,"grp":2,"fco":148,"cdp":60,"caf":40,"spo":100,"man":135,"url":"https://www.idealista.it/immobile/34939305/","lat":43.312,"lng":12.29,"plannedDate":"2026-07-03","plannedTime":"9:30 AM"},{"id":23044407,"name":"Foiano della Chiana","town":"Foiano","prov":"AR","price":750,"rooms":12,"size":500,"grp":2,"fco":150,"cdp":50,"caf":20,"spo":125,"man":105,"url":"https://www.idealista.it/immobile/23044407/","lat":43.251,"lng":11.819,"plannedDate":"2026-06-30","plannedTime":"11:30 AM"},{"id":33291507,"name":"Cortona Fratticciola","town":"Cortona","prov":"AR","price":870,"rooms":10,"size":311,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":110,"man":115,"url":"https://www.idealista.it/immobile/33291507/","lat":43.264,"lng":12.002,"plannedDate":"2026-06-28","plannedTime":"11:00 AM"},{"id":33311877,"name":"Cortona Cegliolo Villa","town":"Cortona","prov":"AR","price":980,"rooms":11,"size":400,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/33311877/","lat":43.27,"lng":12.0,"plannedDate":"2026-06-30","plannedTime":"10:30 AM"},{"id":35710302,"name":"Cortona Cegliolo Casale","town":"Cortona","prov":"AR","price":590,"rooms":7,"size":460,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/35710302/","lat":43.272,"lng":11.992,"plannedDate":"","plannedTime":""},{"id":24846822,"name":"CaF Val di Chio","town":"Castiglion Fiorentino","prov":"AR","price":1000,"rooms":12,"size":760,"grp":2,"fco":155,"cdp":55,"caf":0,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/24846822/","lat":43.335,"lng":11.942,"plannedDate":"2026-06-28","plannedTime":"8:45 AM"},{"id":34980495,"name":"CaF Santa Cristina","town":"Castiglion Fiorentino","prov":"AR","price":900,"rooms":12,"size":800,"grp":2,"fco":155,"cdp":55,"caf":5,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/34980495/","lat":43.325,"lng":11.938,"plannedDate":"2026-06-28","plannedTime":"9:30 AM"},{"id":31961655,"name":"Monteroni d'Arbia","town":"Monteroni d'Arbia","prov":"SI","price":980,"rooms":12,"size":480,"grp":2,"fco":155,"cdp":75,"caf":60,"spo":160,"man":95,"url":"https://www.idealista.it/immobile/31961655/","lat":43.227,"lng":11.415,"plannedDate":"2026-07-01","plannedTime":"12:00 PM"},{"id":26833080,"name":"Capolona Pieve SG","town":"Capolona","prov":"AR","price":890,"rooms":9,"size":420,"grp":2,"fco":158,"cdp":90,"caf":35,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/26833080/","lat":43.559,"lng":11.86,"plannedDate":"2026-07-01","plannedTime":"9:45 AM"},{"id":35651252,"name":"Capolona Caliano","town":"Capolona","prov":"AR","price":595,"rooms":10,"size":350,"grp":2,"fco":158,"cdp":90,"caf":30,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/35651252/","lat":43.554,"lng":11.856,"plannedDate":"2026-07-01","plannedTime":"9:00 AM"}];
 const _propsRawById = new Map(PROPS_RAW.map(p => [p.id, p]));
@@ -928,7 +924,7 @@ const _propsRawById = new Map(PROPS_RAW.map(p => [p.id, p]));
 function _applyLegacyData(savedProps) {
   const byId = {};
   for (const raw of PROPS_RAW) byId[String(raw.id)] = initProp(raw);
-  const legacyMergeFields = ['status','deleted','schedDate','schedTime','proposedDate',
+  const legacyMergeFields = ['status','deleted','visitDate','visitTime','schedDate','schedTime','proposedDate','proposedTime',
     'lastContacted','broker','brokerPhone','firmName','firmPhone','brokerEmail',
     'address','gps','calcGps','idealistaGps','userPlannedDate','userPlannedTime','notes','realtorUrl','sourceIfl',
     'commune','prov','driveTimes','grp','name','price','rooms','size','lat','lng','elevation','elevationCoordsKey'];
@@ -1052,6 +1048,8 @@ function initProp(src = {}) {
     driveMiles: src.driveMiles || {},
     refAirport: src.refAirport || '',
     status: src.status || 'New',
+    visitDate: src.visitDate || '',
+    visitTime: src.visitTime || '',
     schedDate: src.schedDate || '',
     schedTime: src.schedTime || '',
     proposedDate: src.proposedDate || src.userPlannedDate || src.plannedDate || '',
@@ -1077,6 +1075,7 @@ function initProp(src = {}) {
   };
   migratePropLocation(p);
   normalizePropTimes(p);
+  migratePropVisit(p);
   return p;
 }
 
@@ -1288,32 +1287,78 @@ function baseColor(abbr) {
   return BASE_COLORS[idx % BASE_COLORS.length] || '#888';
 }
 
+function getPropVisitDate(p) {
+  return (p && p.visitDate) ? p.visitDate : '';
+}
+
+function getPropVisitTime(p) {
+  return (p && p.visitTime) ? normalizeTimeString(p.visitTime) : '';
+}
+
 function getPropProposedDate(p) {
-  return p.proposedDate || p.userPlannedDate || '';
+  return getPropVisitDate(p);
 }
 
 function getPropProposedTime(p) {
-  return p.proposedTime || p.userPlannedTime || '';
+  return getPropVisitTime(p);
 }
 
-/** Locked viewing appointment — status Scheduled with date and time */
+function syncPropLegacyVisitFields(p) {
+  if (!p) return;
+  const d = p.visitDate || '';
+  const t = normalizeTimeString(p.visitTime || '');
+  if (p.status === 'Scheduled') {
+    p.schedDate = d;
+    p.schedTime = t;
+    p.proposedDate = '';
+    p.proposedTime = '';
+  } else {
+    p.schedDate = '';
+    p.schedTime = '';
+    p.proposedDate = d;
+    p.proposedTime = t;
+  }
+  p.userPlannedDate = '';
+  p.userPlannedTime = '';
+}
+
+function migratePropVisit(p) {
+  if (!p) return;
+  if (p.visitDate) {
+    if (p.visitTime) p.visitTime = normalizeTimeString(p.visitTime);
+    syncPropLegacyVisitFields(p);
+    return;
+  }
+  if (p.status === 'Scheduled' && p.schedDate) {
+    p.visitDate = p.schedDate;
+    p.visitTime = normalizeTimeString(p.schedTime || '');
+  } else {
+    p.visitDate = p.proposedDate || p.userPlannedDate || p.schedDate || '';
+    p.visitTime = normalizeTimeString(p.proposedTime || p.userPlannedTime || p.schedTime || '');
+  }
+  syncPropLegacyVisitFields(p);
+}
+
+function setPropVisit(p, date, time) {
+  if (!p) return;
+  p.visitDate = date || '';
+  p.visitTime = normalizeTimeString(time || '');
+  syncPropLegacyVisitFields(p);
+}
+
+/** Locked viewing appointment — Scheduled status with visit date and time */
 function isPropLockedScheduled(p) {
-  return !!(p && p.status === 'Scheduled' && p.schedDate && normalizeTimeString(p.schedTime || ''));
+  return !!(p && p.status === 'Scheduled' && getPropVisitDate(p) && getPropVisitTime(p));
 }
 
 /**
- * Combined route date/time for scheduling and day-plan ordering:
- * Date: scheduled date (status Scheduled) → else proposed date.
- * Time: scheduled time → else proposed time on the same route day.
+ * Route visit for scheduling: single visit date/time.
+ * Scheduled status → locked scheduled; other active statuses → proposed.
  */
 function getPropRouteSchedule(p) {
-  const schedDate = (p && p.status === 'Scheduled' && p.schedDate) ? p.schedDate : '';
-  const schedTime = schedDate ? normalizeTimeString(p.schedTime || '') : '';
-  const propDate = getPropProposedDate(p);
-  const propTime = propDate ? normalizeTimeString(getPropProposedTime(p)) : '';
-  const date = schedDate || propDate || '';
-  const time = schedTime || (date && propDate === date ? propTime : '');
-  const source = schedDate ? 'scheduled' : (propDate ? 'proposed' : null);
+  const date = getPropVisitDate(p);
+  const time = date ? getPropVisitTime(p) : '';
+  const source = !date ? null : (p.status === 'Scheduled' ? 'scheduled' : 'proposed');
   return { date, time, source, locked: isPropLockedScheduled(p) };
 }
 
@@ -1329,11 +1374,19 @@ function getBaseLastDate(baseAbbr) {
 }
 
 function getPropSortMeta(p) {
-  const rd = getPropRouteDate(p);
-  if (rd) return { date: rd, tier: 0 };
+  const vd = getPropVisitDate(p);
+  if (vd) {
+    const timeMin = parseTimeToMinutes(getPropVisitTime(p));
+    return {
+      date: vd,
+      tier: 0,
+      hasTime: timeMin != null ? 0 : 1,
+      timeMin: timeMin ?? 99999,
+    };
+  }
   const bd = getBaseLastDate(p.grp);
-  if (bd) return { date: bd, tier: 1 };
-  return { date: 'zzzz', tier: 2 };
+  if (bd) return { date: bd, tier: 1, hasTime: 1, timeMin: 99999 };
+  return { date: 'zzzz', tier: 2, hasTime: 1, timeMin: 99999 };
 }
 
 function getPropScheduleDayTier(p, dayDate) {
@@ -1684,6 +1737,7 @@ function _applyServerProps(incoming, opts = {}) {
     if (c) {
       Object.assign(local, prop);
       normalizePropTimes(local);
+      migratePropVisit(local);
       migratePropLocation(local);
       changed = true;
     }
@@ -1803,13 +1857,14 @@ function _refreshDetailModalFields() {
   document.getElementById('detail-modal-title').textContent = p.name || 'Property Details';
   const stSel = document.getElementById('dm-status');
   if (stSel) stSel.innerHTML = STATUS_OPTS.map(s => `<option${s === p.status ? ' selected' : ''}>${s}</option>`).join('');
+  const grpSel = document.getElementById('dm-grp');
+  if (grpSel) grpSel.innerHTML = getAssignableBases(p.grp).map(b => `<option value="${b.abbr}"${b.abbr === p.grp ? ' selected' : ''}>${b.name}${b.active === false ? ' (paused)' : ''}</option>`).join('');
   _dv('dm-name', p.name);
+  _dv('dm-visit-date', getPropVisitDate(p));
+  _dv('dm-visit-time', formatTimeDisplay(getPropVisitTime(p)));
+  _dv('dm-last-contacted', p.lastContacted);
   _dv('dm-address', formatPropTownDisplay(p));
   _dv('dm-gps', getPropGps(p));
-  _dv('dm-proposed-date', getPropProposedDate(p));
-  _dv('dm-proposed-time', formatTimeDisplay(getPropProposedTime(p)));
-  _dv('dm-sched-date', isPropLockedScheduled(p) ? p.schedDate : '');
-  _dv('dm-sched-time', isPropLockedScheduled(p) ? formatTimeDisplay(p.schedTime) : '');
   _dv('dm-notes', p.notes);
   renderDmDriveTimes(p);
   renderDmElevation(p);
@@ -1953,6 +2008,7 @@ async function loadFromStorage() {
     await runPlannedClearMigration();
     runScheduleStatusMigration();
     runSchedStaleCleanupMigration();
+    runVisitFieldsMigration();
     await runProvMigration();
     await runCalcGpsMigration();
     if (runTimeFormatMigration()) { try { await saveToStorage(); } catch (e) {} }
@@ -2249,6 +2305,19 @@ function runScheduleStatusMigration() {
     if (!p.grp || p.grp === '') { p.grp = UNASSIGNED_GRP; changed = true; }
   }
   localStorage.setItem(LS_SCHED_STATUS_MIGRATED, '1');
+  if (changed) saveToStorage().catch(() => {});
+}
+
+function runVisitFieldsMigration() {
+  if (localStorage.getItem(LS_VISIT_FIELDS_MIGRATED)) return;
+  let changed = false;
+  for (const p of state.props) {
+    const before = `${p.visitDate || ''}|${p.visitTime || ''}`;
+    migratePropVisit(p);
+    const after = `${p.visitDate || ''}|${p.visitTime || ''}`;
+    if (before !== after) changed = true;
+  }
+  localStorage.setItem(LS_VISIT_FIELDS_MIGRATED, '1');
   if (changed) saveToStorage().catch(() => {});
 }
 
@@ -2787,13 +2856,12 @@ function _sortProps(arr) {
     else if (field === 'date' || field === 'planned' || field === 'sched') {
       const am = getPropSortMeta(a), bm = getPropSortMeta(b);
       if (am.tier !== bm.tier) return am.tier - bm.tier;
-      av = am.date; bv = bm.date;
-      if (av === bv) {
-        const amm = aptMins(a), bmm = aptMins(b);
-        if (amm < bmm) return -1;
-        if (amm > bmm) return 1;
-        return 0;
-      }
+      if (am.date !== bm.date) return am.date < bm.date ? -asc : asc;
+      if (am.hasTime !== bm.hasTime) return am.hasTime - bm.hasTime;
+      if (am.timeMin !== bm.timeMin) return am.timeMin < bm.timeMin ? -asc : asc;
+      const amm = aptMins(a), bmm = aptMins(b);
+      if (amm !== bmm) return amm < bmm ? -asc : asc;
+      return String(a.name).localeCompare(String(b.name)) * asc;
     } else if (field === 'status') {
       av = STATUS_OPTS.indexOf(a.status); bv = STATUS_OPTS.indexOf(b.status);
     }
@@ -2888,8 +2956,12 @@ function renderTile(p) {
   const locLine = getPropAddress(p).replace(/, Italy$/i, '');
 
   let chips = '';
-  if (isPropLockedScheduled(p)) chips += `<span class="tile-date-chip sched-chip">📅 ${p.schedDate}${p.schedTime ? ' ' + formatTimeDisplay(p.schedTime) : ''}</span>`;
-  else if (getPropProposedDate(p)) chips += `<span class="tile-date-chip planned-chip">🗓 ${getPropProposedDate(p)}${getPropProposedTime(p) ? ' ' + formatTimeDisplay(getPropProposedTime(p)) : ''}</span>`;
+  const vd = getPropVisitDate(p);
+  if (vd) {
+    const vt = getPropVisitTime(p);
+    const isSched = p.status === 'Scheduled' && vt;
+    chips += `<span class="tile-date-chip ${isSched ? 'sched-chip' : 'planned-chip'}">${isSched ? '📅' : '🗓'} ${vd}${vt ? ' ' + formatTimeDisplay(vt) : ''}</span>`;
+  }
 
   const priceStr = formatPrice(p.price);
   const roomsStr = p.rooms ? `${p.rooms} rm` : '';
@@ -2903,7 +2975,7 @@ function renderTile(p) {
 
   return `<div class="tile ${stCls}" style="border-left-color:${bColor}" id="tile-${p.id}" onclick="onTileClick(event,${p.id})">
   <div class="tile-body">
-    <div class="tile-name"><a href="${p.url||'#'}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${escHtml(p.name||'Unnamed')}</a>${lockLbl}</div>
+    <div class="tile-name"><button type="button" class="tile-name-btn" onclick="event.stopPropagation();openDetailModal(${p.id})">${escHtml(p.name||'Unnamed')}</button>${lockLbl}</div>
     <div class="tile-sub">${escHtml(locLine)}</div>
     <div class="tile-base" style="font-size:10px;font-weight:600;color:${bColor}">📍 ${escHtml(baseLbl)}</div>
     <div class="tile-drive" title="Drive distance & elevation">${driveStr}${elevStr ? ` · ${elevStr}` : ''}</div>
@@ -2925,7 +2997,7 @@ function renderTile(p) {
 }
 
 function onTileClick(e, id) {
-  if (e.target.closest('.tile-actions,.status-sel,.t-btn,a')) return;
+  if (e.target.closest('.tile-actions,.status-sel,.t-btn,a,.tile-name-btn')) return;
   openDetailModal(id);
 }
 
@@ -2995,6 +3067,7 @@ function dmReloadFromServer() {
   if (remote._v) local._v = remote._v;
   migratePropLocation(local);
   normalizePropTimes(local);
+  migratePropVisit(local);
   _dmDirty = false;
   HHPropConflict.snapshotProp(local);
   HHPropConflict.dismiss();
@@ -3018,6 +3091,9 @@ function openDetailModal(id) {
   urlEl.href = p.url || '#'; urlEl.textContent = p.url || '—';
 
   _dv('dm-name', p.name);
+  _dv('dm-visit-date', getPropVisitDate(p));
+  _dv('dm-visit-time', formatTimeDisplay(getPropVisitTime(p)));
+  _dv('dm-last-contacted', p.lastContacted);
   _dv('dm-address', formatPropTownDisplay(p));
   _dv('dm-gps', getPropGps(p));
   _dv('dm-price', p.price || '');
@@ -3029,11 +3105,6 @@ function openDetailModal(id) {
   _dv('dm-broker', p.broker);
   _dv('dm-broker-phone', p.brokerPhone);
   _dv('dm-broker-email', p.brokerEmail);
-  _dv('dm-proposed-date', getPropProposedDate(p));
-  _dv('dm-proposed-time', formatTimeDisplay(getPropProposedTime(p)));
-  _dv('dm-last-contacted', p.lastContacted);
-  _dv('dm-sched-date', isPropLockedScheduled(p) ? p.schedDate : '');
-  _dv('dm-sched-time', isPropLockedScheduled(p) ? formatTimeDisplay(p.schedTime) : '');
   _dv('dm-notes', p.notes);
 
   const stSel = document.getElementById('dm-status');
@@ -3166,8 +3237,8 @@ function _propMapEditSnapshot(p) {
     grp: p.grp,
     status: p.status,
     routeDate: getPropRouteDate(p),
-    proposedDate: getPropProposedDate(p),
-    schedDate: p.schedDate || '',
+    visitDate: getPropVisitDate(p),
+    visitTime: getPropVisitTime(p),
   };
 }
 
@@ -3176,8 +3247,8 @@ function _propMapEditChanged(p, prev) {
   return p.grp !== prev.grp
     || p.status !== prev.status
     || getPropRouteDate(p) !== prev.routeDate
-    || getPropProposedDate(p) !== prev.proposedDate
-    || (p.schedDate || '') !== prev.schedDate;
+    || getPropVisitDate(p) !== prev.visitDate
+    || getPropVisitTime(p) !== prev.visitTime;
 }
 
 function _syncMapShadedForProp(p) {
@@ -3199,10 +3270,8 @@ function _invalidateMapRouteCachesForProp(p, prev) {
   _invalidatePropRouteCaches(
     prev?.routeDate,
     getPropRouteDate(p),
-    prev?.proposedDate,
-    getPropProposedDate(p),
-    prev?.schedDate,
-    p.schedDate
+    prev?.visitDate,
+    getPropVisitDate(p),
   );
   for (const d of getMapRouteDays()) {
     delete _dayPlanCache[d];
@@ -3272,19 +3341,15 @@ async function saveDetailModal() {
   const brokerEmail = document.getElementById('dm-broker-email')?.value.trim() || '';
   const status = document.getElementById('dm-status')?.value || p.status;
   const grp = document.getElementById('dm-grp')?.value || p.grp;
-  const proposedDate = document.getElementById('dm-proposed-date')?.value || '';
-  const proposedTime = normalizeTimeString(document.getElementById('dm-proposed-time')?.value || '');
-  const proposedErr = validatePropProposedDate({ ...p, grp, proposedDate }, proposedDate);
-  if (proposedErr) { alert(proposedErr); return false; }
-  const lastContacted = document.getElementById('dm-last-contacted')?.value || '';
-  const schedDate = document.getElementById('dm-sched-date')?.value || '';
-  const schedTime = normalizeTimeString(document.getElementById('dm-sched-time')?.value || '');
+  const visitDate = document.getElementById('dm-visit-date')?.value || '';
+  const visitTime = normalizeTimeString(document.getElementById('dm-visit-time')?.value || '');
+  if (visitTime && !visitDate) { alert('Visit time requires a visit date.'); return false; }
+  const visitErr = visitDate ? validatePropProposedDate({ ...p, grp, proposedDate: visitDate }, visitDate) : '';
+  if (visitErr) { alert(visitErr); return false; }
   if (status === 'Scheduled') {
-    if (!schedDate) { alert('Scheduled status requires a date.'); return false; }
-    if (!schedTime) { alert('Scheduled status requires a time.'); return false; }
-    const schedErr = validatePropProposedDate({ ...p, grp, schedDate }, schedDate);
-    if (schedErr) { alert(schedErr); return false; }
+    if (!visitDate || !visitTime) { alert('Scheduled status requires visit date and time.'); return false; }
   }
+  const lastContacted = document.getElementById('dm-last-contacted')?.value || '';
   const notes = document.getElementById('dm-notes')?.value || '';
 
   let newTown = oldTown;
@@ -3330,18 +3395,8 @@ async function saveDetailModal() {
   p.brokerEmail = brokerEmail;
   p.status = status;
   p.grp = grp;
-  p.proposedDate = proposedDate;
-  p.proposedTime = proposedTime;
-  p.userPlannedDate = '';
-  p.userPlannedTime = '';
+  setPropVisit(p, visitDate, visitTime);
   p.lastContacted = lastContacted;
-  if (status === 'Scheduled') {
-    p.schedDate = schedDate;
-    p.schedTime = schedTime;
-  } else {
-    p.schedDate = '';
-    p.schedTime = '';
-  }
   p.notes = notes;
   if (locScratch) {
     p.address = locScratch.address || '';
@@ -3356,8 +3411,8 @@ async function saveDetailModal() {
 
   touchPropFields(p, [
     'name', 'address', 'gps', 'calcGps', 'price', 'rooms', 'size', 'firmName', 'firmPhone', 'realtorUrl',
-    'broker', 'brokerPhone', 'brokerEmail', 'status', 'grp', 'proposedDate', 'proposedTime',
-    'lastContacted', 'schedDate', 'schedTime', 'notes',
+    'broker', 'brokerPhone', 'brokerEmail', 'status', 'grp', 'visitDate', 'visitTime',
+    'proposedDate', 'proposedTime', 'lastContacted', 'schedDate', 'schedTime', 'notes',
   ]);
   _dmDirty = false;
   document.getElementById('dm-save-btn').disabled = true;
@@ -3581,7 +3636,7 @@ function _fmtDate(dateStr) {
 }
 
 function applyTemplate(tpl, p) {
-  const date = p.userPlannedDate || p.schedDate || '';
+  const date = getPropVisitDate(p) || '';
   // Find base for this property's planned date, or use assigned base
   let base = date ? getTripDays().find(d => d.date === date && d.base)?.baseObj : null;
   if (!base) base = getBase(p.grp);
@@ -3729,6 +3784,7 @@ function formatTimeDisplay(t) {
 
 function normalizePropTimes(p) {
   if (!p) return;
+  if (p.visitTime) p.visitTime = normalizeTimeString(p.visitTime);
   if (p.proposedTime) p.proposedTime = normalizeTimeString(p.proposedTime);
   if (p.userPlannedTime) p.userPlannedTime = normalizeTimeString(p.userPlannedTime);
   if (p.schedTime) p.schedTime = normalizeTimeString(p.schedTime);
@@ -3971,9 +4027,12 @@ function getDayProperties(date, baseAbbr) {
       return p.grp === baseAbbr;
     })
     .sort((a, b) => {
-      const at = parseTimeToMinutes(getPropDayTime(a, date)) ?? 99999;
-      const bt = parseTimeToMinutes(getPropDayTime(b, date)) ?? 99999;
-      return at - bt || String(a.name).localeCompare(String(b.name));
+      const at = parseTimeToMinutes(getPropDayTime(a, date));
+      const bt = parseTimeToMinutes(getPropDayTime(b, date));
+      const aHas = at != null, bHas = bt != null;
+      if (aHas !== bHas) return aHas ? -1 : 1;
+      if (aHas && bHas && at !== bt) return at - bt;
+      return String(a.name).localeCompare(String(b.name));
     });
 }
 
@@ -4238,9 +4297,12 @@ async function orderDayPlanProperties(props, endpoints, date) {
 }
 
 function _timeSortProps(a, b, date) {
-  const at = parseTimeToMinutes(getPropDayTime(a, date)) ?? 99999;
-  const bt = parseTimeToMinutes(getPropDayTime(b, date)) ?? 99999;
-  return at - bt || String(a.name).localeCompare(String(b.name));
+  const at = parseTimeToMinutes(getPropDayTime(a, date));
+  const bt = parseTimeToMinutes(getPropDayTime(b, date));
+  const aHas = at != null, bHas = bt != null;
+  if (aHas !== bHas) return aHas ? -1 : 1;
+  if (aHas && bHas && at !== bt) return at - bt;
+  return String(a.name).localeCompare(String(b.name));
 }
 
 /** Keep locked scheduled visits in chronological order among themselves. */
@@ -4263,12 +4325,7 @@ function orderAsScheduledProperties(props, date, manualOrder) {
       if (byId[id]) { ordered.push(byId[id]); seen.add(id); }
     }
     const rest = props.filter(p => !seen.has(p.id));
-    rest.sort((a, b) => {
-      const at = parseTimeToMinutes(getPropDayTime(a, date)) ?? 99999;
-      const bt = parseTimeToMinutes(getPropDayTime(b, date)) ?? 99999;
-      if (at !== bt) return at - bt;
-      return String(a.name).localeCompare(String(b.name));
-    });
+    rest.sort((a, b) => _timeSortProps(a, b, date));
     return enforceLockedInTimeOrder([...ordered, ...rest], date);
   }
   const timed = props.filter(p => parseTimeToMinutes(getPropDayTime(p, date)) != null);
@@ -4990,9 +5047,8 @@ function dpSyncOrder(date) {
       if (p && !getPropRouteDate(p)) {
         const err = validatePropProposedDate(p, date);
         if (!err) {
-          p.proposedDate = date;
-          p.proposedTime = '';
-          touchPropFields(p, ['proposedDate', 'proposedTime']);
+          setPropVisit(p, date, '');
+          touchPropFields(p, ['visitDate', 'visitTime', 'proposedDate', 'proposedTime', 'schedDate', 'schedTime']);
           saveToStorage();
         }
       }
@@ -5087,9 +5143,12 @@ function renderSchedule() {
       const tierA = getPropScheduleDayTier(a, day.date);
       const tierB = getPropScheduleDayTier(b, day.date);
       if (tierA !== tierB) return tierA - tierB;
-      const at = parseTimeToMinutes(getPropDayTime(a, day.date)) ?? 99999;
-      const bt = parseTimeToMinutes(getPropDayTime(b, day.date)) ?? 99999;
-      return at - bt || String(a.name).localeCompare(String(b.name));
+      const at = parseTimeToMinutes(getPropDayTime(a, day.date));
+      const bt = parseTimeToMinutes(getPropDayTime(b, day.date));
+      const aHas = at != null, bHas = bt != null;
+      if (aHas !== bHas) return aHas ? -1 : 1;
+      if (aHas && bHas && at !== bt) return at - bt;
+      return String(a.name).localeCompare(String(b.name));
     });
     for (const p of sortedItems) {
       const rs = getPropRouteSchedule(p);
@@ -5169,11 +5228,8 @@ function _initSchedDnd() {
           const err = validatePropProposedDate(p, toDate);
           if (err) { alert(err); renderSchedule(); return; }
         }
-        p.proposedDate = toDate || '';
-        p.proposedTime = '';
-        p.userPlannedDate = '';
-        p.userPlannedTime = '';
-        touchPropFields(p, ['proposedDate', 'proposedTime']);
+        setPropVisit(p, toDate || '', '');
+        touchPropFields(p, ['visitDate', 'visitTime', 'proposedDate', 'proposedTime', 'schedDate', 'schedTime']);
         if (toDate) {
           delete _dayPlanCache[toDate];
           delete _dayPlanCache[toDate + '_as_scheduled'];
@@ -5192,11 +5248,8 @@ function _initSchedDnd() {
         const pid = evt.item.dataset.pid;
         const p = getProp(pid);
         if (p && !isPropLockedScheduled(p)) {
-          p.proposedDate = '';
-          p.proposedTime = '';
-          p.userPlannedDate = '';
-          p.userPlannedTime = '';
-          touchPropFields(p, ['proposedDate', 'proposedTime']);
+          setPropVisit(p, '', '');
+          touchPropFields(p, ['visitDate', 'visitTime', 'proposedDate', 'proposedTime', 'schedDate', 'schedTime']);
           saveToStorage();
         }
       }
@@ -5438,7 +5491,7 @@ function getMapUnscheduledProps(baseSet, statusFilter, dayFilter, routeMode, day
     if (inDayColumn.has(p.id)) return false;
     if (routeMode === 'timed') {
       if (getPropRouteDate(p)) return false;
-      if (getPropProposedDate(p)) return false;
+      if (getPropVisitDate(p)) return false;
       return propMatchesMapFilters(p, baseSet, dayFilter, statusFilter);
     }
     if (getPropRouteDate(p)) return false;
@@ -5897,33 +5950,14 @@ function mapPopupSaveDate(id, dateStr) {
   const prevMap = _propMapEditSnapshot(p);
   const nextDate = dateStr || '';
   if (nextDate === prevMap.routeDate) return;
-  if (isPropLockedScheduled(p)) {
-    if (nextDate) {
-      const err = validatePropProposedDate({ ...p, schedDate: nextDate }, nextDate);
-      if (err) { alert(err); if (_mapInited) refreshMap({ preserveView: true }); return; }
-      p.schedDate = nextDate;
-      touchPropFields(p, ['schedDate']);
-    } else {
-      p.schedDate = '';
-      p.schedTime = '';
-      touchPropFields(p, ['schedDate', 'schedTime']);
-    }
+  if (nextDate) {
+    const err = validatePropProposedDate({ ...p, proposedDate: nextDate }, nextDate);
+    if (err) { alert(err); if (_mapInited) refreshMap({ preserveView: true }); return; }
+    setPropVisit(p, nextDate, p.status === 'Scheduled' ? getPropVisitTime(p) : '');
+    touchPropFields(p, ['visitDate', 'visitTime', 'proposedDate', 'proposedTime', 'schedDate', 'schedTime']);
   } else {
-    if (nextDate) {
-      const err = validatePropProposedDate({ ...p, proposedDate: nextDate }, nextDate);
-      if (err) { alert(err); if (_mapInited) refreshMap({ preserveView: true }); return; }
-      p.proposedDate = nextDate;
-      p.proposedTime = '';
-      p.userPlannedDate = '';
-      p.userPlannedTime = '';
-      touchPropFields(p, ['proposedDate', 'proposedTime']);
-    } else {
-      p.proposedDate = '';
-      p.proposedTime = '';
-      p.userPlannedDate = '';
-      p.userPlannedTime = '';
-      touchPropFields(p, ['proposedDate', 'proposedTime']);
-    }
+    setPropVisit(p, '', '');
+    touchPropFields(p, ['visitDate', 'visitTime', 'proposedDate', 'proposedTime', 'schedDate', 'schedTime']);
   }
   saveToStorage();
   renderProps();
@@ -6425,10 +6459,10 @@ async function fetchBroker(id) {
 
 function addToCalendar(id) {
   const p = getProp(id);
-  if (!p || !isPropLockedScheduled(p)) { alert('No scheduled date set for this property.'); return; }
-  const t = normalizeTimeString(p.schedTime) || '09:00';
+  if (!p || !isPropLockedScheduled(p)) { alert('Scheduled visit date and time required.'); return; }
+  const t = getPropVisitTime(p) || '09:00';
   const hhmm = t.match(/^\d{2}:\d{2}$/) ? t : '09:00';
-  const s = new Date(p.schedDate + 'T' + hhmm + ':00');
+  const s = new Date(getPropVisitDate(p) + 'T' + hhmm + ':00');
   const e = new Date(s); e.setMinutes(e.getMinutes() + 45);
   const fmt = d => d.toISOString().replace(/[-:.]/g,'').slice(0,15);
   const closestApt = getClosestAirportDrive(p);
