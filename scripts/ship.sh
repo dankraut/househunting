@@ -13,7 +13,7 @@ usage() {
 Usage: scripts/ship.sh [-m "commit message"] [-t "PR title"] [-b "PR body"]
 
 Ships the current cursor/* branch: smoke check → commit (if dirty) → push → gh pr create → gh pr ready.
-Do not run on main. Branch must match cursor/<description>-fb87 or cursor/<description>-b2eb.
+Do not run on main. Branch must match cursor/<description>-<suffix> (e.g. -288c, -fb87, -b2eb).
 EOF
 }
 
@@ -41,7 +41,7 @@ if [[ -z "$branch" ]]; then
 fi
 
 if [[ "$branch" == "$MAIN_BRANCH" ]]; then
-  echo "ERROR: cannot ship from main. Create cursor/<description>-b2eb (or -fb87) first." >&2
+  echo "ERROR: cannot ship from main. Create cursor/<description>-<suffix> first." >&2
   exit 1
 fi
 
@@ -50,8 +50,8 @@ if [[ "$branch" != ${BRANCH_PREFIX}* ]]; then
   exit 1
 fi
 
-if ! [[ "$branch" =~ -(fb87|b2eb)$ ]]; then
-  echo "ERROR: branch '$branch' must end with -fb87 or -b2eb for auto-merge." >&2
+if ! [[ "$branch" =~ ^cursor/.+-[a-z0-9]+$ ]]; then
+  echo "ERROR: branch '$branch' must match cursor/<description>-<suffix> (e.g. cursor/my-fix-288c or cursor/my-fix-fb87)." >&2
   exit 1
 fi
 
