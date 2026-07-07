@@ -1,5 +1,5 @@
 /** @module config — shared SPA constants */
-export const SPA_VERSION = 'v3.13.52';
+export const SPA_VERSION = 'v3.13.53';
 export const API_TOKEN = 'jmjk05DK';
 export const UNASSIGNED_GRP = 'UNA';
 export const DAY_ROUTE_COLORS = ['#2C5F7A', '#7B1FA2', '#C0603A', '#5B7232', '#0891B2', '#DC2626', '#8B5CF6', '#059669'];
@@ -7,13 +7,16 @@ export const API_BASE = '/api';
 export const GEMINI_KEY = 'AIzaSyBmBWSxxAvawMG4noiDA7ulzm6hHtYtCAc';
 export const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`;
 
+export const STATUS_UNDER_AGREEMENT_SOLD = 'Under Agreement/Sold';
+export const STATUS_UNABLE_TO_SEE = 'Unable To See';
+
 export const STATUS_OPTS = ['New','Working','Reset','Reached Out','Replied','Info Supplied',
-  'To Be Scheduled','Scheduled','Unavailable','Unresponsive','Rejected',
-  'Duplicate','Deleted','Deleted-Idealista'];
-export const ELIM_STATUSES = new Set(['Unavailable','Unresponsive','Rejected','Duplicate','Deleted','Deleted-Idealista']);
-export const IFL_ELIM_STATUSES = new Set(['Unavailable','Rejected','Deleted-Idealista','Deleted']);
+  'To Be Scheduled','Scheduled',STATUS_UNDER_AGREEMENT_SOLD,'Unresponsive','Rejected',
+  STATUS_UNABLE_TO_SEE,'Duplicate','Deleted','Deleted-Idealista'];
+export const ELIM_STATUSES = new Set([STATUS_UNDER_AGREEMENT_SOLD,'Unresponsive','Rejected',STATUS_UNABLE_TO_SEE,'Duplicate','Deleted','Deleted-Idealista']);
+export const IFL_ELIM_STATUSES = new Set([STATUS_UNDER_AGREEMENT_SOLD,'Rejected','Deleted-Idealista','Deleted']);
 export const IFL_RESET_STATUSES = new Set(['Unresponsive','Rejected','Deleted']);
-export const ACTIVE_ELIM = new Set(['Unavailable','Unresponsive','Rejected','Duplicate']);
+export const ACTIVE_ELIM = new Set([STATUS_UNDER_AGREEMENT_SOLD,'Unresponsive','Rejected',STATUS_UNABLE_TO_SEE,'Duplicate']);
 export const DRIVE_CAP = 120;
 export const DRIVE_SHOW_CAP = 45;
 export const VIEWING_MIN = 45;
@@ -40,6 +43,7 @@ export const LS_PLANNED_CLEARED = 'italy_hunt_planned_cleared_v37';
 export const LS_SCHED_STATUS_MIGRATED = 'italy_hunt_sched_status_v312';
 export const LS_SCHED_STALE_CLEANED = 'italy_hunt_sched_stale_v3123';
 export const LS_VISIT_FIELDS_MIGRATED = 'italy_hunt_visit_fields_v31352';
+export const LS_STATUS_LABELS_MIGRATED = 'italy_hunt_status_labels_v31353';
 export const LS_PROV_MIGRATED = 'italy_hunt_prov_migrated_v3129';
 export const LS_ORPHAN_GRP_MIGRATED = 'italy_hunt_orphan_grp_v3138';
 export const LS_CALC_GPS_MIGRATED = 'italy_hunt_calc_gps_v3145';
