@@ -29,4 +29,7 @@ js/config.js|LS_MXP_AIRPORT_BACKFILL|MXP airport backfill migration key
 extension/spa_relay.js|RELAY_IFL_SYNC|SPA content-script IFL relay
 extension/background.js|RUN_IFL_SYNC|Background IFL sync job
 js/location.js|geocode-town-fallback|Town fallback when street geocode fails
-index.html|Not Included|Day plan excluded section label
+index.html|computeOptScheduledRoute|Optimized w scheduled map route
+index.html|computeUnconstrainedOptimizedRoute|Unconstrained optimized map route
+index.html|annotateMapRouteStops|Map route implied timing and feasibility
+index.html|Not Included|Map panel excluded section label

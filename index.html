@@ -443,8 +443,10 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
     <label>Route <select id="map-route-mode" onchange="onMapRouteModeChange()" disabled title="Select day(s) for route">
       <option value="suggested">What if</option>
       <option value="timed">Scheduled</option>
+      <option value="opt-scheduled">Optimized w Scheduled</option>
+      <option value="opt-free">Unconstrained Optimized</option>
     </select></label>
-    <button type="button" class="io-btn" onclick="resetMapPlanningState()" title="Reset route order to property details">Reset</button>
+    <button type="button" class="io-btn" id="map-reset-btn" onclick="resetMapPlanningState()" title="Reset route order">Reset</button>
     <span id="map-status"></span>
     <span id="map-route-info" style="font-size:11px;color:var(--text3)"></span>
   </div>
@@ -917,7 +919,7 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 
 <script type="module" src="js/bootstrap.js"></script>
 <script>
-// ═══ SPA v3.13.48 — app core (config/api/location in js/) ═══════════════════════
+// ═══ SPA v3.13.49 — app core (config/api/location in js/) ═══════════════════════
 
 const PROPS_RAW=[{"id":30278342,"name":"Tuscania Villa","town":"Tuscania","prov":"VT","price":780,"rooms":10,"size":300,"grp":1,"fco":72,"cdp":80,"caf":140,"spo":105,"man":45,"url":"https://www.idealista.it/immobile/30278342/","lat":42.418,"lng":11.875,"plannedDate":"2026-07-09","plannedTime":"10:30 AM"},{"id":34998463,"name":"Vetralla Villa","town":"Vetralla","prov":"VT","price":670,"rooms":12,"size":509,"grp":1,"fco":75,"cdp":95,"caf":155,"spo":95,"man":70,"url":"https://www.idealista.it/immobile/34998463/","lat":42.32,"lng":12.05,"plannedDate":"2026-07-09","plannedTime":"11:30 AM"},{"id":35809714,"name":"Canino Villa","town":"Canino","prov":"VT","price":870,"rooms":7,"size":380,"grp":1,"fco":78,"cdp":80,"caf":130,"spo":115,"man":30,"url":"https://www.idealista.it/immobile/35809714/","lat":42.468,"lng":11.744,"plannedDate":"2026-07-09","plannedTime":"9:30 AM"},{"id":26448701,"name":"Montecastrilli Villa","town":"Montecastrilli","prov":"TR","price":820,"rooms":19,"size":480,"grp":1,"fco":85,"cdp":70,"caf":120,"spo":30,"man":105,"url":"https://www.idealista.it/immobile/26448701/","lat":42.649,"lng":12.487,"plannedDate":"2026-07-06","plannedTime":"11:00 AM"},{"id":21658129,"name":"Manciano SP159","town":"Manciano","prov":"GR","price":850,"rooms":18,"size":379,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":0,"url":"https://www.idealista.it/immobile/21658129/","lat":42.595,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"8:45 AM"},{"id":18085022,"name":"Manciano Scansanese","town":"Manciano","prov":"GR","price":870,"rooms":10,"size":520,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/18085022/","lat":42.605,"lng":11.52,"plannedDate":"2026-07-10","plannedTime":"9:30 AM"},{"id":33646557,"name":"Manciano Montemerano","town":"Manciano","prov":"GR","price":698,"rooms":8,"size":430,"grp":1,"fco":95,"cdp":75,"caf":125,"spo":130,"man":10,"url":"https://www.idealista.it/immobile/33646557/","lat":42.544,"lng":11.57,"plannedDate":"2026-07-10","plannedTime":"10:20 AM"},{"id":32530331,"name":"Manciano Saturnia","town":"Manciano","prov":"GR","price":720,"rooms":10,"size":395,"grp":1,"fco":95,"cdp":80,"caf":125,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/32530331/","lat":42.555,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"11:10 AM"},{"id":27864548,"name":"Baschi Villa","town":"Baschi","prov":"TR","price":780,"rooms":10,"size":580,"grp":1,"fco":99,"cdp":45,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/27864548/","lat":42.675,"lng":12.212,"plannedDate":"2026-06-26","plannedTime":"12:15 PM"},{"id":34980477,"name":"Baschi Civitella","town":"Baschi","prov":"TR","price":990,"rooms":15,"size":450,"grp":1,"fco":99,"cdp":50,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/34980477/","lat":42.67,"lng":12.205,"plannedDate":"2026-06-26","plannedTime":"1:05 PM"},{"id":35860173,"name":"Todi Piagge Casale","town":"Todi","prov":"PG","price":825,"rooms":10,"size":300,"grp":1,"fco":102,"cdp":50,"caf":100,"spo":35,"man":100,"url":"https://www.idealista.it/immobile/35860173/","lat":42.775,"lng":12.412,"plannedDate":"2026-07-07","plannedTime":"9:00 AM"},{"id":35822412,"name":"Todi Collarezzo","town":"Todi","prov":"PG","price":850,"rooms":10,"size":351,"grp":1,"fco":102,"cdp":55,"caf":100,"spo":35,"man":105,"url":"https://www.idealista.it/immobile/35822412/","lat":42.782,"lng":12.43,"plannedDate":"2026-07-07","plannedTime":"10:00 AM"},{"id":34024712,"name":"San Venanzo Civitella","town":"San Venanzo","prov":"TR","price":845,"rooms":18,"size":815,"grp":1,"fco":105,"cdp":30,"caf":80,"spo":55,"man":90,"url":"https://www.idealista.it/immobile/34024712/","lat":42.87,"lng":12.265,"plannedDate":"","plannedTime":""},{"id":33903982,"name":"Scansano Fonte Guerra","town":"Scansano","prov":"GR","price":790,"rooms":12,"size":475,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/33903982/","lat":42.683,"lng":11.34,"plannedDate":"2026-07-10","plannedTime":"12:30 PM"},{"id":35951463,"name":"Scansano Montorgiali","town":"Scansano","prov":"GR","price":960,"rooms":8,"size":390,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35951463/","lat":42.69,"lng":11.332,"plannedDate":"2026-07-09","plannedTime":"3:00 PM"},{"id":35048730,"name":"Scansano Agriturismo","town":"Scansano","prov":"GR","price":630,"rooms":7,"size":390,"grp":1,"fco":105,"cdp":85,"caf":120,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35048730/","lat":42.676,"lng":11.321,"plannedDate":"2026-07-09","plannedTime":"3:50 PM"},{"id":35397327,"name":"Sorano Piancasale","town":"Sorano","prov":"GR","price":700,"rooms":24,"size":480,"grp":1,"fco":108,"cdp":50,"caf":100,"spo":110,"man":25,"url":"https://www.idealista.it/immobile/35397327/","lat":42.685,"lng":11.713,"plannedDate":"","plannedTime":""},{"id":21287742,"name":"Ferentillo Rustico","town":"Ferentillo","prov":"TR","price":645,"rooms":12,"size":650,"grp":1,"fco":110,"cdp":100,"caf":145,"spo":20,"man":140,"url":"https://www.idealista.it/immobile/21287742/","lat":42.623,"lng":12.798,"plannedDate":"2026-07-06","plannedTime":"9:00 AM"},{"id":10679967,"name":"Semproniano Rustico","town":"Semproniano","prov":"GR","price":720,"rooms":11,"size":355,"grp":1,"fco":110,"cdp":70,"caf":115,"spo":130,"man":5,"url":"https://www.idealista.it/immobile/10679967/","lat":42.623,"lng":11.537,"plannedDate":"","plannedTime":""},{"id":34882496,"name":"Spoleto Baiano","town":"Spoleto","prov":"PG","price":980,"rooms":17,"size":451,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":135,"url":"https://www.idealista.it/immobile/34882496/","lat":42.722,"lng":12.718,"plannedDate":"2026-07-05","plannedTime":"8:45 AM"},{"id":30865904,"name":"Spoleto Terzo La Pieve","town":"Spoleto","prov":"PG","price":900,"rooms":11,"size":350,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":130,"url":"https://www.idealista.it/immobile/30865904/","lat":42.715,"lng":12.708,"plannedDate":"2026-07-05","plannedTime":"9:45 AM"},{"id":35103506,"name":"Montefalco Fabbri","town":"Montefalco","prov":"PG","price":910,"rooms":16,"size":450,"grp":1,"fco":121,"cdp":70,"caf":105,"spo":25,"man":130,"url":"https://www.idealista.it/immobile/35103506/","lat":42.89,"lng":12.652,"plannedDate":"2026-07-04","plannedTime":"12:30 PM"},{"id":35432103,"name":"Deruta Tiberina","town":"Deruta","prov":"PG","price":790,"rooms":12,"size":320,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/35432103/","lat":42.982,"lng":12.419,"plannedDate":"2026-07-04","plannedTime":"10:00 AM"},{"id":33533240,"name":"Deruta Tiberina 203","town":"Deruta","prov":"PG","price":685,"rooms":22,"size":611,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/33533240/","lat":42.981,"lng":12.421,"plannedDate":"2026-07-04","plannedTime":"10:50 AM"},{"id":27988041,"name":"Deruta Centro Casale","town":"Deruta","prov":"PG","price":650,"rooms":12,"size":400,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/27988041/","lat":42.982,"lng":12.416,"plannedDate":"","plannedTime":""},{"id":29370809,"name":"Deruta Castelleone","town":"Deruta","prov":"PG","price":890,"rooms":12,"size":316,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/29370809/","lat":42.984,"lng":12.413,"plannedDate":"","plannedTime":""},{"id":34783987,"name":"Bettona Villa","town":"Bettona","prov":"PG","price":850,"rooms":20,"size":484,"grp":1,"fco":129,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/34783987/","lat":42.992,"lng":12.43,"plannedDate":"2026-06-27","plannedTime":"11:00 AM"},{"id":34843857,"name":"Santa Fiora Monte Amiata","town":"Santa Fiora","prov":"GR","price":978,"rooms":12,"size":520,"grp":1,"fco":130,"cdp":50,"caf":85,"spo":125,"man":40,"url":"https://www.idealista.it/immobile/34843857/","lat":42.834,"lng":11.587,"plannedDate":"","plannedTime":""},{"id":34979131,"name":"Corciano Migiana","town":"Corciano","prov":"PG","price":830,"rooms":13,"size":700,"grp":1,"fco":133,"cdp":40,"caf":55,"spo":75,"man":115,"url":"https://www.idealista.it/immobile/34979131/","lat":43.11,"lng":12.289,"plannedDate":"","plannedTime":""},{"id":35300665,"name":"Perugia Olmo","town":"Perugia","prov":"PG","price":675,"rooms":5,"size":425,"grp":2,"fco":138,"cdp":50,"caf":70,"spo":60,"man":125,"url":"https://www.idealista.it/immobile/35300665/","lat":43.085,"lng":12.442,"plannedDate":"2026-06-25","plannedTime":"12:30 PM"},{"id":35456752,"name":"Perugia Eugubina","town":"Perugia","prov":"PG","price":650,"rooms":21,"size":953,"grp":2,"fco":138,"cdp":50,"caf":60,"spo":70,"man":125,"url":"https://www.idealista.it/immobile/35456752/","lat":43.138,"lng":12.408,"plannedDate":"2026-06-25","plannedTime":"1:15 PM"},{"id":32456550,"name":"Perugia Colli Albani","town":"Perugia","prov":"PG","price":650,"rooms":10,"size":530,"grp":2,"fco":138,"cdp":50,"caf":65,"spo":65,"man":125,"url":"https://www.idealista.it/immobile/32456550/","lat":43.093,"lng":12.415,"plannedDate":"2026-06-25","plannedTime":"2:15 PM"},{"id":16393910,"name":"Perugia Solfagnano","town":"Perugia","prov":"PG","price":1100,"rooms":16,"size":725,"grp":2,"fco":138,"cdp":45,"caf":50,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/16393910/","lat":43.155,"lng":12.33,"plannedDate":"2026-06-26","plannedTime":"2:30 PM"},{"id":34105542,"name":"Perugia Monte Tezio","town":"Perugia","prov":"PG","price":890,"rooms":10,"size":500,"grp":2,"fco":138,"cdp":45,"caf":55,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/34105542/","lat":43.148,"lng":12.34,"plannedDate":"2026-06-26","plannedTime":"3:15 PM"},{"id":33928859,"name":"Assisi Porziano","town":"Assisi","prov":"PG","price":580,"rooms":12,"size":485,"grp":2,"fco":148,"cdp":70,"caf":85,"spo":50,"man":140,"url":"https://www.idealista.it/immobile/33928859/","lat":43.07,"lng":12.612,"plannedDate":"2026-07-03","plannedTime":"11:30 AM"},{"id":35247592,"name":"Lisciano Niccone Villa","town":"Lisciano Niccone","prov":"PG","price":1050,"rooms":12,"size":520,"grp":2,"fco":148,"cdp":50,"caf":25,"spo":105,"man":120,"url":"https://www.idealista.it/immobile/35247592/","lat":43.265,"lng":12.125,"plannedDate":"2026-06-27","plannedTime":"9:30 AM"},{"id":35456269,"name":"Umbertide Casale","town":"Umbertide","prov":"PG","price":1150,"rooms":15,"size":700,"grp":2,"fco":148,"cdp":60,"caf":45,"spo":95,"man":140,"url":"https://www.idealista.it/immobile/35456269/","lat":43.297,"lng":12.332,"plannedDate":"2026-07-03","plannedTime":"8:45 AM"},{"id":34939305,"name":"Umbertide Preggio","town":"Umbertide","prov":"PG","price":895,"rooms":16,"size":320,"grp":2,"fco":148,"cdp":60,"caf":40,"spo":100,"man":135,"url":"https://www.idealista.it/immobile/34939305/","lat":43.312,"lng":12.29,"plannedDate":"2026-07-03","plannedTime":"9:30 AM"},{"id":23044407,"name":"Foiano della Chiana","town":"Foiano","prov":"AR","price":750,"rooms":12,"size":500,"grp":2,"fco":150,"cdp":50,"caf":20,"spo":125,"man":105,"url":"https://www.idealista.it/immobile/23044407/","lat":43.251,"lng":11.819,"plannedDate":"2026-06-30","plannedTime":"11:30 AM"},{"id":33291507,"name":"Cortona Fratticciola","town":"Cortona","prov":"AR","price":870,"rooms":10,"size":311,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":110,"man":115,"url":"https://www.idealista.it/immobile/33291507/","lat":43.264,"lng":12.002,"plannedDate":"2026-06-28","plannedTime":"11:00 AM"},{"id":33311877,"name":"Cortona Cegliolo Villa","town":"Cortona","prov":"AR","price":980,"rooms":11,"size":400,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/33311877/","lat":43.27,"lng":12.0,"plannedDate":"2026-06-30","plannedTime":"10:30 AM"},{"id":35710302,"name":"Cortona Cegliolo Casale","town":"Cortona","prov":"AR","price":590,"rooms":7,"size":460,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/35710302/","lat":43.272,"lng":11.992,"plannedDate":"","plannedTime":""},{"id":24846822,"name":"CaF Val di Chio","town":"Castiglion Fiorentino","prov":"AR","price":1000,"rooms":12,"size":760,"grp":2,"fco":155,"cdp":55,"caf":0,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/24846822/","lat":43.335,"lng":11.942,"plannedDate":"2026-06-28","plannedTime":"8:45 AM"},{"id":34980495,"name":"CaF Santa Cristina","town":"Castiglion Fiorentino","prov":"AR","price":900,"rooms":12,"size":800,"grp":2,"fco":155,"cdp":55,"caf":5,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/34980495/","lat":43.325,"lng":11.938,"plannedDate":"2026-06-28","plannedTime":"9:30 AM"},{"id":31961655,"name":"Monteroni d'Arbia","town":"Monteroni d'Arbia","prov":"SI","price":980,"rooms":12,"size":480,"grp":2,"fco":155,"cdp":75,"caf":60,"spo":160,"man":95,"url":"https://www.idealista.it/immobile/31961655/","lat":43.227,"lng":11.415,"plannedDate":"2026-07-01","plannedTime":"12:00 PM"},{"id":26833080,"name":"Capolona Pieve SG","town":"Capolona","prov":"AR","price":890,"rooms":9,"size":420,"grp":2,"fco":158,"cdp":90,"caf":35,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/26833080/","lat":43.559,"lng":11.86,"plannedDate":"2026-07-01","plannedTime":"9:45 AM"},{"id":35651252,"name":"Capolona Caliano","town":"Capolona","prov":"AR","price":595,"rooms":10,"size":350,"grp":2,"fco":158,"cdp":90,"caf":30,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/35651252/","lat":43.554,"lng":11.856,"plannedDate":"2026-07-01","plannedTime":"9:00 AM"}];
 const _propsRawById = new Map(PROPS_RAW.map(p => [p.id, p]));
@@ -965,6 +967,7 @@ let _mapDayFilterManual = false;
 let _mapBaseFilterManual = false;
 let _mapShadedPropIds = new Set();
 let _mapManualOrder = {};
+let _mapOptimizedOrder = {};
 let _mapTempUnscheduled = new Set();
 let _mapSortables = {};
 let _propLegPopupEl = null;
@@ -1390,11 +1393,52 @@ function applyDefaultMapTabFilters() {
 }
 
 function resetMapPlanningState() {
-  _mapManualOrder = {};
+  const mode = getMapRouteMode();
+  if (mode === 'opt-scheduled' && Object.keys(_mapOptimizedOrder).length) {
+    _mapManualOrder = {};
+    for (const [k, ids] of Object.entries(_mapOptimizedOrder)) {
+      _mapManualOrder[k] = [...ids];
+    }
+  } else {
+    _mapManualOrder = {};
+    _mapOptimizedOrder = {};
+  }
   _mapTempUnscheduled.clear();
   _mapShadedPropIds.clear();
   for (const k of Object.keys(_dayPlanCache)) delete _dayPlanCache[k];
   refreshMap();
+}
+
+function isMapRouteMode(mode) {
+  return getMapRouteMode() === mode;
+}
+
+function isMapOptimizedMode() {
+  const m = getMapRouteMode();
+  return m === 'opt-scheduled' || m === 'opt-free';
+}
+
+function isMapTimedRouteMode() {
+  const m = getMapRouteMode();
+  return m === 'timed' || m === 'suggested' || isMapOptimizedMode();
+}
+
+function isFirstStopScheduledAnchor(stop, date) {
+  if (!stop?.p || !date) return false;
+  return isPropLockedScheduled(stop.p) && parseTimeToMinutes(getPropDayTime(stop.p, date)) != null;
+}
+
+function formatStopTimeMeta(s, p, date) {
+  if (!s) return '—';
+  const planned = parseTimeToMinutes(getPropDayTime(p, date));
+  if (isPropLockedScheduled(p) && planned != null) {
+    return formatTimeDisplay(getPropDayTime(p, date)) || formatMinToTime(planned);
+  }
+  if (s.startViewMin != null && s.departMin != null) {
+    return `${formatMinToTime(s.startViewMin)}–${formatMinToTime(s.departMin)}`;
+  }
+  if (planned != null) return formatTimeDisplay(getPropDayTime(p, date)) || formatMinToTime(planned);
+  return '—';
 }
 
 function applyDefaultDpDay() {
@@ -1419,9 +1463,9 @@ function isPropDateOnlyOnDay(p, date) {
 function getStopViolationReasons(s, plan) {
   const reasons = [];
   if (s.cantReach) reasons.push('unreachable');
-  if (s.late) reasons.push('late');
+  if (s.late) reasons.push('late arrival');
   if (s.noTimeToView) reasons.push('past day end');
-  if (s.tightToNext) reasons.push('conflicts with next');
+  if (s.tightToNext) reasons.push('insufficient travel time');
   if (s.noPlannedTime) reasons.push('no planned time');
   if (s.timeOrderViolation) reasons.push('out of time order');
   if (s.driveCapViolation) reasons.push('drive over cap');
@@ -1433,53 +1477,114 @@ function stopHasViolation(s, plan) {
   return getStopViolationReasons(s, plan).length > 0 || !!s.infeasible;
 }
 
-async function annotateRouteStopsFeasibility(stops, date, endpoints, base) {
-  if (!stops.length) return;
+async function annotateMapRouteStops(stops, date, endpoints, base, opts = {}) {
+  if (!stops.length) return { departBaseMin: DAY_START_MIN };
+  const respectTimes = opts.respectScheduledTimes !== false;
+  const impliedTimes = opts.impliedTimes !== false;
+  const day = getDayForDate(date);
   let curLat = endpoints?.startLat ?? null;
   let curLng = endpoints?.startLng ?? null;
   let curMin = DAY_START_MIN;
-  const day = getDayForDate(date);
+  let departBaseMin = DAY_START_MIN;
+
+  const first = stops[0];
+  await resolvePropCoords(first.p, false);
+  const firstDrive = (curLat != null && first.p.lat != null)
+    ? await calcDriveLeg(curLat, curLng, first.p.lat, first.p.lng)
+    : first.drive;
+  if (firstDrive != null) first.drive = firstDrive;
+  const firstPlanned = parseTimeToMinutes(getPropDayTime(first.p, date));
+
+  if (isFirstStopScheduledAnchor(first, date) && firstPlanned != null && firstDrive != null) {
+    departBaseMin = Math.max(DAY_START_MIN, firstPlanned - firstDrive);
+    curMin = departBaseMin;
+  }
+
   for (let i = 0; i < stops.length; i++) {
     const s = stops[i];
     const p = s.p;
     await resolvePropCoords(p, false);
-    const plannedMin = parseTimeToMinutes(getPropDayTime(p, date));
+    const plannedMin = respectTimes ? parseTimeToMinutes(getPropDayTime(p, date)) : null;
+    const lockedAnchor = isPropLockedScheduled(p) && plannedMin != null;
+    const usePlanned = lockedAnchor || (respectTimes && plannedMin != null && getMapRouteMode() === 'timed');
     const noPlannedTime = plannedMin == null;
-    const drive = (curLat != null && p.lat != null) ? await calcDriveLeg(curLat, curLng, p.lat, p.lng) : s.drive;
+
+    let drive = s.drive;
+    if (drive == null && curLat != null && p.lat != null) {
+      drive = await calcDriveLeg(curLat, curLng, p.lat, p.lng);
+    }
     if (drive != null) s.drive = drive;
-    const arriveMin = drive != null ? curMin + drive : (plannedMin ?? null);
-    const late = arriveMin != null && plannedMin != null && arriveMin > plannedMin + 5;
-    const startViewMin = arriveMin != null ? (plannedMin != null ? Math.max(arriveMin, plannedMin) : arriveMin) : null;
+
+    const arriveMin = drive != null ? curMin + drive : (usePlanned ? plannedMin : null);
+    let startViewMin = arriveMin;
+    if (usePlanned && plannedMin != null && arriveMin != null) {
+      startViewMin = Math.max(arriveMin, plannedMin);
+    } else if (impliedTimes && arriveMin != null) {
+      startViewMin = arriveMin;
+    }
     const departMin = startViewMin != null ? startViewMin + VIEWING_MIN : null;
+
+    let driveToNext = null;
+    let nextPlanned = null;
+    if (i < stops.length - 1) {
+      const next = stops[i + 1];
+      await resolvePropCoords(next.p, false);
+      if (p.lat != null && next.p.lat != null) {
+        driveToNext = await calcDriveLeg(p.lat, p.lng, next.p.lat, next.p.lng);
+      }
+      if (respectTimes) {
+        nextPlanned = parseTimeToMinutes(getPropDayTime(next.p, date));
+        if (!isPropLockedScheduled(next.p)) nextPlanned = nextPlanned;
+      }
+    }
+
     const cantReach = p.lat == null || (curLat != null && drive == null);
     const noTimeToView = departMin != null && departMin > DAY_END_MIN;
-    const nextPlanned = i < stops.length - 1
-      ? parseTimeToMinutes(getPropDayTime(stops[i + 1].p, date))
-      : null;
-    const tightToNext = departMin != null && nextPlanned != null && departMin > nextPlanned;
+    const late = usePlanned && arriveMin != null && plannedMin != null && arriveMin > plannedMin + 5;
+    const tightToNext = departMin != null && nextPlanned != null && driveToNext != null
+      && (departMin + driveToNext) > nextPlanned;
     const driveToBase = day?.base ? getPropDriveToBase(p, day.base) : null;
     const dateViolation = !!(day?.base && p.grp !== day.base && !isTransitBase(getBase(day.base)));
+    const driveCapViolation = driveToBase != null && driveToBase > DRIVE_CAP;
+    const timingInfeasible = noTimeToView || late || tightToNext;
+
     s.plannedMin = plannedMin;
     s.arriveMin = arriveMin;
+    s.startViewMin = startViewMin;
     s.departMin = departMin;
+    s.driveToNext = driveToNext;
     s.late = late;
     s.cantReach = cantReach;
     s.noTimeToView = noTimeToView;
     s.tightToNext = tightToNext;
-    s.noPlannedTime = noPlannedTime;
-    s.driveCapViolation = driveToBase != null && driveToBase > DRIVE_CAP;
+    s.noPlannedTime = noPlannedTime && !impliedTimes;
+    s.driveCapViolation = driveCapViolation;
     s.dateViolation = !!dateViolation;
-    s.infeasible = cantReach || noTimeToView || late || tightToNext || noPlannedTime || s.driveCapViolation || s.dateViolation;
+    s.locked = lockedAnchor;
+    s.infeasible = cantReach || timingInfeasible || driveCapViolation || dateViolation;
+    s.timeOrderViolation = false;
+
     if (p.lat != null && departMin != null) {
       curLat = p.lat; curLng = p.lng; curMin = departMin;
-    } else if (plannedMin != null) {
+    } else if (usePlanned && plannedMin != null) {
       curMin = plannedMin + VIEWING_MIN;
+    } else if (departMin != null) {
+      curMin = departMin;
     }
   }
-  markTimingOrderViolations(stops, date);
+
+  if (respectTimes) markTimingOrderViolations(stops, date);
   for (const s of stops) {
     if (s.timeOrderViolation) s.infeasible = true;
   }
+  return { departBaseMin };
+}
+
+async function annotateRouteStopsFeasibility(stops, date, endpoints, base) {
+  return annotateMapRouteStops(stops, date, endpoints, base, {
+    respectScheduledTimes: true,
+    impliedTimes: true,
+  });
 }
 
 function hidePropLegPopup() {
@@ -3999,6 +4104,124 @@ async function buildAnchoredSuggestedStops(endpoints, candidates, date) {
   return { stops, skipped, finalDrive, usedDrive };
 }
 
+/** Optimize flexibles around locked scheduled anchors only. */
+async function buildOptScheduledStops(endpoints, candidates, date) {
+  const start = { lat: endpoints.startLat, lng: endpoints.startLng };
+  const end = { lat: endpoints.endLat, lng: endpoints.endLng };
+  const anchored = [];
+  const flexible = [];
+  const noCoords = [];
+  for (const p of candidates) {
+    if (p.lat == null) { noCoords.push(p); continue; }
+    const timeMin = parseTimeToMinutes(getPropDayTime(p, date));
+    if (isPropLockedScheduled(p) && timeMin != null) {
+      anchored.push({ p, timeMin, anchor: true });
+    } else {
+      flexible.push(p);
+    }
+  }
+  anchored.sort((a, b) => a.timeMin - b.timeMin || String(a.p.name).localeCompare(String(b.p.name)));
+  let route = anchored.map(a => ({ p: a.p, anchor: true, timeMin: a.timeMin }));
+  let remaining = [...flexible];
+  while (remaining.length) {
+    const { prop, idx } = await _bestFlexibleInsertion(start, route, remaining, end);
+    if (!prop) { noCoords.push(...remaining); break; }
+    route.splice(idx, 0, { p: prop, anchor: false });
+    remaining.splice(remaining.indexOf(prop), 1);
+  }
+  const stops = [];
+  let cur = start;
+  let usedDrive = 0;
+  for (let i = 0; i < route.length; i++) {
+    const leg = await calcDriveLeg(cur.lat, cur.lng, route[i].p.lat, route[i].p.lng);
+    if (leg != null) usedDrive += leg;
+    stops.push({ p: route[i].p, drive: leg, seq: i + 1, infeasible: false });
+    cur = { lat: route[i].p.lat, lng: route[i].p.lng };
+  }
+  let finalDrive = null;
+  if (stops.length) {
+    finalDrive = await calcDriveLeg(cur.lat, cur.lng, end.lat, end.lng);
+    if (finalDrive != null) usedDrive += finalDrive;
+  } else if (endpoints.isTransit) {
+    finalDrive = await calcDriveLeg(start.lat, start.lng, end.lat, end.lng);
+    if (finalDrive != null) usedDrive = finalDrive;
+  }
+  return { stops, skipped: noCoords.map(p => ({ p, reason: 'no coordinates' })), finalDrive, usedDrive };
+}
+
+async function buildUnconstrainedOptimizedStops(endpoints, candidates) {
+  const withCoords = candidates.filter(p => p.lat != null);
+  const noCoords = candidates.filter(p => !p.lat);
+  const end = { lat: endpoints.endLat, lng: endpoints.endLng };
+  let cur = { lat: endpoints.startLat, lng: endpoints.startLng };
+  const unvisited = [...withCoords];
+  const stops = [];
+  let usedDrive = 0;
+  while (unvisited.length) {
+    let best = null, bestLeg = Infinity;
+    for (const p of unvisited) {
+      const toP = await calcDriveLeg(cur.lat, cur.lng, p.lat, p.lng);
+      if (toP == null) continue;
+      if (toP < bestLeg) { best = p; bestLeg = toP; }
+    }
+    if (!best) break;
+    usedDrive += bestLeg;
+    stops.push({ p: best, drive: bestLeg, seq: stops.length + 1, infeasible: false });
+    cur = { lat: best.lat, lng: best.lng };
+    unvisited.splice(unvisited.indexOf(best), 1);
+  }
+  let finalDrive = null;
+  if (stops.length) {
+    finalDrive = await calcDriveLeg(cur.lat, cur.lng, end.lat, end.lng);
+    if (finalDrive != null) usedDrive += finalDrive;
+  } else if (endpoints.isTransit) {
+    finalDrive = await calcDriveLeg(cur.lat, cur.lng, end.lat, end.lng);
+    if (finalDrive != null) usedDrive = finalDrive;
+  }
+  return {
+    stops,
+    skipped: [
+      ...unvisited.map(p => ({ p, reason: 'unreachable' })),
+      ...noCoords.map(p => ({ p, reason: 'no coordinates' })),
+    ],
+    finalDrive,
+    usedDrive,
+  };
+}
+
+async function applyManualOrderToMapStops(plan, date, dayBase, routeMode) {
+  if (!plan) return plan;
+  const orderKey = _mapOrderKey(dayBase, date);
+  const manual = _mapManualOrder[orderKey];
+  if (manual?.length) {
+    const stopById = Object.fromEntries((plan.stops || []).map(s => [s.p.id, s]));
+    const seen = new Set();
+    const merged = [];
+    for (const id of manual) {
+      if (stopById[id]) { merged.push(stopById[id]); seen.add(id); }
+      else {
+        const p = getProp(id);
+        if (p && isPropIncludedInDayRoute(p, date, { baseF: dayBase, mapMode: true })) {
+          merged.push({ p, drive: null, seq: 0, infeasible: false });
+          seen.add(id);
+        }
+      }
+    }
+    for (const s of (plan.stops || [])) {
+      if (!seen.has(s.p.id)) merged.push(s);
+    }
+    plan = { ...plan, stops: merged.map((s, idx) => ({ ...s, seq: idx + 1 })) };
+    plan = await recalcPlanStopDrives(plan);
+  }
+  const ann = await annotateMapRouteStops(plan.stops || [], date, plan.endpoints, plan.base, {
+    respectScheduledTimes: routeMode !== 'opt-free',
+    impliedTimes: true,
+  });
+  plan.departBaseMin = ann.departBaseMin;
+  plan.infeasibleCount = (plan.skipped?.length || 0) + (plan.stops || []).filter(s => s.infeasible).length;
+  return plan;
+}
+
 function _haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -4051,24 +4274,28 @@ function enforceLockedInTimeOrder(props, date) {
   return result;
 }
 
-/** As-scheduled route order: timed props by default time sort; manual order for proposed; locked scheduled fixed in time order. */
+/** As-scheduled route order: manual positions preserved; locked scheduled stay in time order. */
 function orderAsScheduledProperties(props, date, manualOrder) {
-  const timed = props.filter(p => parseTimeToMinutes(getPropDayTime(p, date)) != null);
-  const byId = Object.fromEntries(timed.map(p => [p.id, p]));
-  let ordered;
+  const byId = Object.fromEntries(props.map(p => [p.id, p]));
   if (manualOrder?.length) {
-    ordered = [];
+    const ordered = [];
     const seen = new Set();
     for (const id of manualOrder) {
       if (byId[id]) { ordered.push(byId[id]); seen.add(id); }
     }
-    for (const p of [...timed].sort((a, b) => _timeSortProps(a, b, date))) {
-      if (!seen.has(p.id)) ordered.push(p);
-    }
-  } else {
-    ordered = [...timed].sort((a, b) => _timeSortProps(a, b, date));
+    const rest = props.filter(p => !seen.has(p.id));
+    rest.sort((a, b) => {
+      const at = parseTimeToMinutes(getPropDayTime(a, date)) ?? 99999;
+      const bt = parseTimeToMinutes(getPropDayTime(b, date)) ?? 99999;
+      if (at !== bt) return at - bt;
+      return String(a.name).localeCompare(String(b.name));
+    });
+    return enforceLockedInTimeOrder([...ordered, ...rest], date);
   }
-  return enforceLockedInTimeOrder(ordered, date);
+  const timed = props.filter(p => parseTimeToMinutes(getPropDayTime(p, date)) != null);
+  const untimed = props.filter(p => !timed.includes(p));
+  const orderedTimed = [...timed].sort((a, b) => _timeSortProps(a, b, date));
+  return enforceLockedInTimeOrder([...orderedTimed, ...untimed], date);
 }
 
 function markTimingOrderViolations(stops, date) {
@@ -4091,10 +4318,23 @@ function isMapAsScheduledMode() {
   return getMapRouteMode() === 'timed';
 }
 
+function isMapOptScheduledMode() {
+  return getMapRouteMode() === 'opt-scheduled';
+}
+
 function getMapEffectiveRouteDays() {
   const days = getMapRouteDays();
   if (isMapAsScheduledMode()) return days.length === 1 ? days : [];
   return days;
+}
+
+function getMapRouteModeLabel(mode) {
+  return ({
+    suggested: 'What if',
+    timed: 'Scheduled',
+    'opt-scheduled': 'Optimized w Scheduled',
+    'opt-free': 'Unconstrained Optimized',
+  })[mode] || mode;
 }
 
 function getDpExcludedSet(date) {
@@ -4247,88 +4487,51 @@ async function computeDayPlan(date, bustCache = false, opts = {}) {
   const base = day.baseObj;
   if (isTransitBase(base)) await resolveTransitEndpoints(base);
   const endpoints = await getBaseStartEndCoords(base);
-  const rawProps = getRoutePlanProperties(date, base?.abbr);
+  const rawProps = getRoutePlanProperties(date, base?.abbr, { mapMode: true });
   _pruneDpExcluded(date, new Set(getDayProperties(date, base?.abbr).map(p => p.id)));
   const excluded = getDpExcludedSet(date);
-  const activeProps = rawProps;
   const excludedProps = getDayProperties(date, base?.abbr).filter(p => excluded.has(p.id));
   const baseF = base?.abbr || '';
   const manual = asScheduled ? _mapManualOrder[_mapOrderKey(baseF, date)] : null;
   const props = asScheduled
-    ? orderAsScheduledProperties(activeProps, date, manual)
-    : await orderDayPlanProperties(activeProps, endpoints, date);
-  const stops = [];
-  let curLat = endpoints?.startLat ?? null;
-  let curLng = endpoints?.startLng ?? null;
-  let curMin = DAY_START_MIN;
-  let totalDriveMin = 0;
-
-  for (let i = 0; i < props.length; i++) {
-    const p = props[i];
-    await resolvePropCoords(p, false);
-    const plannedMin = parseTimeToMinutes(getPropDayTime(p, date));
-    const noPlannedTime = plannedMin == null;
-    const drive = (curLat != null && p.lat != null) ? await calcDriveLeg(curLat, curLng, p.lat, p.lng) : null;
-    if (drive != null) totalDriveMin += drive;
-    const arriveMin = drive != null ? curMin + drive : (plannedMin ?? null);
-    const late = arriveMin != null && plannedMin != null && arriveMin > plannedMin + 5;
-    const startViewMin = arriveMin != null ? (plannedMin != null ? Math.max(arriveMin, plannedMin) : arriveMin) : null;
-    const departMin = startViewMin != null ? startViewMin + VIEWING_MIN : null;
-    const cantReach = p.lat == null || (curLat != null && drive == null);
-    const noTimeToView = departMin != null && departMin > DAY_END_MIN;
-    const nextPlanned = i < props.length - 1
-      ? parseTimeToMinutes(getPropDayTime(props[i + 1], date))
-      : null;
-    const tightToNext = departMin != null && nextPlanned != null && departMin > nextPlanned;
-    const driveToBase = day?.base ? getPropDriveToBase(p, day.base) : null;
-    const dateViolation = !!(day?.base && p.grp !== day.base && !isTransitBase(getBase(day.base)));
-    const driveCapViolation = driveToBase != null && driveToBase > DRIVE_CAP;
-    const infeasible = cantReach || noTimeToView || late || tightToNext || noPlannedTime || driveCapViolation || dateViolation;
-    stops.push({
-      p, seq: i + 1, plannedMin, drive, arriveMin, departMin, late, cantReach,
-      noTimeToView, tightToNext, noPlannedTime, infeasible, locked: getPropRouteSchedule(p).locked && getPropRouteDate(p) === date,
-      timeOrderViolation: false, driveCapViolation, dateViolation,
-    });
-    if (p.lat != null && departMin != null) {
-      curLat = p.lat; curLng = p.lng; curMin = departMin;
-    } else if (plannedMin != null) {
-      curMin = plannedMin + VIEWING_MIN;
-    }
-  }
-
-  markTimingOrderViolations(stops, date);
-  for (const s of stops) {
-    if (s.timeOrderViolation) s.infeasible = true;
-  }
+    ? orderAsScheduledProperties(rawProps, date, manual)
+    : await orderDayPlanProperties(rawProps, endpoints, date);
+  const stops = props.map((p, i) => ({ p, seq: i + 1, drive: null, infeasible: false }));
+  let plan = {
+    date, day, base, endpoints, stops, excluded: excludedProps, skipped: [],
+    mode: asScheduled ? 'as-scheduled' : 'timed',
+  };
+  plan = await recalcPlanStopDrives(plan);
+  const ann = await annotateMapRouteStops(plan.stops, date, endpoints, base, {
+    respectScheduledTimes: true,
+    impliedTimes: true,
+  });
+  plan.departBaseMin = ann.departBaseMin;
 
   let returnDrive = null, returnArrive = null, returnOver = false;
-  const lastDepart = stops.length ? stops[stops.length - 1].departMin : DAY_START_MIN;
+  const last = plan.stops[plan.stops.length - 1];
+  const lastDepart = last?.departMin ?? DAY_START_MIN;
+  let curLat = last?.p?.lat ?? endpoints?.startLat;
+  let curLng = last?.p?.lng ?? endpoints?.startLng;
   if (endpoints && curLat != null && lastDepart != null) {
     returnDrive = await calcDriveLeg(curLat, curLng, endpoints.endLat, endpoints.endLng);
     if (returnDrive != null) {
-      totalDriveMin += returnDrive;
       returnArrive = lastDepart + returnDrive;
       returnOver = returnArrive > DAY_END_MIN;
     }
   }
-
-  let baseToBaseDrive = null;
-  if (isTransitBase(base) && endpoints) {
-    baseToBaseDrive = await getTransitDirectDrive(base, endpoints);
-  }
-
-  const plan = {
-    date, day, base, endpoints, stops, excluded: excludedProps, returnDrive, returnArrive, returnOver,
-    totalDriveMin, baseToBaseDrive,
-    mode: asScheduled ? 'as-scheduled' : 'timed',
-    infeasibleCount: stops.filter(s => s.infeasible).length + (returnOver ? 1 : 0),
-  };
+  plan.returnDrive = returnDrive;
+  plan.returnArrive = returnArrive;
+  plan.returnOver = returnOver;
+  plan.totalDriveMin = planCumulativeDriveMin(plan) ?? (plan.stops.reduce((s, x) => s + (x.drive || 0), 0) + (returnDrive || 0));
+  plan.baseToBaseDrive = isTransitBase(base) && endpoints ? await getTransitDirectDrive(base, endpoints) : null;
+  plan.infeasibleCount = plan.stops.filter(s => s.infeasible).length + (returnOver ? 1 : 0);
   _dayPlanCache[cacheKey] = plan;
   return plan;
 }
 
 async function computeSuggestedDayRoute(date, bustCache = false, opts = {}) {
-  const honorTimes = !!opts.honorTimes;
+  const honorTimes = opts.honorTimes !== false;
   const cacheKey = date + '_suggested' + (honorTimes ? '_anchored' : '');
   if (!bustCache && _dayPlanCache[cacheKey]) return _dayPlanCache[cacheKey];
   const day = getDayForDate(date);
@@ -4353,50 +4556,93 @@ async function computeSuggestedDayRoute(date, bustCache = false, opts = {}) {
     finalDrive = built.finalDrive;
     usedDrive = built.usedDrive;
   } else {
-    const withCoords = candidates.filter(p => p.lat != null);
-    const noCoords = candidates.filter(p => !p.lat);
-    const end = { lat: endpoints.endLat, lng: endpoints.endLng };
-    let cur = { lat: endpoints.startLat, lng: endpoints.startLng };
-    usedDrive = 0;
-    const unvisited = [...withCoords];
-    stops = [];
-
-    while (unvisited.length) {
-      let best = null, bestLeg = Infinity;
-      for (const p of unvisited) {
-        const toP = await calcDriveLeg(cur.lat, cur.lng, p.lat, p.lng);
-        if (toP == null) continue;
-        if (toP < bestLeg) { best = p; bestLeg = toP; }
-      }
-      if (!best) break;
-      usedDrive += bestLeg;
-      stops.push({ p: best, drive: bestLeg, seq: stops.length + 1, infeasible: false });
-      cur = { lat: best.lat, lng: best.lng };
-      unvisited.splice(unvisited.indexOf(best), 1);
-    }
-
-    finalDrive = null;
-    if (stops.length) {
-      finalDrive = await calcDriveLeg(cur.lat, cur.lng, end.lat, end.lng);
-      if (finalDrive != null) usedDrive += finalDrive;
-    } else if (endpoints.isTransit) {
-      finalDrive = await calcDriveLeg(cur.lat, cur.lng, end.lat, end.lng);
-      if (finalDrive != null) usedDrive = finalDrive;
-    }
-
-    skipped = [
-      ...unvisited.map(p => ({ p, reason: 'unreachable' })),
-      ...noCoords.map(p => ({ p, reason: 'no coordinates' })),
-    ];
+    const built = await buildUnconstrainedOptimizedStops(endpoints, candidates);
+    stops = built.stops;
+    skipped = built.skipped;
+    finalDrive = built.finalDrive;
+    usedDrive = built.usedDrive;
   }
 
-  await annotateRouteStopsFeasibility(stops, date, endpoints, base);
+  const ann = await annotateMapRouteStops(stops, date, endpoints, base, {
+    respectScheduledTimes: true,
+    impliedTimes: true,
+  });
   const baseToBaseDrive = await getTransitDirectDrive(base, endpoints);
 
   const plan = {
     date, day, base, endpoints, stops, skipped, finalDrive,
     mode: 'suggested', totalDrive: usedDrive, totalDriveMin: usedDrive, baseToBaseDrive,
+    departBaseMin: ann.departBaseMin,
     infeasibleCount: skipped.length + stops.filter(s => s.infeasible).length,
+  };
+  _dayPlanCache[cacheKey] = plan;
+  return plan;
+}
+
+async function computeOptScheduledRoute(date, bustCache = false) {
+  const cacheKey = date + '_opt_scheduled';
+  if (!bustCache && _dayPlanCache[cacheKey]) return _dayPlanCache[cacheKey];
+  const day = getDayForDate(date);
+  if (!day) return null;
+  const base = day.baseObj;
+  if (isTransitBase(base)) await resolveTransitEndpoints(base);
+  const endpoints = await getBaseStartEndCoords(base);
+  if (!endpoints) return null;
+  const baseF = base?.abbr || '';
+  const orderKey = _mapOrderKey(baseF, date);
+  const candidates = getRoutePlanProperties(date, base?.abbr, { mapMode: true });
+  for (const p of candidates) await resolvePropCoords(p, false);
+  const built = await buildOptScheduledStops(endpoints, candidates, date);
+  const ann = await annotateMapRouteStops(built.stops, date, endpoints, base, {
+    respectScheduledTimes: true,
+    impliedTimes: true,
+  });
+  if (!_mapManualOrder[orderKey]?.length) {
+    _mapOptimizedOrder[orderKey] = built.stops.map(s => s.p.id);
+  }
+  const plan = {
+    date, day, base, endpoints,
+    stops: built.stops,
+    skipped: built.skipped,
+    finalDrive: built.finalDrive,
+    mode: 'opt-scheduled',
+    totalDrive: built.usedDrive,
+    totalDriveMin: built.usedDrive,
+    baseToBaseDrive: await getTransitDirectDrive(base, endpoints),
+    departBaseMin: ann.departBaseMin,
+    infeasibleCount: built.skipped.length + built.stops.filter(s => s.infeasible).length,
+  };
+  _dayPlanCache[cacheKey] = plan;
+  return plan;
+}
+
+async function computeUnconstrainedOptimizedRoute(date, bustCache = false) {
+  const cacheKey = date + '_opt_free';
+  if (!bustCache && _dayPlanCache[cacheKey]) return _dayPlanCache[cacheKey];
+  const day = getDayForDate(date);
+  if (!day) return null;
+  const base = day.baseObj;
+  if (isTransitBase(base)) await resolveTransitEndpoints(base);
+  const endpoints = await getBaseStartEndCoords(base);
+  if (!endpoints) return null;
+  const candidates = getRoutePlanProperties(date, base?.abbr, { mapMode: true });
+  for (const p of candidates) await resolvePropCoords(p, false);
+  const built = await buildUnconstrainedOptimizedStops(endpoints, candidates);
+  const ann = await annotateMapRouteStops(built.stops, date, endpoints, base, {
+    respectScheduledTimes: false,
+    impliedTimes: true,
+  });
+  const plan = {
+    date, day, base, endpoints,
+    stops: built.stops,
+    skipped: built.skipped,
+    finalDrive: built.finalDrive,
+    mode: 'opt-free',
+    totalDrive: built.usedDrive,
+    totalDriveMin: built.usedDrive,
+    baseToBaseDrive: await getTransitDirectDrive(base, endpoints),
+    departBaseMin: ann.departBaseMin,
+    infeasibleCount: built.skipped.length + built.stops.filter(s => s.infeasible).length,
   };
   _dayPlanCache[cacheKey] = plan;
   return plan;
@@ -5196,11 +5442,9 @@ function getMapUnscheduledProps(baseSet, statusFilter, dayFilter, routeMode, day
   if (!baseSet?.size) return [];
   const inDayColumn = new Set();
   for (const plan of dayPlans || []) {
-    for (const s of plan.stops || []) {
-      if (!_mapTempUnscheduled.has(s.p.id) && getPropRouteDate(s.p)) inDayColumn.add(s.p.id);
-    }
+    for (const s of plan.stops || []) inDayColumn.add(s.p.id);
     for (const sk of plan.skipped || []) {
-      if (!_mapTempUnscheduled.has(sk.p.id) && getPropRouteDate(sk.p)) inDayColumn.add(sk.p.id);
+      if (!_mapTempUnscheduled.has(sk.p.id)) inDayColumn.add(sk.p.id);
     }
   }
   const panelDates = getMapPanelDayDates();
@@ -5225,7 +5469,7 @@ function getMapUnscheduledProps(baseSet, statusFilter, dayFilter, routeMode, day
 }
 
 function getMapListedProps(baseSet, dayPlans, dayFilter, statusFilter, routeMode) {
-  if (!baseSet?.size || routeMode === 'suggested') return [];
+  if (!baseSet?.size || routeMode === 'suggested' || routeMode === 'opt-scheduled' || routeMode === 'opt-free') return [];
   const inPlan = new Set();
   for (const plan of dayPlans || []) {
     for (const s of plan.stops || []) inPlan.add(s.p.id);
@@ -5374,27 +5618,25 @@ function _mapDropZoneKind(el) {
   return 'day';
 }
 
+function getMapDayRouteStops(plan, date, baseF, statusFilter) {
+  if (!plan) return [];
+  return (plan.stops || []).filter(s => {
+    if (!isPropIncludedInDayRoute(s.p, date, { baseF, mapMode: true })) return false;
+    return isPropMapEligible(s.p, statusFilter) && propMatchesMapBaseForPlan(s.p, baseF, date);
+  });
+}
+
 function getMapDayUntimedProps(date, baseF, statusFilter, dayPlans) {
-  const inTimed = new Set();
-  const untimed = [];
-  const seen = new Set();
+  const inRoute = new Set();
   const plan = (dayPlans || []).find(p => p.date === date);
   if (plan) {
-    for (const s of plan.stops || []) {
-      if (hasPropTimeOnDay(s.p, date)) {
-        inTimed.add(s.p.id);
-        continue;
-      }
-      if (!isPropIncludedInDayRoute(s.p, date, { baseF, mapMode: true })) continue;
-      if (!isPropMapEligible(s.p, statusFilter) || !propMatchesMapBaseForPlan(s.p, baseF, date)) continue;
-      if (seen.has(s.p.id)) continue;
-      seen.add(s.p.id);
-      untimed.push(s.p);
-    }
+    for (const s of plan.stops || []) inRoute.add(s.p.id);
   }
+  const untimed = [];
+  const seen = new Set();
   for (const p of getDayProperties(date, baseF)) {
     if (!isPropIncludedInDayRoute(p, date, { baseF, mapMode: true })) continue;
-    if (inTimed.has(p.id) || seen.has(p.id)) continue;
+    if (inRoute.has(p.id) || seen.has(p.id)) continue;
     if (!isPropDateOnlyOnDay(p, date)) continue;
     if (!isPropMapEligible(p, statusFilter) || !propMatchesMapBaseForPlan(p, baseF, date)) continue;
     seen.add(p.id);
@@ -5404,22 +5646,19 @@ function getMapDayUntimedProps(date, baseF, statusFilter, dayPlans) {
 }
 
 function getMapDayTimedStops(plan, date, baseF, statusFilter) {
-  if (!plan) return [];
-  return (plan.stops || []).filter(s => {
-    if (!hasPropTimeOnDay(s.p, date)) return false;
-    if (!isPropIncludedInDayRoute(s.p, date, { baseF, mapMode: true })) return false;
-    return isPropMapEligible(s.p, statusFilter) && propMatchesMapBaseForPlan(s.p, baseF, date);
-  });
+  return getMapDayRouteStops(plan, date, baseF, statusFilter);
 }
 
 function buildMapDayRowsWithoutPlan(date, baseF, statusFilter) {
   const props = getRoutePlanProperties(date, baseF, { mapMode: true }).filter(p => {
     return isPropMapEligible(p, statusFilter) && propMatchesMapBaseForPlan(p, baseF, date);
   });
-  const timed = props.filter(p => hasPropTimeOnDay(p, date));
-  const untimed = props.filter(p => !hasPropTimeOnDay(p, date));
-  timed.sort((a, b) => _timeSortProps(a, b, date));
-  return { timed: timed.map((p, i) => ({ p, seq: i + 1, drive: null, infeasible: false })), untimed };
+  const route = props.filter(p => !isPropDateOnlyOnDay(p, date));
+  const untimed = props.filter(p => isPropDateOnlyOnDay(p, date));
+  return {
+    timed: route.map((p, i) => ({ p, seq: i + 1, drive: null, infeasible: false })),
+    untimed,
+  };
 }
 
 function syncMapManualOrdersFromDom() {
@@ -5454,6 +5693,8 @@ function _clearMapDayPlanCache(date) {
   delete _dayPlanCache[date + '_as_scheduled'];
   delete _dayPlanCache[date + '_suggested'];
   delete _dayPlanCache[date + '_suggested_anchored'];
+  delete _dayPlanCache[date + '_opt_scheduled'];
+  delete _dayPlanCache[date + '_opt_free'];
 }
 
 function _removePidFromMapManualOrders(pid) {
@@ -5510,8 +5751,15 @@ function updateMapRouteModeState() {
 }
 
 function onMapRouteModeChange() {
+  for (const k of Object.keys(_dayPlanCache)) delete _dayPlanCache[k];
   updateMapRouteModeState();
   const info = document.getElementById('map-route-info');
+  const resetBtn = document.getElementById('map-reset-btn');
+  if (resetBtn) {
+    resetBtn.title = isMapOptScheduledMode()
+      ? 'Reset to optimized w scheduled order'
+      : 'Reset route order to property details';
+  }
   if (info && isMapAsScheduledMode() && getMapEffectiveRouteDays().length !== 1) {
     info.textContent = 'Scheduled route requires exactly one day.';
   } else if (info) {
@@ -5556,6 +5804,8 @@ function initMap() {
   applyDefaultMapTabFilters();
   populateMapBaseDropdown();
   populateMapDayDropdown();
+  const resetBtn = document.getElementById('map-reset-btn');
+  if (resetBtn) resetBtn.title = 'Reset route order to property details';
   refreshMap();
 }
 
@@ -5721,9 +5971,10 @@ async function _drawMapDayRoute(mapObj, plan, allLatLngs, lineColor, statusFilte
   }
   const legs = _dayPlanRouteLegs(plan);
   if (legs.length) {
+    const dash = (plan.mode === 'suggested' || plan.mode === 'opt-free') ? '8,6' : null;
     await drawRoadLegs(mapObj, legs, color, {
       weight: 4, opacity: 0.85,
-      dashArray: plan.mode === 'suggested' ? '8,6' : null,
+      dashArray: dash,
     });
   }
   for (const s of plan.stops) {
@@ -5733,9 +5984,11 @@ async function _drawMapDayRoute(mapObj, plan, allLatLngs, lineColor, statusFilte
     if (scheduleMix) _noteMapScheduleMix(p, statusFilter, scheduleMix);
     const sk = getPropScheduleKind(p, plan.date);
     const fill = s.infeasible ? '#C0392B' : color;
-    const extra = plan.mode === 'suggested'
-      ? `${s.drive ?? '?'}m from previous<br>`
-      : `Proposed: ${getPropDayTime(p, plan.date) ? escHtml(formatTimeDisplay(getPropDayTime(p, plan.date))) : '—'}<br>` +
+    const extra = (plan.mode === 'suggested' || plan.mode === 'opt-scheduled' || plan.mode === 'opt-free')
+      ? `${s.startViewMin != null ? `View ${formatMinToTime(s.startViewMin)}–${formatMinToTime(s.departMin)}<br>` : ''}` +
+        `${s.drive ?? '?'}m from previous<br>` +
+        (s.infeasible ? '<span style="color:#C0392B">⚠ Not enough time</span><br>' : '')
+      : `${formatStopTimeMeta(s, p, plan.date) !== '—' ? `Time ${formatStopTimeMeta(s, p, plan.date)}<br>` : ''}` +
         `Arrive: ${formatMinToTime(s.arriveMin)} · Drive: ${s.drive ?? '?'}m<br>` +
         (s.timeOrderViolation ? '<span style="color:#F5A623">⚠ Out of time order</span><br>' : '') +
         (s.infeasible ? '<span style="color:#C0392B">⚠ Not enough time</span><br>' : '');
@@ -5808,14 +6061,20 @@ function renderMapPropsPanel({ baseSet, baseF, dayPlans, unscheduled, listed, sh
       const dayLbl = getDayForDate(date)?.label || date;
       const lineColor = plan?.lineColor || '#2C5F7A';
       html += `<div class="map-props-day" style="color:${lineColor}">${escHtml(dayLbl)}</div>`;
-      const timedStops = plan
-        ? getMapDayTimedStops(plan, date, dayBase, statusFilter)
+      if (plan?.departBaseMin != null && plan.stops?.length) {
+        const leaveLbl = isFirstStopScheduledAnchor(plan.stops[0], date)
+          ? `Leave base ${formatMinToTime(plan.departBaseMin)}`
+          : `Depart ${formatMinToTime(plan.departBaseMin)}`;
+        html += `<div class="map-props-day-untimed" style="font-style:normal;color:${lineColor}">${escHtml(leaveLbl)}</div>`;
+      }
+      const routeStops = plan
+        ? getMapDayRouteStops(plan, date, dayBase, statusFilter)
         : buildMapDayRowsWithoutPlan(date, dayBase, statusFilter).timed;
       html += `<div class="map-props-sort map-props-sort-timed" data-date="${date}">`;
-      for (const s of timedStops) {
-        const t = formatTimeDisplay(getPropDayTime(s.p, date)) || '—';
+      for (const s of routeStops) {
+        const meta = formatStopTimeMeta(s, s.p, date);
         html += _mapPropsRowHtml(s.p, {
-          date, seq: s.seq, meta: t, shaded: shadedIds?.has(s.p.id),
+          date, seq: s.seq, meta, shaded: shadedIds?.has(s.p.id),
           extraCls: s.infeasible ? ' skipped' : '', plan, stop: s,
         });
       }
@@ -5893,7 +6152,7 @@ function initMapPropsSortable() {
       });
     }
   } else {
-    const crossGroup = { name: 'map-props', pull: true, put: true };
+    const crossGroup = { name: 'map-route-' + getMapRouteMode(), pull: true, put: true };
     document.querySelectorAll('.map-props-sort-timed,.map-props-sort-untimed').forEach((el, idx) => {
       const key = (el.classList.contains('map-props-sort-timed') ? 't-' : 'u-') + (el.dataset.date || String(idx));
       _mapSortables[key] = Sortable.create(el, { ...sortOptsBase, group: crossGroup });
@@ -5929,7 +6188,6 @@ async function refreshMapAsync() {
   let panelPayload = { baseSet, dayPlans: [], unscheduled: [], listed: [], shadedIds: _mapShadedPropIds };
   let mapError = '';
   let boundsPts = null;
-  const honorSuggestedTimes = routeMode === 'suggested' && routeDays.length >= 1;
 
   for (const id of _mapShadedPropIds) {
     const sp = getProp(id);
@@ -5949,36 +6207,32 @@ async function refreshMapAsync() {
     }
 
     if (baseSet.size && routeDays.length) {
-      setMapStatus(routeMode === 'suggested' ? 'Optimizing routes…' : 'Calculating routes…');
+      const statusMsg = {
+        suggested: 'Planning routes…',
+        timed: 'Calculating routes…',
+        'opt-scheduled': 'Optimizing routes…',
+        'opt-free': 'Optimizing routes…',
+      }[routeMode] || 'Loading routes…';
+      setMapStatus(statusMsg);
       for (let i = 0; i < routeDays.length; i++) {
         const date = routeDays[i];
         const dayBase = getMapOrderBaseForDate(date);
-        let plan = routeMode === 'suggested'
-          ? await computeSuggestedDayRoute(date, false, { honorTimes: honorSuggestedTimes })
-          : await computeDayPlan(date, false, { asScheduled: true });
+        let plan;
+        if (routeMode === 'suggested') {
+          plan = await computeSuggestedDayRoute(date, false, { honorTimes: true });
+        } else if (routeMode === 'timed') {
+          plan = await computeDayPlan(date, false, { asScheduled: true });
+        } else if (routeMode === 'opt-scheduled') {
+          plan = await computeOptScheduledRoute(date, false);
+        } else if (routeMode === 'opt-free') {
+          plan = await computeUnconstrainedOptimizedRoute(date, false);
+        }
         if (stale()) return;
         if (!plan) continue;
-        const orderKey = _mapOrderKey(dayBase, date);
-        const manual = _mapManualOrder[orderKey];
-        if (manual?.length && routeMode === 'suggested') {
-          const stopById = Object.fromEntries(plan.stops.map(s => [s.p.id, s]));
-          const seen = new Set();
-          const merged = [];
-          for (const id of manual) {
-            if (stopById[id]) { merged.push(stopById[id]); seen.add(id); }
-            else {
-              const p = getProp(id);
-              if (p && isPropIncludedInDayRoute(p, date, { baseF: dayBase, mapMode: true })) {
-                merged.push({ p, drive: null, seq: 0, infeasible: false });
-                seen.add(id);
-              }
-            }
-          }
-          for (const s of plan.stops) {
-            if (!seen.has(s.p.id)) merged.push(s);
-          }
-          plan = { ...plan, stops: merged.map((s, idx) => ({ ...s, seq: idx + 1 })) };
-          plan = await recalcPlanStopDrives(plan);
+        if (routeMode !== 'timed') {
+          plan = await applyManualOrderToMapStops(plan, date, dayBase, routeMode);
+        } else {
+          plan = await applyManualOrderToMapStops(plan, date, dayBase, routeMode);
         }
         plan.lineColor = DAY_ROUTE_COLORS[i % DAY_ROUTE_COLORS.length];
         dayPlans.push(filterMapDayPlan(plan, statusFilter, dayBase, dayFilter));
