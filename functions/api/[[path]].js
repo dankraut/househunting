@@ -76,6 +76,28 @@ async function bumpBasesRev(env) {
   return rev;
 }
 
+const PROP_HISTORY_MAX = 100;
+
+function mergePropHistory(serverHist, clientHist) {
+  const combined = [
+    ...(Array.isArray(clientHist) ? clientHist : []),
+    ...(Array.isArray(serverHist) ? serverHist : []),
+  ];
+  if (!combined.length) return [];
+  const seen = new Set();
+  const out = [];
+  combined.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  for (const e of combined) {
+    if (!e || !Array.isArray(e.changes) || !e.changes.length) continue;
+    const key = `${e.ts}|${e.source}|${JSON.stringify(e.changes)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(e);
+    if (out.length >= PROP_HISTORY_MAX) break;
+  }
+  return out;
+}
+
 function mergeProp(server, client) {
   const out = { ...server };
   const sTs = server._fts || {};
@@ -93,6 +115,7 @@ function mergeProp(server, client) {
   }
   out._fts = mergedTs;
   out._v = Math.max(server._v || 0, client._v || 0);
+  out.history = mergePropHistory(server.history, client.history);
   return out;
 }
 

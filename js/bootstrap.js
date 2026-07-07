@@ -3,6 +3,7 @@ import * as config from './config.js';
 import { createApiClient } from './api-client.js';
 import { createLocationModule } from './location.js';
 import { createPropSyncConflict } from './property-sync-conflict.js';
+import { createPropertyHistoryModule } from './property-history.js';
 
 function getApiToken() {
   let t = localStorage.getItem('hh_api_key');
@@ -16,11 +17,17 @@ function getApiToken() {
 const HHApi = createApiClient(getApiToken);
 const HHLoc = createLocationModule(HHApi);
 const HHPropConflict = createPropSyncConflict();
+const HHPropHistory = createPropertyHistoryModule({
+  formatPropTownDisplay: HHLoc.formatPropTownDisplay,
+  getPropGps: HHLoc.getPropGps,
+  getBase: (abbr) => (typeof window !== 'undefined' && window.getBase ? window.getBase(abbr) : null),
+});
 
 Object.assign(window, config);
 window.HHApi = HHApi;
 window.HHLoc = HHLoc;
 window.HHPropConflict = HHPropConflict;
+window.HHPropHistory = HHPropHistory;
 window.getApiToken = getApiToken;
 
 const locNames = [
