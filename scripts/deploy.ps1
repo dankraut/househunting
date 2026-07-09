@@ -86,7 +86,7 @@ function Get-DefaultCommitMessage {
 }
 
 function Test-CursorShipBranch([string]$Branch) {
-    return [bool]($Branch -match "^$([regex]::Escape($BranchPrefix)).+$([regex]::Escape($BranchSuffix))$")
+    return [bool]($Branch -match "^$([regex]::Escape($BranchPrefix)).+-[a-z0-9]+$")
 }
 
 function ConvertTo-BranchSlug([string]$Text) {
@@ -316,8 +316,8 @@ try {
         $currentBranch = $shipBranch
     } elseif (-not (Test-CursorShipBranch $currentBranch)) {
         throw @(
-            "Branch '$currentBranch' will not auto-merge.",
-            "Rename to cursor/<description>-fb87 (cloud agent convention), or",
+            "Branch '$currentBranch' is not a cursor ship branch.",
+            "Use cursor/<description>-<suffix> (e.g. cursor/my-feature-fb87 or cursor/my-feature-288c), or",
             "checkout main and re-run with -Description 'my-feature'."
         ) -join ' '
     }

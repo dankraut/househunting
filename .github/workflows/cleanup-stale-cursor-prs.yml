@@ -1,0 +1,119 @@
+name: Cleanup stale cursor PRs
+
+on:
+  schedule:
+    # Sweep stuck cursor/* PRs so the auto-merge queue stays healthy
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      close_all_dirty:
+        description: 'Close all open conflicting cursor/* PRs (not only stale)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: cleanup-stale-cursor-prs
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close superseded or stuck cursor PRs; delete merged branches
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const closeAllDirty = '${{ github.event.inputs.close_all_dirty }}' === 'true';
+            const staleDays = 3;
+            const staleMs = staleDays * 24 * 60 * 60 * 1000;
+            const now = Date.now();
+
+            async function listOpenCursorPrs() {
+              const out = [];
+              for (let page = 1; page <= 5; page++) {
+                const { data } = await github.rest.pulls.list({
+                  owner, repo, state: 'open', per_page: 100, page,
+                });
+                if (!data.length) break;
+                out.push(...data.filter(p => p.head.ref.startsWith('cursor/')));
+                if (data.length < 100) break;
+              }
+              return out;
+            }
+
+            async function deleteBranch(ref) {
+              try {
+                await github.rest.git.deleteRef({ owner, repo, ref: `heads/${ref}` });
+                core.info(`Deleted branch ${ref}`);
+              } catch (e) {
+                if (!/Reference does not exist/i.test(e?.message || '')) {
+                  core.warning(`Could not delete ${ref}: ${e.message}`);
+                }
+              }
+            }
+
+            async function closePr(pr, reason) {
+              core.info(`Closing PR #${pr.number}: ${reason}`);
+              await github.rest.pulls.update({
+                owner, repo, pull_number: pr.number, state: 'closed',
+              });
+              try {
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: pr.number,
+                  body: `Closed automatically: ${reason}\n\nOpen a fresh \`cursor/*\` branch from latest \`main\` if you still need this work.`,
+                });
+              } catch (e) {
+                core.warning(`Comment failed on PR #${pr.number}: ${e.message}`);
+              }
+              await deleteBranch(pr.head.ref);
+            }
+
+            // Delete remote branches whose PRs already merged
+            for (let page = 1; page <= 5; page++) {
+              const { data } = await github.rest.pulls.list({
+                owner, repo, state: 'closed', per_page: 100, page,
+              });
+              if (!data.length) break;
+              for (const pr of data) {
+                if (!pr.head.ref.startsWith('cursor/') || !pr.merged_at) continue;
+                const mergedAt = new Date(pr.merged_at).getTime();
+                if (now - mergedAt < 24 * 60 * 60 * 1000) {
+                  await deleteBranch(pr.head.ref);
+                }
+              }
+              if (data.length < 100) break;
+            }
+
+            const open = await listOpenCursorPrs();
+            for (const pr of open) {
+              const { data: full } = await github.rest.pulls.get({
+                owner, repo, pull_number: pr.number,
+              });
+              const updatedAt = new Date(full.updated_at).getTime();
+              const isStale = now - updatedAt > staleMs;
+              const dirty = full.mergeable_state === 'dirty';
+              const behind = full.mergeable_state === 'behind';
+              const noAhead = full.commits === 0;
+
+              if (noAhead) {
+                await closePr(full, 'branch has no commits ahead of `main`');
+                continue;
+              }
+
+              if (dirty && (closeAllDirty || isStale)) {
+                await closePr(full, closeAllDirty
+                  ? 'merge conflicts with `main` — start a fresh branch from latest `main`'
+                  : `merge conflicts with \`main\` and no updates for ${staleDays}+ days`);
+                continue;
+              }
+
+              if (behind && isStale) {
+                core.info(`PR #${full.number} is behind main and stale — leaving open (push/rebase to refresh).`);
+              }
+            }

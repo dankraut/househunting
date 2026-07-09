@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "House Hunt · Idealista Extractor",
-  "version": "1.8.29",
-  "description": "Extracts broker, phone, GPS, price, rooms, size, commune, town, and name from Idealista listings. Pushes to House Hunt SPA v3.13.45.",
+  "version": "1.8.31",
+  "description": "Extracts broker, phone, GPS, price, rooms, size, commune, town, and name from Idealista listings. Pushes to House Hunt SPA v2.4.",
   "permissions": [
     "activeTab",
     "scripting",

@@ -11,7 +11,7 @@ const MAX_SNAPSHOTS = 20;
 const LOCK_TTL_SEC = 120;
 
 const MERGE_FIELDS = [
-  'status', 'schedDate', 'schedTime', 'proposedDate', 'lastContacted',
+  'status', 'visitDate', 'visitTime', 'schedDate', 'schedTime', 'proposedDate', 'proposedTime', 'lastContacted',
   'firmName', 'firmPhone', 'broker', 'brokerPhone', 'brokerEmail',
   'address', 'gps', 'idealistaGps', 'userPlannedDate', 'userPlannedTime', 'notes', 'realtorUrl', 'sourceIfl', 'grp',
   'commune', 'town', 'prov', 'driveTimes', 'driveMiles', 'refAirport', 'name', 'price', 'rooms', 'size', 'lat', 'lng',
@@ -76,6 +76,28 @@ async function bumpBasesRev(env) {
   return rev;
 }
 
+const PROP_HISTORY_MAX = 100;
+
+function mergePropHistory(serverHist, clientHist) {
+  const combined = [
+    ...(Array.isArray(clientHist) ? clientHist : []),
+    ...(Array.isArray(serverHist) ? serverHist : []),
+  ];
+  if (!combined.length) return [];
+  const seen = new Set();
+  const out = [];
+  combined.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  for (const e of combined) {
+    if (!e || !Array.isArray(e.changes) || !e.changes.length) continue;
+    const key = `${e.ts}|${e.source}|${JSON.stringify(e.changes)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(e);
+    if (out.length >= PROP_HISTORY_MAX) break;
+  }
+  return out;
+}
+
 function mergeProp(server, client) {
   const out = { ...server };
   const sTs = server._fts || {};
@@ -93,6 +115,7 @@ function mergeProp(server, client) {
   }
   out._fts = mergedTs;
   out._v = Math.max(server._v || 0, client._v || 0);
+  out.history = mergePropHistory(server.history, client.history);
   return out;
 }
 
@@ -523,7 +546,7 @@ export async function onRequest(context) {
     if (!iflToken) return json({ error: 'Missing iflToken' }, 400);
     const iflIds = new Set(properties.map(p => String(p.id)));
     const propMap = Object.fromEntries(properties.map(p => [String(p.id), p]));
-    const ELIM_STATUSES = new Set(['Unavailable', 'Unresponsive', 'Rejected', 'Duplicate', 'Deleted', 'Deleted-Idealista']);
+    const ELIM_STATUSES = new Set(['Under Agreement/Sold', 'Unresponsive', 'Rejected', 'Unable To See', 'Duplicate', 'Deleted', 'Deleted-Idealista']);
     const dataRaw = await env.HH_KV.get('data');
     if (!dataRaw) {
       const toAddEmpty = properties.filter(p => !p.discarded);
