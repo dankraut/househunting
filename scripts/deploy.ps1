@@ -338,13 +338,24 @@ try {
     Write-Step "Pushing '$currentBranch' (not main)"
     Invoke-Git $pushArgs | Out-Null
 
+    $localSha = (Invoke-GitRead @('rev-parse', 'HEAD')).Output.Trim()
+    $remoteSha = (Invoke-GitRead @('ls-remote', 'origin', "refs/heads/$currentBranch")).Output
+    $remoteHead = ($remoteSha -split "`n" | Select-Object -First 1) -replace '\s+.*$', ''
+    if (-not $remoteHead -or $localSha -ne $remoteHead) {
+        throw "Push verification failed — origin/$currentBranch ($remoteHead) does not match local HEAD ($localSha)."
+    }
+    Write-Host "    Push verified: $($localSha.Substring(0, [Math]::Min(8, $localSha.Length)))" -ForegroundColor DarkGray
+
+    $settleMin = if ($env:AUTOMERGE_SETTLE_MINUTES) { $env:AUTOMERGE_SETTLE_MINUTES } else { '8' }
+
     if (-not $PrTitle) {
         $PrTitle = if ($Message) { $Message } else { "Ship $currentBranch" }
     }
     $prBody = @(
         'Shipped from Cursor Desktop using the same PR pipeline as Cloud agents.',
         '',
-        '- Auto-merge runs when the **Cloudflare Pages** check passes.',
+        "- Auto-merge waits **$settleMin minutes** after the latest push, then merges when the **Cloudflare Pages** check passes.",
+        '- Push all commits before opening the PR when possible; each push resets the settle timer.',
         '- Do not merge or push to `main` manually.',
         '',
         'After merge:',
@@ -360,7 +371,7 @@ try {
     Write-Ok 'Ship initiated (PR workflow — same as Cursor Cloud).'
     Write-Host "  Branch: $currentBranch"
     if ($prUrl) { Write-Host "  PR:     $prUrl" }
-    Write-Host '  Next:   GitHub auto-merge merges to main when Cloudflare Pages succeeds.'
+    Write-Host '  Next:   Auto-merge waits after the last push, then merges when Cloudflare Pages succeeds.'
     Write-Host '  Then:   Pull main locally; refresh SPA; reload extension if extension/ changed.'
     if ($DryRun) {
         Write-Host '  [dry-run] No git changes were made.' -ForegroundColor DarkGray

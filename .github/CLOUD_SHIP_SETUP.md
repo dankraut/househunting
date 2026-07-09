@@ -35,14 +35,20 @@ flowchart LR
 | 1 | Agent edits on `cursor/<task>-<suffix>` |
 | 2 | `bash scripts/smoke-check.sh` (or `ship.sh` which runs it) |
 | 3 | `git push origin cursor/...` |
-| 4 | **Auto-open cursor agent PRs** — opens/updates PR (not draft) |
+| 4 | **Auto-open cursor agent PRs** — opens/updates PR (not draft); re-opens after merge if new commits land on the branch |
 | 5 | **Cloudflare Pages** — preview deploy check |
-| 6 | **Auto-merge cursor agent PRs** — squash-merge when green |
+| 6 | **Auto-merge cursor agent PRs** — waits **8 minutes** after the latest push, then squash-merge when green |
 | 7 | Cloudflare Pages production deploy from `main` |
 
 **Stuck PRs:** **Actions → Cleanup stale cursor PRs → Run workflow** (optionally check *Close all conflicting*). This closes conflicting/stale `cursor/*` PRs and deletes merged branches.
 
-**Manual recovery:** Actions → **Auto-merge cursor agent PRs** → Run workflow → optional `pr_number`.
+**Manual recovery:** Actions → **Auto-merge cursor agent PRs** → Run workflow → optional `pr_number` → check **force_merge** to skip the settle wait.
+
+### Settle period (prevents premature merge)
+
+Auto-merge waits **8 minutes** after the **latest push** to a PR branch before merging (configurable via `AUTOMERGE_SETTLE_MINUTES` in `auto-merge-cursor.yml`). This gives Cloud agents time to push follow-up commits in the same turn. **Each new push resets the timer.**
+
+If a PR merged before a follow-up commit landed, push the remaining commits to the same `cursor/*` branch (or a fresh branch) — **auto-open** now creates a follow-up PR instead of skipping.
 
 ## Cloud agent ship command
 

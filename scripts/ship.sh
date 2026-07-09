@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # House Hunt — ship via PR (Cloud / Linux; mirrors scripts/deploy.ps1)
-# commit → push cursor/* branch → open PR (ready, not draft) → auto-merge when Cloudflare Pages passes
+# commit → push cursor/* branch → open PR (ready, not draft) → auto-merge after settle + Cloudflare Pages
 set -euo pipefail
 
 MAIN_BRANCH=main
@@ -82,8 +82,30 @@ else
   git push -u origin "$branch"
 fi
 
+local_sha="$(git rev-parse HEAD)"
+remote_sha="$(git ls-remote origin "refs/heads/$branch" 2>/dev/null | awk '{print $1}' | head -1)"
+if [[ -z "$remote_sha" || "$local_sha" != "$remote_sha" ]]; then
+  echo "ERROR: push verification failed — origin/$branch does not match local HEAD." >&2
+  echo "       local=$local_sha remote=${remote_sha:-<missing>}" >&2
+  exit 1
+fi
+echo "==> Push verified: ${local_sha:0:8}"
+
+if command -v "$GH" >/dev/null 2>&1; then
+  merged_pr="$("$GH" pr list --head "$branch" --state merged --json number --limit 1 -q '.[0].number' 2>/dev/null || true)"
+  ahead="$(git rev-list --count "origin/$MAIN_BRANCH..HEAD" 2>/dev/null || echo 0)"
+  if [[ -n "$merged_pr" && "$ahead" -gt 0 ]]; then
+    echo "NOTE: Branch already had merged PR #$merged_pr; $ahead new commit(s) will get a follow-up PR." >&2
+  fi
+fi
+
+fi
+
+SETTLE_MIN="${AUTOMERGE_SETTLE_MINUTES:-8}"
+
 if ! command -v "$GH" >/dev/null 2>&1; then
   echo "WARNING: gh not found — push succeeded but PR was not created." >&2
+  echo "         Auto-merge waits ${SETTLE_MIN}m after the last push before merging." >&2
   exit 0
 fi
 
@@ -91,6 +113,7 @@ existing="$("$GH" pr list --head "$branch" --state open --json url --limit 1 2>/
 if [[ -n "$existing" ]]; then
   echo "==> Open PR: $existing"
   "$GH" pr ready "$existing" 2>/dev/null || true
+  echo "    Auto-merge waits ${SETTLE_MIN}m after the last push before merging."
   echo "$existing"
   exit 0
 fi
@@ -101,7 +124,8 @@ fi
 if [[ -z "$PR_BODY" ]]; then
   PR_BODY="Shipped from Cursor Cloud using scripts/ship.sh (same PR pipeline as Desktop).
 
-- Auto-merge runs when the **Cloudflare Pages** check passes.
+- Auto-merge waits **${SETTLE_MIN} minutes** after the latest push, then merges when **Cloudflare Pages** passes.
+- Push all commits before opening the PR when possible; each push resets the settle timer.
 - Do not merge or push to \`main\` manually."
 fi
 
@@ -113,10 +137,12 @@ set -e
 if [[ $pr_rc -eq 0 ]]; then
   echo "    Created PR: $pr_out"
   "$GH" pr ready "$pr_out" 2>/dev/null || true
+  echo "    Auto-merge waits ${SETTLE_MIN}m after the last push before merging."
   echo "$pr_out"
 else
   echo "    gh pr create unavailable: $pr_out"
   echo "    Push triggers .github/workflows/auto-open-cursor-pr.yml to open the PR."
+  echo "    Auto-merge waits ${SETTLE_MIN}m after the last push before merging."
   remote="$(git remote get-url origin)"
   repo_path="$(echo "$remote" | sed -E 's#.*github.com[:/](.+/.+)(\.git)?$#\1#')"
   echo "    Manual: https://github.com/${repo_path}/compare/main...${branch}?expand=1"
