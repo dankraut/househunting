@@ -298,6 +298,7 @@ export function createLocationModule(api) {
       entity.lng = geo.lng;
       entity.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
       clearPropCalcGps(entity);
+      if (!isBase) entity.gpsPinExact = true;
       const label = formatItalianLocation(geo);
       if (label) entity.address = label;
       if (!isBase) {
@@ -313,7 +314,10 @@ export function createLocationModule(api) {
         if (!applyGpsToEntity(entity, gpsIn)) {
           return { ok: false, error: 'Invalid GPS coordinates' };
         }
-        if (!isBase) clearPropCalcGps(entity);
+        if (!isBase) {
+          clearPropCalcGps(entity);
+          entity.gpsPinExact = true;
+        }
         if (addrIn && !overwriteTown && !isBase) {
           applyTownTextToProp(entity, addrIn);
           return { ok: true, source: 'gps' };
@@ -362,6 +366,7 @@ export function createLocationModule(api) {
       if (gpsIn) return applyReverse();
       if (!isBase) {
         entity.gps = '';
+        entity.gpsPinExact = false;
         return syncCalcGpsFromTown(entity);
       }
       entity.gps = '';
@@ -374,6 +379,7 @@ export function createLocationModule(api) {
     if (!isBase) {
       clearPropCalcGps(entity);
       entity.gps = '';
+      entity.gpsPinExact = false;
       clearEntityCoords(entity);
       return { ok: true, source: 'cleared' };
     }
@@ -471,6 +477,7 @@ export function createLocationModule(api) {
     }
     if (getPropGps(p)) {
       applyGpsToEntity(p, p.gps);
+      if (p.gpsPinExact !== false) p.gpsPinExact = true;
     } else if (getPropCalcGps(p)) {
       const [lat, lng] = parseGPS(p.calcGps);
       if (lat != null && lng != null) {
@@ -482,6 +489,7 @@ export function createLocationModule(api) {
       p.gps = '';
     } else {
       p.gps = '';
+      p.gpsPinExact = false;
       clearEntityCoords(p);
     }
   }
@@ -578,18 +586,7 @@ export function createLocationModule(api) {
     setLocLoading(prefix, true);
     try {
       const syncMode = mode || resolveLocSyncMode({ gps, address, fromField });
-      let townOverwrite = overwriteTown;
-      const hasGps = !!(gps && String(gps).trim());
-      const hasAddr = !!(address && String(address).trim());
-      if (syncMode === 'gps' && hasGps && hasAddr && isCoordinateGps(gps) && townOverwrite !== true) {
-        if (townOverwrite === false) {
-          // caller declined overwrite
-        } else if (typeof confirm === 'function') {
-          townOverwrite = confirm(
-            'Replace the existing town/location with the name from these GPS coordinates?'
-          );
-        }
-      }
+      const townOverwrite = overwriteTown;
       const r = await syncEntityLocation(scratch, {
         gps, address, isBase, mode: syncMode, overwriteTown: !!townOverwrite,
       });
@@ -612,9 +609,10 @@ export function createLocationModule(api) {
       let msg = '';
       if (r.source === 'gps' && townOverwrite) msg = 'Town updated from GPS.';
       else if (r.source === 'geocode-town-fallback') msg = 'Street not found — coordinates set to town center.';
-      else if (r.source === 'geocode') msg = syncMode === 'gps' ? 'GPS updated from location.' : 'Map pin updated from town.';
+      else if (r.source === 'geocode') msg = syncMode === 'gps' ? 'GPS set as exact property location.' : 'Map pin updated from town.';
       else if (r.source === 'calc-gps') msg = 'Map pin calculated from town.';
       else if (r.source === 'gps' && syncMode === 'address') msg = 'Town updated (GPS unchanged).';
+      else if (r.source === 'cleared') msg = 'GPS cleared — town pin restored.';
       setLocSuccess(prefix, msg);
       if (onSuccess) onSuccess(scratch, r);
       return r;
