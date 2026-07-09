@@ -99,8 +99,6 @@ if command -v "$GH" >/dev/null 2>&1; then
   fi
 fi
 
-fi
-
 SETTLE_MIN="${AUTOMERGE_SETTLE_MINUTES:-8}"
 
 if ! command -v "$GH" >/dev/null 2>&1; then

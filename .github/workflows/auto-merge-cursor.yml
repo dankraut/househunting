@@ -185,7 +185,10 @@ jobs:
                   return true;
                 }
                 if (!pr.mergeable && pr.mergeable_state === 'dirty') {
-                  core.warning(`PR #${prNum} has merge conflicts — rebase onto main or open a fresh cursor/* branch. Cleanup workflow will close stale conflicting PRs.`);
+                  core.warning(
+                    `PR #${prNum} has merge conflicts with main (common after a squash-merge + follow-up push without rebase). `
+                    + 'Push again (auto-open rebases onto main) or run: git fetch origin main && git rebase origin/main && git push --force-with-lease'
+                  );
                   return false;
                 }
 
