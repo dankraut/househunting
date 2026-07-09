@@ -10,6 +10,9 @@ on:
         description: 'Branch to open PR for (defaults to triggering ref)'
         required: false
 
+env:
+  AUTOMERGE_SETTLE_MINUTES: '8'
+
 permissions:
   contents: read
   pull-requests: write
@@ -33,6 +36,7 @@ jobs:
             const repo = context.repo.repo;
             const branch = '${{ github.event.inputs.branch }}'.trim()
               || context.ref.replace(/^refs\/heads\//, '');
+            const settleMinutes = process.env.AUTOMERGE_SETTLE_MINUTES || '8';
 
             if (!branch.startsWith('cursor/')) {
               core.info(`Skipping non-cursor branch: ${branch}`);
@@ -40,6 +44,28 @@ jobs:
             }
             if (branch === 'main') {
               core.info('Skipping main.');
+              return;
+            }
+
+            async function undraft(prNum) {
+              const { data: fresh } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+              if (!fresh.draft) return;
+              core.info(`Promoting draft PR #${prNum} to ready.`);
+              await github.graphql(
+                `mutation($pullRequestId: ID!) {
+                  markPullRequestReadyForReview(input: { pullRequestId: $pullRequestId }) {
+                    pullRequest { number isDraft }
+                  }
+                }`,
+                { pullRequestId: fresh.node_id }
+              );
+            }
+
+            const { data: compare } = await github.rest.repos.compareCommitsWithBasehead({
+              owner, repo, basehead: `main...${branch}`,
+            });
+            if (!compare.ahead_by) {
+              core.info(`Branch ${branch} has no commits ahead of main.`);
               return;
             }
 
@@ -51,11 +77,11 @@ jobs:
               core.info(`Open PR already exists: ${pr.html_url}`);
               if (pr.draft) await undraft(pr.number);
               if (pr.title.startsWith('Ship cursor/')) {
+                const title = compare.commits.length === 1
+                  ? compare.commits[compare.commits.length - 1].commit.message.split('\n')[0]
+                  : pr.title;
                 await github.rest.pulls.update({
-                  owner, repo, pull_number: pr.number,
-                  title: compare.commits.length === 1
-                    ? compare.commits[compare.commits.length - 1].commit.message.split('\n')[0]
-                    : pr.title,
+                  owner, repo, pull_number: pr.number, title,
                 });
               }
               return;
@@ -65,26 +91,20 @@ jobs:
               owner, repo, state: 'closed', head: `${owner}:${branch}`, per_page: 1,
             });
             if (closed.length && closed[0].merged_at) {
-              core.info(`Branch ${branch} was already merged via PR #${closed[0].number}; skipping new PR.`);
-              return;
-            }
-
-            const { data: compare } = await github.rest.repos.compareCommitsWithBasehead({
-              owner, repo, basehead: `main...${branch}`,
-            });
-            if (!compare.ahead_by) {
-              core.info(`Branch ${branch} has no commits ahead of main.`);
-              return;
+              core.info(
+                `Branch ${branch} had merged PR #${closed[0].number}; opening follow-up PR for ${compare.ahead_by} new commit(s).`
+              );
             }
 
             const title = compare.commits.length === 1
-              ? compare.commits[0].commit.message.split('\n')[0]
+              ? compare.commits[compare.commits.length - 1].commit.message.split('\n')[0]
               : `Ship ${branch}`;
 
             const body = [
               'Opened automatically when a `cursor/*` branch was pushed (Cloud agent ship pipeline).',
               '',
-              '- Auto-merge runs when **Cloudflare Pages** passes (see `auto-merge-cursor.yml`).',
+              `- Auto-merge waits **${settleMinutes} minutes** after the latest push, then merges when **Cloudflare Pages** passes (see \`auto-merge-cursor.yml\`).`,
+              '- Push all commits before opening the PR when possible; each push resets the settle timer.',
               '- Do not merge or push to `main` manually.',
             ].join('\n');
 
@@ -107,18 +127,4 @@ jobs:
                 return;
               }
               throw e;
-            }
-
-            async function undraft(prNum) {
-              const { data: fresh } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
-              if (!fresh.draft) return;
-              core.info(`Promoting draft PR #${prNum} to ready.`);
-              await github.graphql(
-                `mutation($pullRequestId: ID!) {
-                  markPullRequestReadyForReview(input: { pullRequestId: $pullRequestId }) {
-                    pullRequest { number isDraft }
-                  }
-                }`,
-                { pullRequestId: fresh.node_id }
-              );
             }

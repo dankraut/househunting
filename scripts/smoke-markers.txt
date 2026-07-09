@@ -32,4 +32,5 @@ js/location.js|geocode-town-fallback|Town fallback when street geocode fails
 index.html|computeOptScheduledRoute|Optimized w scheduled map route
 index.html|computeUnconstrainedOptimizedRoute|Unconstrained optimized map route
 index.html|annotateMapRouteStops|Map route implied timing and feasibility
+.github/workflows/auto-merge-cursor.yml|waitForSettlePeriod|Auto-merge settle period before production merge
 index.html|computeMultiDayOptimizedRoutes|Multi-day map route optimization

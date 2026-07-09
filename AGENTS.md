@@ -31,9 +31,11 @@ All `/api/*` calls require `Authorization: Bearer jmjk05DK` (or `?tk=jmjk05DK`).
 
 After editing, run `bash scripts/ship.sh` (smoke check → commit → push → open PR). Branch: `cursor/<description>-<suffix>` (e.g. `-288c`, `-fb87`).
 
+**Push all commits before opening a PR** when possible. Auto-merge waits **8 minutes** after the last push before merging. If a branch already merged, push follow-up commits and auto-open will create a new PR.
+
 **One-time repo setup** so PRs open automatically on push: see [`.github/CLOUD_SHIP_SETUP.md`](.github/CLOUD_SHIP_SETUP.md) — enable *Allow GitHub Actions to create and approve pull requests* in [Actions settings](https://github.com/dankraut/househunting/settings/actions), or add a `GH_PAT` secret.
 
-Do **not** leave PRs as drafts; `auto-merge-cursor.yml` merges when Cloudflare Pages passes.
+Do **not** leave PRs as drafts; `auto-merge-cursor.yml` merges when Cloudflare Pages passes (after the settle wait).
 - The Windows ship tooling (`deploy.cmd`, `scripts/*.ps1`) mirrors the same pipeline for Desktop.
 
 ### Chrome extension (optional)

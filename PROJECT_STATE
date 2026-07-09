@@ -81,7 +81,7 @@ Production reaches **Cloudflare Pages only when a PR merges to `main`**. Direct 
 
 **Stuck PRs:** GitHub Actions → **Cleanup stale cursor PRs** (closes conflicting/stale `cursor/*` PRs; deletes merged branches). See `.github/CLOUD_SHIP_SETUP.md`.
 
-Draft PRs from Cloud/Android agents are **auto-promoted** by `.github/workflows/auto-merge-cursor.yml` (REST/GraphQL undraft — no `gh` CLI in CI). A **6-hour cron** plus **15-minute auto-merge sweep** keep the queue healthy.
+Draft PRs from Cloud/Android agents are **auto-promoted** by `.github/workflows/auto-merge-cursor.yml` (REST/GraphQL undraft — no `gh` CLI in CI). Auto-merge waits **8 minutes** after the latest push before merging (settle period; each push resets the timer). A **6-hour cron** plus **15-minute auto-merge sweep** keep the queue healthy.
 
 `deploy.ps1` / `push.ps1`: commit → push branch (never `main`) → open PR via `gh` → `.github/workflows/auto-merge-cursor.yml` squash-merges.
 

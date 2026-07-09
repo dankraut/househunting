@@ -13,6 +13,14 @@ on:
       pr_number:
         description: 'Optional PR number to promote/merge (manual recovery)'
         required: false
+      force_merge:
+        description: 'Skip settle wait (manual recovery only)'
+        type: boolean
+        default: false
+
+env:
+  # Wait this long after the latest push before merging — gives agents time for follow-up commits.
+  AUTOMERGE_SETTLE_MINUTES: '8'
 
 permissions:
   contents: write
@@ -35,6 +43,33 @@ jobs:
             const repo = context.repo.repo;
             const requiredCheck = 'Cloudflare Pages';
             const manualPr = '${{ github.event.inputs.pr_number }}'.trim();
+            const forceMerge = '${{ github.event.inputs.force_merge }}' === 'true';
+            const settleMs = Math.max(0, Number(process.env.AUTOMERGE_SETTLE_MINUTES || 8)) * 60 * 1000;
+
+            async function getHeadCommitAgeMs(sha) {
+              const { data: commit } = await github.rest.repos.getCommit({ owner, repo, ref: sha });
+              const committedAt = new Date(commit.commit.committer.date).getTime();
+              return Date.now() - committedAt;
+            }
+
+            async function waitForSettlePeriod(prNum) {
+              if (forceMerge || settleMs <= 0) {
+                core.info(`PR #${prNum}: settle wait skipped (force_merge=${forceMerge}).`);
+                return;
+              }
+              for (let attempt = 0; attempt < 40; attempt++) {
+                const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+                const ageMs = await getHeadCommitAgeMs(pr.head.sha);
+                if (ageMs >= settleMs) {
+                  core.info(`PR #${prNum}: head settled for ${Math.round(ageMs / 60000)}m — ok to merge.`);
+                  return;
+                }
+                const remainingMin = Math.ceil((settleMs - ageMs) / 60000);
+                core.info(`PR #${prNum}: waiting for settle period (${remainingMin}m remaining after last push)…`);
+                await new Promise(r => setTimeout(r, 30000));
+              }
+              throw new Error(`Settle period (${process.env.AUTOMERGE_SETTLE_MINUTES || 8}m) not reached for PR #${prNum}`);
+            }
 
             async function listOpenCursorPrs() {
               const out = [];
@@ -141,6 +176,8 @@ jobs:
             }
 
             async function waitForCloudflareAndMerge(prNum) {
+              await waitForSettlePeriod(prNum);
+
               for (let attempt = 0; attempt < 30; attempt++) {
                 const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
                 if (pr.merged) {
@@ -158,6 +195,19 @@ jobs:
                 const cf = checks.check_runs.find(c => c.name === requiredCheck);
 
                 if (cf?.status === 'completed' && cf.conclusion === 'success') {
+                  // Re-check head is still settled (a push during the CF wait resets the timer).
+                  const ageMs = await getHeadCommitAgeMs(pr.head.sha);
+                  if (!forceMerge && settleMs > 0 && ageMs < settleMs) {
+                    const remainingMin = Math.ceil((settleMs - ageMs) / 60000);
+                    core.info(`PR #${prNum}: new push detected — settle wait reset (${remainingMin}m remaining).`);
+                    await waitForSettlePeriod(prNum);
+                    const { data: prFresh } = await github.rest.pulls.get({ owner, repo, pull_number: prNum });
+                    if (prFresh.head.sha !== pr.head.sha) {
+                      core.info(`PR #${prNum}: head moved during settle — re-checking Cloudflare.`);
+                      continue;
+                    }
+                  }
+
                   try {
                     await github.rest.pulls.merge({
                       owner, repo, pull_number: prNum, merge_method: 'squash',
