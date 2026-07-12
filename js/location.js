@@ -8,8 +8,28 @@ export function createLocationModule(api) {
   function parseGPS(gps) {
     if (!gps || typeof gps !== 'string') return [null, null];
     const s = gps.trim();
-    let m = s.match(/^(-?\d+\.?\d*)\s*[,;\s]\s*(-?\d+\.?\d*)$/);
+
+    let m = s.match(/^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/);
     if (m) return [parseFloat(m[1]), parseFloat(m[2])];
+
+    const hemis = [];
+    const hemRe = /([NnSsEeWw])?\s*(-?\d+(?:\.\d+)?)\s*°?\s*([NnSsEeWw])?/g;
+    let hm;
+    while ((hm = hemRe.exec(s)) !== null) {
+      const dir = (hm[1] || hm[3] || '').toUpperCase();
+      if (!dir) continue;
+      hemis.push({ val: Math.abs(parseFloat(hm[2])), dir });
+    }
+    if (hemis.length >= 2) {
+      let lat = null;
+      let lng = null;
+      for (const { val, dir } of hemis) {
+        if (dir === 'N' || dir === 'S') lat = dir === 'S' ? -val : val;
+        else if (dir === 'E' || dir === 'W') lng = dir === 'W' ? -val : val;
+      }
+      if (lat != null && lng != null) return [lat, lng];
+    }
+
     const dms = s.match(/(\d+)[°]\s*(\d+)['′]?\s*([\d.]*)?["″]?\s*([NnSs])\s+(\d+)[°]\s*(\d+)['′]?\s*([\d.]*)?["″]?\s*([EeWw])/);
     if (dms) {
       let lat = parseInt(dms[1], 10) + parseInt(dms[2], 10) / 60 + parseFloat(dms[3] || 0) / 3600;
@@ -19,6 +39,12 @@ export function createLocationModule(api) {
       return [lat, lng];
     }
     return [null, null];
+  }
+
+  function looksLikeCoordinateAttempt(gps) {
+    if (!gps || typeof gps !== 'string') return false;
+    const s = gps.trim();
+    return /[°]|[NnSsEeWw]\b|^\s*-?\d+\.\d+\s*[,;]/.test(s);
   }
 
   function isCoordinateGps(gps) {
@@ -292,6 +318,9 @@ export function createLocationModule(api) {
     };
 
     const applyGpsText = async () => {
+      if (looksLikeCoordinateAttempt(gpsIn) && !isCoordinateGps(gpsIn)) {
+        return { ok: false, error: 'Could not parse GPS coordinates' };
+      }
       const geo = await geocodeAddress(gpsIn);
       if (!geo) return { ok: false, error: 'Could not find coordinates for that location' };
       entity.lat = geo.lat;
