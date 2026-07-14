@@ -925,7 +925,7 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
 
 <script type="module" src="js/bootstrap.js"></script>
 <script>
-// ═══ SPA v2.13 — app core (config/api/location in js/) ═══════════════════════════
+// ═══ SPA v2.15 — app core (config/api/location in js/) ═══════════════════════════
 
 const PROPS_RAW=[{"id":30278342,"name":"Tuscania Villa","town":"Tuscania","prov":"VT","price":780,"rooms":10,"size":300,"grp":1,"fco":72,"cdp":80,"caf":140,"spo":105,"man":45,"url":"https://www.idealista.it/immobile/30278342/","lat":42.418,"lng":11.875,"plannedDate":"2026-07-09","plannedTime":"10:30 AM"},{"id":34998463,"name":"Vetralla Villa","town":"Vetralla","prov":"VT","price":670,"rooms":12,"size":509,"grp":1,"fco":75,"cdp":95,"caf":155,"spo":95,"man":70,"url":"https://www.idealista.it/immobile/34998463/","lat":42.32,"lng":12.05,"plannedDate":"2026-07-09","plannedTime":"11:30 AM"},{"id":35809714,"name":"Canino Villa","town":"Canino","prov":"VT","price":870,"rooms":7,"size":380,"grp":1,"fco":78,"cdp":80,"caf":130,"spo":115,"man":30,"url":"https://www.idealista.it/immobile/35809714/","lat":42.468,"lng":11.744,"plannedDate":"2026-07-09","plannedTime":"9:30 AM"},{"id":26448701,"name":"Montecastrilli Villa","town":"Montecastrilli","prov":"TR","price":820,"rooms":19,"size":480,"grp":1,"fco":85,"cdp":70,"caf":120,"spo":30,"man":105,"url":"https://www.idealista.it/immobile/26448701/","lat":42.649,"lng":12.487,"plannedDate":"2026-07-06","plannedTime":"11:00 AM"},{"id":21658129,"name":"Manciano SP159","town":"Manciano","prov":"GR","price":850,"rooms":18,"size":379,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":0,"url":"https://www.idealista.it/immobile/21658129/","lat":42.595,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"8:45 AM"},{"id":18085022,"name":"Manciano Scansanese","town":"Manciano","prov":"GR","price":870,"rooms":10,"size":520,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/18085022/","lat":42.605,"lng":11.52,"plannedDate":"2026-07-10","plannedTime":"9:30 AM"},{"id":33646557,"name":"Manciano Montemerano","town":"Manciano","prov":"GR","price":698,"rooms":8,"size":430,"grp":1,"fco":95,"cdp":75,"caf":125,"spo":130,"man":10,"url":"https://www.idealista.it/immobile/33646557/","lat":42.544,"lng":11.57,"plannedDate":"2026-07-10","plannedTime":"10:20 AM"},{"id":32530331,"name":"Manciano Saturnia","town":"Manciano","prov":"GR","price":720,"rooms":10,"size":395,"grp":1,"fco":95,"cdp":80,"caf":125,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/32530331/","lat":42.555,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"11:10 AM"},{"id":27864548,"name":"Baschi Villa","town":"Baschi","prov":"TR","price":780,"rooms":10,"size":580,"grp":1,"fco":99,"cdp":45,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/27864548/","lat":42.675,"lng":12.212,"plannedDate":"2026-06-26","plannedTime":"12:15 PM"},{"id":34980477,"name":"Baschi Civitella","town":"Baschi","prov":"TR","price":990,"rooms":15,"size":450,"grp":1,"fco":99,"cdp":50,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/34980477/","lat":42.67,"lng":12.205,"plannedDate":"2026-06-26","plannedTime":"1:05 PM"},{"id":35860173,"name":"Todi Piagge Casale","town":"Todi","prov":"PG","price":825,"rooms":10,"size":300,"grp":1,"fco":102,"cdp":50,"caf":100,"spo":35,"man":100,"url":"https://www.idealista.it/immobile/35860173/","lat":42.775,"lng":12.412,"plannedDate":"2026-07-07","plannedTime":"9:00 AM"},{"id":35822412,"name":"Todi Collarezzo","town":"Todi","prov":"PG","price":850,"rooms":10,"size":351,"grp":1,"fco":102,"cdp":55,"caf":100,"spo":35,"man":105,"url":"https://www.idealista.it/immobile/35822412/","lat":42.782,"lng":12.43,"plannedDate":"2026-07-07","plannedTime":"10:00 AM"},{"id":34024712,"name":"San Venanzo Civitella","town":"San Venanzo","prov":"TR","price":845,"rooms":18,"size":815,"grp":1,"fco":105,"cdp":30,"caf":80,"spo":55,"man":90,"url":"https://www.idealista.it/immobile/34024712/","lat":42.87,"lng":12.265,"plannedDate":"","plannedTime":""},{"id":33903982,"name":"Scansano Fonte Guerra","town":"Scansano","prov":"GR","price":790,"rooms":12,"size":475,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/33903982/","lat":42.683,"lng":11.34,"plannedDate":"2026-07-10","plannedTime":"12:30 PM"},{"id":35951463,"name":"Scansano Montorgiali","town":"Scansano","prov":"GR","price":960,"rooms":8,"size":390,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35951463/","lat":42.69,"lng":11.332,"plannedDate":"2026-07-09","plannedTime":"3:00 PM"},{"id":35048730,"name":"Scansano Agriturismo","town":"Scansano","prov":"GR","price":630,"rooms":7,"size":390,"grp":1,"fco":105,"cdp":85,"caf":120,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35048730/","lat":42.676,"lng":11.321,"plannedDate":"2026-07-09","plannedTime":"3:50 PM"},{"id":35397327,"name":"Sorano Piancasale","town":"Sorano","prov":"GR","price":700,"rooms":24,"size":480,"grp":1,"fco":108,"cdp":50,"caf":100,"spo":110,"man":25,"url":"https://www.idealista.it/immobile/35397327/","lat":42.685,"lng":11.713,"plannedDate":"","plannedTime":""},{"id":21287742,"name":"Ferentillo Rustico","town":"Ferentillo","prov":"TR","price":645,"rooms":12,"size":650,"grp":1,"fco":110,"cdp":100,"caf":145,"spo":20,"man":140,"url":"https://www.idealista.it/immobile/21287742/","lat":42.623,"lng":12.798,"plannedDate":"2026-07-06","plannedTime":"9:00 AM"},{"id":10679967,"name":"Semproniano Rustico","town":"Semproniano","prov":"GR","price":720,"rooms":11,"size":355,"grp":1,"fco":110,"cdp":70,"caf":115,"spo":130,"man":5,"url":"https://www.idealista.it/immobile/10679967/","lat":42.623,"lng":11.537,"plannedDate":"","plannedTime":""},{"id":34882496,"name":"Spoleto Baiano","town":"Spoleto","prov":"PG","price":980,"rooms":17,"size":451,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":135,"url":"https://www.idealista.it/immobile/34882496/","lat":42.722,"lng":12.718,"plannedDate":"2026-07-05","plannedTime":"8:45 AM"},{"id":30865904,"name":"Spoleto Terzo La Pieve","town":"Spoleto","prov":"PG","price":900,"rooms":11,"size":350,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":130,"url":"https://www.idealista.it/immobile/30865904/","lat":42.715,"lng":12.708,"plannedDate":"2026-07-05","plannedTime":"9:45 AM"},{"id":35103506,"name":"Montefalco Fabbri","town":"Montefalco","prov":"PG","price":910,"rooms":16,"size":450,"grp":1,"fco":121,"cdp":70,"caf":105,"spo":25,"man":130,"url":"https://www.idealista.it/immobile/35103506/","lat":42.89,"lng":12.652,"plannedDate":"2026-07-04","plannedTime":"12:30 PM"},{"id":35432103,"name":"Deruta Tiberina","town":"Deruta","prov":"PG","price":790,"rooms":12,"size":320,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/35432103/","lat":42.982,"lng":12.419,"plannedDate":"2026-07-04","plannedTime":"10:00 AM"},{"id":33533240,"name":"Deruta Tiberina 203","town":"Deruta","prov":"PG","price":685,"rooms":22,"size":611,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/33533240/","lat":42.981,"lng":12.421,"plannedDate":"2026-07-04","plannedTime":"10:50 AM"},{"id":27988041,"name":"Deruta Centro Casale","town":"Deruta","prov":"PG","price":650,"rooms":12,"size":400,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/27988041/","lat":42.982,"lng":12.416,"plannedDate":"","plannedTime":""},{"id":29370809,"name":"Deruta Castelleone","town":"Deruta","prov":"PG","price":890,"rooms":12,"size":316,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/29370809/","lat":42.984,"lng":12.413,"plannedDate":"","plannedTime":""},{"id":34783987,"name":"Bettona Villa","town":"Bettona","prov":"PG","price":850,"rooms":20,"size":484,"grp":1,"fco":129,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/34783987/","lat":42.992,"lng":12.43,"plannedDate":"2026-06-27","plannedTime":"11:00 AM"},{"id":34843857,"name":"Santa Fiora Monte Amiata","town":"Santa Fiora","prov":"GR","price":978,"rooms":12,"size":520,"grp":1,"fco":130,"cdp":50,"caf":85,"spo":125,"man":40,"url":"https://www.idealista.it/immobile/34843857/","lat":42.834,"lng":11.587,"plannedDate":"","plannedTime":""},{"id":34979131,"name":"Corciano Migiana","town":"Corciano","prov":"PG","price":830,"rooms":13,"size":700,"grp":1,"fco":133,"cdp":40,"caf":55,"spo":75,"man":115,"url":"https://www.idealista.it/immobile/34979131/","lat":43.11,"lng":12.289,"plannedDate":"","plannedTime":""},{"id":35300665,"name":"Perugia Olmo","town":"Perugia","prov":"PG","price":675,"rooms":5,"size":425,"grp":2,"fco":138,"cdp":50,"caf":70,"spo":60,"man":125,"url":"https://www.idealista.it/immobile/35300665/","lat":43.085,"lng":12.442,"plannedDate":"2026-06-25","plannedTime":"12:30 PM"},{"id":35456752,"name":"Perugia Eugubina","town":"Perugia","prov":"PG","price":650,"rooms":21,"size":953,"grp":2,"fco":138,"cdp":50,"caf":60,"spo":70,"man":125,"url":"https://www.idealista.it/immobile/35456752/","lat":43.138,"lng":12.408,"plannedDate":"2026-06-25","plannedTime":"1:15 PM"},{"id":32456550,"name":"Perugia Colli Albani","town":"Perugia","prov":"PG","price":650,"rooms":10,"size":530,"grp":2,"fco":138,"cdp":50,"caf":65,"spo":65,"man":125,"url":"https://www.idealista.it/immobile/32456550/","lat":43.093,"lng":12.415,"plannedDate":"2026-06-25","plannedTime":"2:15 PM"},{"id":16393910,"name":"Perugia Solfagnano","town":"Perugia","prov":"PG","price":1100,"rooms":16,"size":725,"grp":2,"fco":138,"cdp":45,"caf":50,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/16393910/","lat":43.155,"lng":12.33,"plannedDate":"2026-06-26","plannedTime":"2:30 PM"},{"id":34105542,"name":"Perugia Monte Tezio","town":"Perugia","prov":"PG","price":890,"rooms":10,"size":500,"grp":2,"fco":138,"cdp":45,"caf":55,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/34105542/","lat":43.148,"lng":12.34,"plannedDate":"2026-06-26","plannedTime":"3:15 PM"},{"id":33928859,"name":"Assisi Porziano","town":"Assisi","prov":"PG","price":580,"rooms":12,"size":485,"grp":2,"fco":148,"cdp":70,"caf":85,"spo":50,"man":140,"url":"https://www.idealista.it/immobile/33928859/","lat":43.07,"lng":12.612,"plannedDate":"2026-07-03","plannedTime":"11:30 AM"},{"id":35247592,"name":"Lisciano Niccone Villa","town":"Lisciano Niccone","prov":"PG","price":1050,"rooms":12,"size":520,"grp":2,"fco":148,"cdp":50,"caf":25,"spo":105,"man":120,"url":"https://www.idealista.it/immobile/35247592/","lat":43.265,"lng":12.125,"plannedDate":"2026-06-27","plannedTime":"9:30 AM"},{"id":35456269,"name":"Umbertide Casale","town":"Umbertide","prov":"PG","price":1150,"rooms":15,"size":700,"grp":2,"fco":148,"cdp":60,"caf":45,"spo":95,"man":140,"url":"https://www.idealista.it/immobile/35456269/","lat":43.297,"lng":12.332,"plannedDate":"2026-07-03","plannedTime":"8:45 AM"},{"id":34939305,"name":"Umbertide Preggio","town":"Umbertide","prov":"PG","price":895,"rooms":16,"size":320,"grp":2,"fco":148,"cdp":60,"caf":40,"spo":100,"man":135,"url":"https://www.idealista.it/immobile/34939305/","lat":43.312,"lng":12.29,"plannedDate":"2026-07-03","plannedTime":"9:30 AM"},{"id":23044407,"name":"Foiano della Chiana","town":"Foiano","prov":"AR","price":750,"rooms":12,"size":500,"grp":2,"fco":150,"cdp":50,"caf":20,"spo":125,"man":105,"url":"https://www.idealista.it/immobile/23044407/","lat":43.251,"lng":11.819,"plannedDate":"2026-06-30","plannedTime":"11:30 AM"},{"id":33291507,"name":"Cortona Fratticciola","town":"Cortona","prov":"AR","price":870,"rooms":10,"size":311,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":110,"man":115,"url":"https://www.idealista.it/immobile/33291507/","lat":43.264,"lng":12.002,"plannedDate":"2026-06-28","plannedTime":"11:00 AM"},{"id":33311877,"name":"Cortona Cegliolo Villa","town":"Cortona","prov":"AR","price":980,"rooms":11,"size":400,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/33311877/","lat":43.27,"lng":12.0,"plannedDate":"2026-06-30","plannedTime":"10:30 AM"},{"id":35710302,"name":"Cortona Cegliolo Casale","town":"Cortona","prov":"AR","price":590,"rooms":7,"size":460,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/35710302/","lat":43.272,"lng":11.992,"plannedDate":"","plannedTime":""},{"id":24846822,"name":"CaF Val di Chio","town":"Castiglion Fiorentino","prov":"AR","price":1000,"rooms":12,"size":760,"grp":2,"fco":155,"cdp":55,"caf":0,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/24846822/","lat":43.335,"lng":11.942,"plannedDate":"2026-06-28","plannedTime":"8:45 AM"},{"id":34980495,"name":"CaF Santa Cristina","town":"Castiglion Fiorentino","prov":"AR","price":900,"rooms":12,"size":800,"grp":2,"fco":155,"cdp":55,"caf":5,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/34980495/","lat":43.325,"lng":11.938,"plannedDate":"2026-06-28","plannedTime":"9:30 AM"},{"id":31961655,"name":"Monteroni d'Arbia","town":"Monteroni d'Arbia","prov":"SI","price":980,"rooms":12,"size":480,"grp":2,"fco":155,"cdp":75,"caf":60,"spo":160,"man":95,"url":"https://www.idealista.it/immobile/31961655/","lat":43.227,"lng":11.415,"plannedDate":"2026-07-01","plannedTime":"12:00 PM"},{"id":26833080,"name":"Capolona Pieve SG","town":"Capolona","prov":"AR","price":890,"rooms":9,"size":420,"grp":2,"fco":158,"cdp":90,"caf":35,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/26833080/","lat":43.559,"lng":11.86,"plannedDate":"2026-07-01","plannedTime":"9:45 AM"},{"id":35651252,"name":"Capolona Caliano","town":"Capolona","prov":"AR","price":595,"rooms":10,"size":350,"grp":2,"fco":158,"cdp":90,"caf":30,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/35651252/","lat":43.554,"lng":11.856,"plannedDate":"2026-07-01","plannedTime":"9:00 AM"}];
 const _propsRawById = new Map(PROPS_RAW.map(p => [p.id, p]));
@@ -1188,13 +1188,13 @@ function resolvePropNameFromScrape(scraped) {
 function formatPropDriveTimes(p) {
   const parts = [];
   const ref = getPropReferenceAirportDrive(p);
-  if (ref) parts.push(`✈ ${ref.abbr} ${ref.miles != null ? ref.miles + ' mi' : ref.mins + 'm'}`);
+  if (ref) parts.push(`✈ ${ref.abbr} ${ref.miles != null ? ref.miles + ' mi' : formatDurMin(ref.mins)}`);
   const assigned = getPropDriveToBase(p, p.grp);
-  if (assigned != null) parts.push(`📍 ${p.grp} ${assigned}m`);
+  if (assigned != null) parts.push(`📍 ${p.grp} ${formatDurMin(assigned)}`);
   for (const base of getActiveBases()) {
     if (base.abbr === p.grp) continue;
     const m = getPropDriveToBase(p, base.abbr);
-    if (m != null && m <= DRIVE_SHOW_CAP) parts.push(`📍 ${base.abbr} ${m}m`);
+    if (m != null && m <= DRIVE_SHOW_CAP) parts.push(`📍 ${base.abbr} ${formatDurMin(m)}`);
   }
   return parts.join(' · ') || '—';
 }
@@ -1641,7 +1641,7 @@ function showPropLegPopup(pid, anchorEl, driveMin) {
   hidePropLegPopup();
   const el = document.createElement('div');
   el.className = 'prop-leg-popup';
-  const driveLine = driveMin != null ? `${driveMin} min drive to property` : 'Drive time unknown';
+  const driveLine = driveMin != null ? `${formatDurMin(driveMin)} drive to property` : 'Drive time unknown';
   const idealista = p.url ? `<a href="${escHtml(p.url)}" target="_blank" rel="noopener">Idealista</a>` : '';
   const details = `<a href="#" onclick="openDetailModal(${p.id});hidePropLegPopup();return false">Details</a>`;
   el.innerHTML = `<div class="plp-title">${escHtml(p.name)}</div><div>${driveLine}</div><div class="plp-links">${idealista}${idealista && details ? ' · ' : ''}${details}</div>`;
@@ -2612,7 +2612,7 @@ function getGoogleMapsDirectionsUrl(p) {
   return '';
 }
 
-// Zoom ~13 shows roughly a 5-minute rural drive radius (~4 km) around the pin.
+// Zoom ~13 shows roughly a 5 min rural drive radius (~4 km) around the pin.
 function getGoogleMapsPropertyUrl(p) {
   const coords = getPropMapCoords(p);
   if (coords) {
@@ -3111,7 +3111,7 @@ function renderTile(p) {
       ${p.url ? `<a class="t-btn t-btn-blue" href="${escHtml(p.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Idealista</a>` : `<button class="t-btn t-btn-blue" disabled onclick="event.stopPropagation()">Idealista</button>`}
       <button class="t-btn t-btn-olive" onclick="event.stopPropagation();openCopyMsg(${p.id})" ${p.url?'':'disabled title="No URL"'}>📋 Msg</button>
       ${directionsUrl ? `<a class="t-btn t-btn-map" href="${directionsUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Driving directions">🧭 Directions</a>` : `<button class="t-btn t-btn-map" disabled onclick="event.stopPropagation()" title="Enter location to enable">🧭 Directions</button>`}
-      ${propertyMapUrl ? `<a class="t-btn t-btn-map" href="${propertyMapUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Property location and ~5-minute drive area">🗺 Map</a>` : `<button class="t-btn t-btn-map" disabled onclick="event.stopPropagation()" title="Enter location to enable">🗺 Map</button>`}
+      ${propertyMapUrl ? `<a class="t-btn t-btn-map" href="${propertyMapUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Property location and ~5 min drive area">🗺 Map</a>` : `<button class="t-btn t-btn-map" disabled onclick="event.stopPropagation()" title="Enter location to enable">🗺 Map</button>`}
       ${ELIM_STATUSES.has(p.status) ? `<button class="t-btn t-btn-restore" onclick="event.stopPropagation();quickStatus(${p.id},'New')">↩ Restore</button>` : `<button class="t-btn t-btn-red" onclick="event.stopPropagation();quickStatus(${p.id},'Rejected')">✕ Reject</button>`}
     </div>
   </div>
@@ -3355,7 +3355,7 @@ function renderDmDriveTimes(p) {
     if (base && k !== p.grp && mins > DRIVE_SHOW_CAP) return '';
     const label = apt ? `✈ ${k}` : (base ? `📍 ${k}` : k);
     const cls = mins > DRIVE_CAP ? 'drive-hot' : '';
-    const dist = apt && miles != null ? `${miles} mi` : `${mins}m`;
+    const dist = apt && miles != null ? `${miles} mi` : formatDurMin(mins);
     return `<span class="${cls}" style="margin-right:12px">${label}: ${dist}</span>`;
   }).filter(Boolean).join('');
   el.innerHTML = pairs;
@@ -3828,7 +3828,7 @@ async function confirmAddProperty() {
 
 // ─── Templates ───────────────────────────────────────────────────────────────
 const DEFAULT_TEMPLATES = [
-`We are looking for a 4+ bedroom, 4+ bathroom casale within a two hour drive of [base airport]. The house should NOT be divided into apartments, though an annex with 1 or 2 bedrooms or a small service apartment in the main house are fine. We would ideally be a 5-minute drive (and no more than a 10-minute drive) to a town with a bar and restaurant. Our budget is 800,000 euros (or a little more if it is in move-in condition with modern, US-like bathrooms).
+`We are looking for a 4+ bedroom, 4+ bathroom casale within a two hour drive of [base airport]. The house should NOT be divided into apartments, though an annex with 1 or 2 bedrooms or a small service apartment in the main house are fine. We would ideally be a 5 min drive (and no more than a 10 min drive) to a town with a bar and restaurant. Our budget is 800,000 euros (or a little more if it is in move-in condition with modern, US-like bathrooms).
 
 We will be in [base name] [base from date]{" - "[base to date]} looking at properties. If [Property URL] is available to see, please send a Google Map link or coordinates with the exact property location, as well as a satellite image showing the property boundary.
 
@@ -3865,7 +3865,7 @@ function applyTemplate(tpl, p) {
   const bName = base?.name || '';
   const fromDate = base?.visitFrom ? _fmtDate(base.visitFrom) : '';
   const toDate = (base?.visitTo && base.visitTo !== base.visitFrom) ? _fmtDate(base.visitTo) : '';
-  const aptDrive = refApt?.miles != null ? `${refApt.miles} mi` : (refApt?.mins != null ? `${refApt.mins} min` : null);
+  const aptDrive = refApt?.miles != null ? `${refApt.miles} mi` : (refApt?.mins != null ? formatDurMin(refApt.mins) : null);
 
   let result = tpl
     .replace(/\[base airport\]/gi, getBaseAssignedAirportAbbr(base) || apt)
@@ -3990,6 +3990,11 @@ function formatMinToTime(m) {
   const h24 = Math.floor(m / 60) % 24;
   const min = Math.round(m % 60);
   return `${String(h24).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+
+/** Duration in minutes — always abbreviated as min (e.g. 45 min). */
+function formatDurMin(mins) {
+  return mins != null && !isNaN(mins) ? `${Math.round(mins)} min` : '?';
 }
 
 function normalizeTimeString(t) {
@@ -4510,9 +4515,9 @@ function planCumulativeDriveMin(plan) {
 
 function formatPlanDriveSummary(plan) {
   const cumulative = planCumulativeDriveMin(plan);
-  const cumTxt = cumulative != null ? `${cumulative}m drive` : '';
+  const cumTxt = cumulative != null ? `${formatDurMin(cumulative)} drive` : '';
   if (isTransitBase(plan?.base) && plan.baseToBaseDrive != null) {
-    return cumTxt ? `${plan.baseToBaseDrive}m direct · ${cumTxt}` : `${plan.baseToBaseDrive}m direct`;
+    return cumTxt ? `${formatDurMin(plan.baseToBaseDrive)} direct · ${cumTxt}` : `${formatDurMin(plan.baseToBaseDrive)} direct`;
   }
   return cumTxt;
 }
@@ -5279,7 +5284,7 @@ async function drawDayPlanOnMap(mapObj, plan) {
         seq: s.seq,
         scheduleKind: getPropScheduleKind(p, plan.date),
         extra: `Planned: ${formatMinToTime(s.plannedMin)}<br>` +
-          `Arrive: ${formatMinToTime(s.arriveMin)} · Drive: ${s.drive ?? '?'}m<br>` +
+          `Arrive: ${formatMinToTime(s.arriveMin)} · Drive: ${formatDurMin(s.drive)}<br>` +
           (s.infeasible ? '<span style="color:#C0392B">⚠ Not enough time</span><br>' : '✓ Feasible<br>'),
       }),
       { autoPan: true, autoPanPadding: [48, 48] }
@@ -5330,7 +5335,7 @@ async function renderDayPlan(forceRecalc = false, resetOrder = false, syncMapTab
     const typeLbl = isTransitBase(base) ? 'Transit' : 'Stay';
     summary.innerHTML = `<h3>${plan.day.label} · ${escHtml(base?.name || '')} (${base?.abbr || ''}) · ${typeLbl}</h3>
     <div>${ep ? `${escHtml(ep.startLabel)} → ${plan.stops.length ? plan.stops.length + ' viewings' : 'no viewings'} → ${escHtml(ep.endLabel)}` : 'Base location not resolved'}</div>
-    <div style="margin-top:4px;color:var(--text3)">Day window ${formatMinToTime(DAY_START_MIN)}–${formatMinToTime(DAY_END_MIN)} · ${VIEWING_MIN} min per property</div>
+    <div style="margin-top:4px;color:var(--text3)">Day window ${formatMinToTime(DAY_START_MIN)}–${formatMinToTime(DAY_END_MIN)} · ${formatDurMin(VIEWING_MIN)} per property</div>
     ${formatPlanDriveSummary(plan) ? `<div style="margin-top:4px;color:var(--text3)">${formatPlanDriveSummary(plan)}</div>` : ''}
     ${plan.infeasibleCount ? `<div style="margin-top:6px;color:var(--red);font-weight:600">⚠ ${plan.infeasibleCount} leg(s) may not fit</div>` : '<div style="margin-top:6px;color:var(--olive)">✓ Route fits the day window</div>'}`;
 
@@ -5351,7 +5356,7 @@ async function renderDayPlan(forceRecalc = false, resetOrder = false, syncMapTab
         : '<span class="dp-drag-handle" title="Drag to reorder" onclick="event.stopPropagation()">⠿</span>'}
       <span class="dp-leg-time">${formatMinToTime(s.plannedMin)}</span>
       <span class="dp-leg-name${dpLegNameClass(s.p, date, s.locked)}">${s.seq}. ${escHtml(s.p.name)}${s.locked ? ' ✓' : ''}</span>
-      <span class="dp-leg-meta">${s.drive != null ? s.drive + 'm drive' : '—'} · arr ${formatMinToTime(s.arriveMin)} · ${VIEWING_MIN}m view</span>
+      <span class="dp-leg-meta">${s.drive != null ? formatDurMin(s.drive) + ' drive' : '—'} · arr ${formatMinToTime(s.arriveMin)} · ${formatDurMin(VIEWING_MIN)} view</span>
       ${reasons.length ? `<span class="dp-leg-meta" style="color:var(--red)">${reasons.join(', ')}</span>` : ''}
       <span class="dp-actions" onclick="event.stopPropagation()">
         ${!s.locked ? `<button class="t-btn t-btn-red" style="font-size:9px;padding:1px 5px" title="Move to Not Included" onclick="dpExcludeFromPlan(${s.p.id})">✕</button>` : ''}
@@ -5379,7 +5384,7 @@ async function renderDayPlan(forceRecalc = false, resetOrder = false, syncMapTab
     }
     if (ep) {
       const retCls = plan.returnOver ? 'dp-infeasible' : 'dp-end';
-      html += `<div class="dp-leg ${retCls}"><span class="dp-leg-time">${formatMinToTime(plan.returnArrive)}</span><span class="dp-leg-name">${escHtml(ep.endLabel)} — arrive${plan.returnDrive != null ? ` (${plan.returnDrive}m drive)` : ''}</span>${plan.returnOver ? '<span class="dp-leg-meta" style="color:var(--red)">past day end</span>' : ''}</div>`;
+      html += `<div class="dp-leg ${retCls}"><span class="dp-leg-time">${formatMinToTime(plan.returnArrive)}</span><span class="dp-leg-name">${escHtml(ep.endLabel)} — arrive${plan.returnDrive != null ? ` (${formatDurMin(plan.returnDrive)} drive)` : ''}</span>${plan.returnOver ? '<span class="dp-leg-meta" style="color:var(--red)">past day end</span>' : ''}</div>`;
     }
     const unscheduled = getDpUnscheduledProps(date, base?.abbr);
     if (unscheduled.length) {
@@ -5607,7 +5612,7 @@ function renderSchedule() {
     <span class="stop-time">${time||'—'}</span>
     <span class="stop-name" title="${escHtml(p.name)}">${escHtml(p.name)}</span>
     ${isLocked ? '<span class="sched-badge">✓</span>' : ''}
-    ${dt != null ? `<span class="drive-chip ${driveClass}">${dt}m</span>` : ''}
+    ${dt != null ? `<span class="drive-chip ${driveClass}">${formatDurMin(dt)}</span>` : ''}
     ${mapUrl ? `<a href="${mapUrl}" target="_blank" rel="noopener" class="mapit-btn">🗺</a>` : '<span class="mapit-btn disabled">🗺</span>'}
     <button class="t-btn t-btn-blue" style="font-size:9px;padding:1px 5px" onclick="openDetailModal(${p.id})">✏</button>
   </div>`;
@@ -6354,7 +6359,7 @@ function _updateMapRouteInfo(plans) {
     const totalDrive = list.reduce((n, plan) => n + (plan.totalDriveMin || 0), 0);
     const issues = list.reduce((n, plan) => n + (plan.infeasibleCount || 0), 0);
     const issueNote = issues ? ` · ${issues} issues` : '';
-    el.textContent = `${list.length} days · ${totalStops} stops · ${totalDrive}m drive${issueNote}`;
+    el.textContent = `${list.length} days · ${totalStops} stops · ${formatDurMin(totalDrive)} drive${issueNote}`;
     return;
   }
   el.textContent = list.map(plan => {
@@ -6387,7 +6392,7 @@ function makeMapPropPopupHtml(p, { seq, extra = '', scheduleKind } = {}) {
     `<a href="#" onclick="openDetailModal(${p.id});return false">Details</a>`,
   ].filter(Boolean).join(' · ');
   const aptLine = refApt
-    ? `✈ ${refApt.abbr}: ${refApt.miles != null ? refApt.miles + ' mi' : refApt.mins + 'm'}<br>`
+    ? `✈ ${refApt.abbr}: ${refApt.miles != null ? refApt.miles + ' mi' : formatDurMin(refApt.mins)}<br>`
     : '';
   const timeLine = timeDisp ? `🕐 ${escHtml(timeDisp)}<br>` : '';
   return (seq != null ? `<b>${seq}. ${escHtml(p.name)}</b>` : `<b>${escHtml(p.name)}</b>`) +
@@ -6395,7 +6400,7 @@ function makeMapPropPopupHtml(p, { seq, extra = '', scheduleKind } = {}) {
     `<br>${escHtml(getPropAddress(p))}<br>${formatPrice(p.price)} · ${p.rooms}rm<br>` +
     timeLine +
     aptLine +
-    `${baseDrive != null ? `📍 ${p.grp}: ${baseDrive}m<br>` : ''}` +
+    `${baseDrive != null ? `📍 ${p.grp}: ${formatDurMin(baseDrive)}<br>` : ''}` +
     editBlock + extra + (links ? `<br>${links}` : '');
 }
 
@@ -6510,10 +6515,10 @@ async function _drawMapDayRoute(mapObj, plan, allLatLngs, lineColor, statusFilte
     const fill = s.infeasible ? '#C0392B' : color;
     const extra = (plan.mode === 'suggested' || plan.mode === 'opt-scheduled' || plan.mode === 'opt-free' || plan.mode === 'opt-multiday')
       ? `${s.startViewMin != null ? `View ${formatMinToTime(s.startViewMin)}–${formatMinToTime(s.departMin)}<br>` : ''}` +
-        `${s.drive ?? '?'}m from previous<br>` +
+        `${formatDurMin(s.drive)} from previous<br>` +
         (s.infeasible ? '<span style="color:#C0392B">⚠ Not enough time</span><br>' : '')
       : `${formatStopTimeMeta(s, p, plan.date) !== '—' ? `Time ${formatStopTimeMeta(s, p, plan.date)}<br>` : ''}` +
-        `Arrive: ${formatMinToTime(s.arriveMin)} · Drive: ${s.drive ?? '?'}m<br>` +
+        `Arrive: ${formatMinToTime(s.arriveMin)} · Drive: ${formatDurMin(s.drive)}<br>` +
         (s.timeOrderViolation ? '<span style="color:#F5A623">⚠ Out of time order</span><br>' : '') +
         (s.infeasible ? '<span style="color:#C0392B">⚠ Not enough time</span><br>' : '');
     L.marker([p.lat, p.lng], {
@@ -6549,7 +6554,7 @@ function _mapPropsRowHtml(p, { date = '', seq = '', meta = '', shaded = false, e
     ${handle}
     ${seqHtml}
     <span class="map-props-name${nameCls}" title="${escHtml(p.name)}" onclick="event.stopPropagation();openDetailModal(${p.id});return false;" style="cursor:pointer">${pinStar}${escHtml(p.name)}</span>
-    <span class="map-props-meta">${meta || '—'}${dm != null ? ` · ${dm}m` : ''}</span>
+    <span class="map-props-meta">${meta || '—'}${dm != null ? ` · ${formatDurMin(dm)}` : ''}</span>
   </div>`;
 }
 
@@ -6557,7 +6562,7 @@ function _mapPropsReturnRowHtml(plan) {
   const ep = plan?.endpoints;
   if (!ep || !plan?.stops?.length) return '';
   const arrive = plan.returnArrive != null ? formatMinToTime(plan.returnArrive) : '—';
-  const drive = plan.returnDrive != null ? `${plan.returnDrive}m` : '—';
+  const drive = plan.returnDrive != null ? formatDurMin(plan.returnDrive) : '—';
   const overCls = plan.returnOver ? ' schedule-violation' : '';
   const overNote = plan.returnOver ? ' · past day end' : '';
   return `<div class="map-props-row map-props-return${overCls}" title="Return to ${escHtml(ep.endLabel)}">
@@ -6571,7 +6576,7 @@ function _bindMapPropsLegPopups() {
   document.querySelectorAll('#map-props-panel .map-props-row[data-pid]').forEach(row => {
     const pid = parseInt(row.dataset.pid, 10);
     const meta = row.querySelector('.map-props-meta')?.textContent || '';
-    const m = meta.match(/(\d+)m/);
+    const m = meta.match(/(\d+)\s*min/);
     bindPropLegInteraction(row, pid, m ? parseInt(m[1], 10) : null);
   });
 }
@@ -6989,7 +6994,7 @@ function addToCalendar(id) {
   const fmt = d => d.toISOString().replace(/[-:.]/g,'').slice(0,15);
   const closestApt = getClosestAirportDrive(p);
   const title = encodeURIComponent(`House viewing: ${p.name} (${p.town}${p.prov?', '+p.prov:''})`);
-  const det = encodeURIComponent(`${p.url}\n${closestApt ? `${closestApt.abbr}: ${closestApt.mins}min` : 'airport: ?'} | ${formatPrice(p.price)} | ${p.rooms} rooms`);
+  const det = encodeURIComponent(`${p.url}\n${closestApt ? `${closestApt.abbr}: ${formatDurMin(closestApt.mins)}` : 'airport: ?'} | ${formatPrice(p.price)} | ${p.rooms} rooms`);
   window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(s)}/${fmt(e)}&details=${det}`,'_blank');
 }
 
@@ -6999,7 +7004,7 @@ function _buildGeminiContext() {
     const closestApt = getClosestAirportDrive(p);
     const baseD = getPropDriveToBase(p, p.grp);
     return `ID:${p.id} | ${p.name} | ${p.town},${p.prov} | ${formatPrice(p.price)} | ${p.rooms}rm | ` +
-      `Base:${p.grp} | ✈${closestApt ? `${closestApt.abbr}:${closestApt.mins}m` : '?'} | Base:${baseD??'?'}m | Status:${p.status}`;
+      `Base:${p.grp} | ✈${closestApt ? `${closestApt.abbr}:${formatDurMin(closestApt.mins)}` : '?'} | Base:${baseD != null ? formatDurMin(baseD) : '?'} | Status:${p.status}`;
   }).join('\n');
   const bases = getActiveBases().map(b => `${b.name}(${b.abbr}) visit:${b.visitFrom||'?'}–${b.visitTo||b.visitFrom||'?'}`).join(', ');
   return `You are a travel assistant helping plan property viewings in Italy.\nBASES: ${bases}\nPROPERTIES (${activeProps.length}):\n${summary}`;
