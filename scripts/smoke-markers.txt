@@ -7,6 +7,8 @@ index.html|setMapView|Map view switcher function
 index.html|recalculateMapRoutes|Map recalculate routes button
 index.html|getMapDayNotIncludedProps|Map per-day Not Included property list
 index.html|onMapParamsChange|Map parameter change recalculates routes
+index.html|refreshMapFromStops|Map stops drag updates routes without re-optimize
+index.html|syncTabFilters|Cross-tab filter sync
 index.html|MULTIDAY_MIN_VISITS|Multi-day minimum visits per day
 index.html|sortBasesByDate|Base dropdown date ordering
 index.html|syncGeoLayouts|Responsive layout sync
