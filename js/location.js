@@ -41,10 +41,20 @@ export function createLocationModule(api) {
     return [null, null];
   }
 
+  /** True when input is meant as coordinates — not street/town text (e.g. "Terme" must not match). */
   function looksLikeCoordinateAttempt(gps) {
     if (!gps || typeof gps !== 'string') return false;
     const s = gps.trim();
-    return /[°]|[NnSsEeWw]\b|^\s*-?\d+\.\d+\s*[,;]/.test(s);
+    if (!s) return false;
+    // Decimal pair: 42.418, 11.875 or 42.418 11.875
+    if (/^-?\d{1,3}(?:\.\d+)?\s*[,;]\s*-?\d{1,3}(?:\.\d+)?$/.test(s)) return true;
+    if (/^-?\d{1,3}(?:\.\d+)?\s+-?\d{1,3}(?:\.\d+)?$/.test(s)) return true;
+    // DMS / degree symbols
+    if (/\d\s*°/.test(s) || /[°'′"″]/.test(s)) return true;
+    // Compass + number pairs: N42.41 E11.87, 42.41N 11.87E
+    const hasLatAxis = /(?:[NnSs]\s*-?\d+(?:\.\d+)?|-?\d+(?:\.\d+)?\s*[NnSs])\b/.test(s);
+    const hasLngAxis = /(?:[EeWw]\s*-?\d+(?:\.\d+)?|-?\d+(?:\.\d+)?\s*[EeWw])\b/.test(s);
+    return hasLatAxis && hasLngAxis;
   }
 
   function isCoordinateGps(gps) {
@@ -318,7 +328,8 @@ export function createLocationModule(api) {
     };
 
     const applyGpsText = async () => {
-      if (looksLikeCoordinateAttempt(gpsIn) && !isCoordinateGps(gpsIn)) {
+      const coordLike = looksLikeCoordinateAttempt(gpsIn);
+      if (coordLike && !isCoordinateGps(gpsIn)) {
         return { ok: false, error: 'Could not parse GPS coordinates' };
       }
       const geo = await geocodeAddress(gpsIn);
