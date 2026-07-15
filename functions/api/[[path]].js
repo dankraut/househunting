@@ -15,7 +15,7 @@ const MERGE_FIELDS = [
   'firmName', 'firmPhone', 'broker', 'brokerPhone', 'brokerEmail',
   'address', 'gps', 'gpsPinExact', 'idealistaGps', 'userPlannedDate', 'userPlannedTime', 'notes', 'realtorUrl', 'sourceIfl', 'grp',
   'commune', 'town', 'prov', 'driveTimes', 'driveMiles', 'refAirport', 'name', 'price', 'rooms', 'size', 'lat', 'lng',
-  'elevation', 'elevationCoordsKey',
+  'elevation', 'elevationCoordsKey', 'driveTimesCoordsKey',
 ];
 
 const CORS = {

@@ -451,7 +451,7 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
       <option value="opt-free">Unconstrained Optimized</option>
       <option value="opt-multiday">Multi-day optimize</option>
     </select></label>
-    <button type="button" class="io-btn" id="map-reset-btn" onclick="recalculateMapRoutes()" title="Recalculate routes and redraw map">Recalculate</button>
+    <button type="button" class="io-btn" id="map-reset-btn" onclick="recalculateMapRoutes()" title="Refresh stored drive times, recalculate routes, and redraw map">Recalculate</button>
     <span id="map-status"></span>
     <span id="map-route-info" style="font-size:11px;color:var(--text3)"></span>
   </div>
@@ -936,7 +936,7 @@ function _applyLegacyData(savedProps) {
   const legacyMergeFields = ['status','deleted','visitDate','visitTime','schedDate','schedTime','proposedDate','proposedTime',
     'lastContacted','broker','brokerPhone','firmName','firmPhone','brokerEmail',
     'address','gps','gpsPinExact','calcGps','idealistaGps','userPlannedDate','userPlannedTime','notes','realtorUrl','sourceIfl',
-    'commune','prov','driveTimes','grp','name','price','rooms','size','lat','lng','elevation','elevationCoordsKey'];
+    'commune','prov','driveTimes','driveMiles','driveTimesCoordsKey','grp','name','price','rooms','size','lat','lng','elevation','elevationCoordsKey'];
   for (const d of savedProps) {
     const id = String(d.id);
     if (byId[id]) {
@@ -1056,6 +1056,7 @@ function initProp(src = {}) {
     elevationCoordsKey: src.elevationCoordsKey || '',
     driveTimes: dt,
     driveMiles: src.driveMiles || {},
+    driveTimesCoordsKey: src.driveTimesCoordsKey || '',
     refAirport: src.refAirport || '',
     status: src.status || 'New',
     visitDate: src.visitDate || '',
@@ -1216,6 +1217,70 @@ async function resolveProvForProp(p) {
   return false;
 }
 
+function invalidatePropLocationForTownChange(p) {
+  if (!p || isPropGpsPinExact(p)) return;
+  clearPropCalcGps(p);
+  if (!getPropGps(p)) clearEntityCoords(p);
+}
+
+function buildDriveTimesCoordsKeyFromCoords(propCoords, baseAbbr, baseCoords) {
+  if (!propCoords) return '';
+  const basePart = (baseAbbr && baseCoords)
+    ? `${baseAbbr}:${baseCoords.lat.toFixed(5)},${baseCoords.lng.toFixed(5)}` : '';
+  return `${propCoords.lat.toFixed(5)},${propCoords.lng.toFixed(5)}|${basePart}`;
+}
+
+async function buildDriveTimesCoordsKeyAsync(p) {
+  migratePropLocation(p);
+  let propCoords = stayBaseCoordsSync(p);
+  if (!propCoords) {
+    const c = await resolvePropCoords(p, false);
+    propCoords = c ? coordPair(c.lat, c.lng) : null;
+  }
+  if (!propCoords) return '';
+  const base = getBase(p.grp);
+  let baseCoords = null;
+  if (base && base.baseType !== 'transit') {
+    baseCoords = stayBaseCoordsSync(base) || await resolveBaseCoords(base);
+  }
+  return buildDriveTimesCoordsKeyFromCoords(propCoords, base?.abbr || '', baseCoords);
+}
+
+function driveTimesAreStale(p) {
+  if (!p || ELIM_STATUSES.has(p.status) || isUnassignedProp(p)) return false;
+  const propCoords = stayBaseCoordsSync(p) || coordPair(p.lat, p.lng);
+  if (!propCoords) return false;
+  const base = getBase(p.grp);
+  const baseCoords = (base && base.baseType !== 'transit') ? stayBaseCoordsSync(base) : null;
+  const key = buildDriveTimesCoordsKeyFromCoords(propCoords, base?.abbr || '', baseCoords);
+  return !p.driveTimesCoordsKey || p.driveTimesCoordsKey !== key;
+}
+
+async function stampDriveTimesCoordsKey(p) {
+  p.driveTimesCoordsKey = await buildDriveTimesCoordsKeyAsync(p);
+}
+
+async function refreshPropDriveTimesIfStale(p) {
+  if (!driveTimesAreStale(p)) return false;
+  const ok = await recalcAllDriveTimes(p);
+  if (ok) {
+    await stampDriveTimesCoordsKey(p);
+    touchPropFields(p, ['driveTimes', 'driveMiles', 'refAirport', 'driveTimesCoordsKey']);
+  }
+  return ok;
+}
+
+async function refreshStaleDriveTimesForProps(props) {
+  let n = 0;
+  for (const p of props || []) {
+    if (!p || ELIM_STATUSES.has(p.status)) continue;
+    try {
+      if (await refreshPropDriveTimesIfStale(p)) n++;
+    } catch (e) {}
+  }
+  return n;
+}
+
 function applyIflScrapeToProp(existing, scraped, { baseGrp, iflToken }) {
   const scrapedPrice = Number(scraped.price) || 0;
   const token = iflToken || 'none';
@@ -1231,7 +1296,7 @@ function applyIflScrapeToProp(existing, scraped, { baseGrp, iflToken }) {
       touched.push('sourceIfl');
     }
     if (touched.length) touchPropFields(existing, touched);
-    return touched.length > 0;
+    return touched;
   }
 
   // Active in IFL — Idealista is source of truth
@@ -1289,8 +1354,12 @@ function applyIflScrapeToProp(existing, scraped, { baseGrp, iflToken }) {
       touched.push('address');
     }
   }
+  if (touched.some(f => ['commune', 'town', 'prov', 'address'].includes(f))) {
+    invalidatePropLocationForTownChange(existing);
+    touchPropFields(existing, ['calcGps', 'lat', 'lng']);
+  }
   if (touched.length) touchPropFields(existing, touched);
-  return touched.length > 0;
+  return touched;
 }
 
 function baseColor(abbr) {
@@ -1477,7 +1546,40 @@ let _activeTab = 'props';
 function recalculateMapRoutes() {
   _mapRouteManual = false;
   _bustMapRouteCaches();
-  refreshMap();
+  const btn = document.getElementById('map-reset-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Recalculating…'; }
+  (async () => {
+    try {
+      const n = await refreshMapContextDriveTimes();
+      if (n) {
+        try { await saveToStorage(); renderProps(); } catch (e) {}
+      }
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Recalculate'; }
+      refreshMap();
+    }
+  })();
+}
+
+async function refreshMapContextDriveTimes() {
+  const baseSet = getMapSelectedBases();
+  const dayFilter = getMapDayFilter();
+  const statusFilter = getMapStatusFilter();
+  let n = 0;
+  for (const p of state.props) {
+    if (!isPropMapEligible(p, statusFilter)) continue;
+    if (!propMatchesMapFilters(p, baseSet, dayFilter, statusFilter)) continue;
+    if (!propMatchesMapBases(p, baseSet)) continue;
+    try {
+      migratePropLocation(p);
+      await resolvePropCoords(p, false);
+      if (await recalcAllDriveTimes(p)) {
+        touchPropFields(p, ['driveTimes', 'driveMiles', 'refAirport', 'driveTimesCoordsKey']);
+        n++;
+      }
+    } catch (e) {}
+  }
+  return n;
 }
 
 function refreshMapFromStops() {
@@ -1794,6 +1896,24 @@ function _mergePropLocal(local, server) {
   return { prop: out, changed };
 }
 
+let _driveStaleRefreshTimer = null;
+
+function queueDriveTimesStaleRefresh() {
+  if (_driveStaleRefreshTimer) clearTimeout(_driveStaleRefreshTimer);
+  _driveStaleRefreshTimer = setTimeout(async () => {
+    _driveStaleRefreshTimer = null;
+    const targets = state.props.filter(p => !ELIM_STATUSES.has(p.status) && isPropOnActiveBase(p) && driveTimesAreStale(p));
+    const n = await refreshStaleDriveTimesForProps(targets);
+    if (n) {
+      try {
+        await saveToStorage();
+        renderProps();
+        if (_mapInited) refreshMap({ preserveView: true });
+      } catch (e) {}
+    }
+  }, 600);
+}
+
 function _applyServerProps(incoming, opts = {}) {
   if (!Array.isArray(incoming)) return false;
   const byId = Object.fromEntries(state.props.map(p => [String(p.id), p]));
@@ -1841,6 +1961,7 @@ function _applyServerProps(incoming, opts = {}) {
     if (_dmPropId && !_dmDirty) _refreshDetailModalFields();
     updateHeader();
     if (!opts.silent) _flashSyncNotice('Updated from server');
+    queueDriveTimesStaleRefresh();
   }
   return changed;
 }
@@ -2006,6 +2127,7 @@ async function pollServerSync() {
       populateMapBaseDropdown();
       populateMapDayDropdown();
       changed = true;
+      queueDriveTimesStaleRefresh();
     }
     if (locksChanged) renderProps();
     _syncStatus = changed ? 'merged' : 'ok';
@@ -2086,6 +2208,7 @@ async function loadFromStorage() {
     await runPropNameMigration();
     runMxpAirportBackfill();
     runActivePropsTouchBackfill();
+    runDriveTimesStaleBackfill();
     await runPlannedClearMigration();
     runScheduleStatusMigration();
     runSchedStaleCleanupMigration();
@@ -2377,6 +2500,16 @@ async function runPropNameMigration() {
   if (changed) {
     try { await saveToStorage(); renderProps(); } catch (e) {}
   }
+}
+
+function runDriveTimesStaleBackfill() {
+  if (localStorage.getItem(LS_DRIVE_TIMES_STALE_BACKFILL)) return;
+  localStorage.setItem(LS_DRIVE_TIMES_STALE_BACKFILL, '1');
+  setTimeout(async () => {
+    const targets = state.props.filter(p => !ELIM_STATUSES.has(p.status) && isPropOnActiveBase(p));
+    const n = await refreshStaleDriveTimesForProps(targets);
+    if (n) { try { await saveToStorage(); renderProps(); } catch (e) {} }
+  }, 2200);
 }
 
 function runActivePropsTouchBackfill() {
@@ -2731,7 +2864,7 @@ async function touchActiveProperty(p) {
   await resolveProvForProp(p);
   await updatePropElevation(p);
   await recalcAllDriveTimes(p);
-  touchPropFields(p, ['driveTimes', 'driveMiles', 'refAirport', 'lat', 'lng', 'gps', 'gpsPinExact', 'address', 'commune', 'town', 'prov']);
+  touchPropFields(p, ['driveTimes', 'driveMiles', 'refAirport', 'driveTimesCoordsKey', 'lat', 'lng', 'gps', 'gpsPinExact', 'address', 'commune', 'town', 'prov']);
 }
 
 async function ingestProperty(p, { recalcDrives = true } = {}) {
@@ -2855,6 +2988,7 @@ async function recalcPropAssignedBaseDrive(p) {
 async function recalcDriveTimes(p) {
   await recalcPropAirportDrive(p);
   await recalcPropAssignedBaseDrive(p);
+  await stampDriveTimesCoordsKey(p);
   return true;
 }
 
@@ -2882,6 +3016,7 @@ async function recalcAllDriveTimes(p) {
     if (mins != null) { p.driveTimes[base.abbr] = mins; changed = true; }
   }
   await recalcPropAirportDrive(p);
+  await stampDriveTimesCoordsKey(p);
   return changed;
 }
 
@@ -2912,7 +3047,8 @@ async function recalcPropsForBase(baseAbbr) {
   for (const p of targets) {
     await recalcPropAirportDrive(p);
     await recalcPropAssignedBaseDrive(p);
-    touchPropFields(p, ['driveTimes', 'driveMiles', 'refAirport']);
+    await stampDriveTimesCoordsKey(p);
+    touchPropFields(p, ['driveTimes', 'driveMiles', 'refAirport', 'driveTimesCoordsKey']);
   }
   return targets.length;
 }
@@ -3557,6 +3693,7 @@ async function dmRecalcDrives() {
     renderDmDriveTimes(p);
     renderDmElevation(p);
     dmMarkDirty();
+    touchPropFields(p, ['driveTimes', 'driveMiles', 'refAirport', 'driveTimesCoordsKey', 'elevation', 'elevationCoordsKey']);
     document.getElementById('dm-status-msg').textContent = 'Drive times updated.';
   } else {
     document.getElementById('dm-status-msg').textContent = 'Could not calculate drive times.';
@@ -3667,6 +3804,7 @@ async function saveDetailModal() {
   const prevMap = _propMapEditSnapshot(p);
   const oldTown = formatPropTownDisplay(p);
   const oldGps = getPropGps(p);
+  const oldGrp = p.grp;
   const name = document.getElementById('dm-name')?.value.trim() || p.name;
   const gpsIn = document.getElementById('dm-gps')?.value.trim() || '';
   const townIn = document.getElementById('dm-address')?.value.trim() || '';
@@ -3759,15 +3897,16 @@ async function saveDetailModal() {
   document.getElementById('dm-save-btn').disabled = true;
   document.getElementById('dm-status-msg').textContent = 'Saved ✓';
   const locChanged = newTown !== oldTown || newGps !== oldGps;
+  const grpChanged = p.grp !== oldGrp;
   saveToStorage();
   renderProps();
   if (_propMapEditChanged(p, prevMap)) {
     refreshGeoViewsAfterPropMapEdit(p, prevMap);
   }
-  if (locChanged) {
+  if (locChanged || grpChanged) {
     await updatePropElevation(p);
     await recalcAllDriveTimes(p);
-    touchPropFields(p, ['elevation', 'elevationCoordsKey', 'driveTimes', 'driveMiles', 'refAirport', 'lat', 'lng', 'gps', 'address']);
+    touchPropFields(p, ['elevation', 'elevationCoordsKey', 'driveTimes', 'driveMiles', 'refAirport', 'driveTimesCoordsKey', 'lat', 'lng', 'gps', 'address']);
     renderDmElevation(p);
     await saveToStorage();
   }
@@ -6828,6 +6967,15 @@ function mapPopupSaveBase(id, grp) {
   saveToStorage();
   renderProps();
   refreshGeoViewsAfterPropMapEdit(p, prevMap);
+  (async () => {
+    try {
+      if (await recalcAllDriveTimes(p)) {
+        touchPropFields(p, ['driveTimes', 'driveMiles', 'refAirport', 'driveTimesCoordsKey']);
+        await saveToStorage();
+        renderProps();
+      }
+    } catch (e) {}
+  })();
 }
 
 function mapPopupSaveDate(id, dateStr) {
@@ -8005,9 +8153,11 @@ function markPropsRemovedFromIfl(iflIds, baseGrp) {
 
 async function handleIflSyncMessage({ props, baseGrp, baseName, iflToken, discardedCount, serverResult }) {
   if (!Array.isArray(props) || !baseGrp) return;
+  const iflLocTouch = new Set(['commune', 'town', 'prov', 'address', 'grp']);
   let added = 0, updated = 0, priceFixed = 0, reactivated = 0, baseMoved = 0;
   const newProps = [];
   const touchedProps = [];
+  const touchedMeta = new Map();
   const reactivatedProps = [];
   for (const p of props) {
     const existing = state.props.find(x => String(x.id) === String(p.id));
@@ -8015,8 +8165,10 @@ async function handleIflSyncMessage({ props, baseGrp, baseName, iflToken, discar
       const wasPrice = existing.price;
       const wasStatus = existing.status;
       const wasOnBase = propOnBaseGrp(existing, baseGrp);
-      if (applyIflScrapeToProp(existing, p, { baseGrp, iflToken })) {
+      const touchedFields = applyIflScrapeToProp(existing, p, { baseGrp, iflToken });
+      if (touchedFields.length) {
         updated++;
+        touchedMeta.set(existing, touchedFields);
         if (wasStatus !== existing.status && existing.status === 'Reset' && ELIM_STATUSES.has(wasStatus)) {
           reactivated++;
           reactivatedProps.push(existing);
@@ -8080,9 +8232,14 @@ async function handleIflSyncMessage({ props, baseGrp, baseName, iflToken, discar
     }
     for (const tp of touchedProps) {
       if (reactivatedProps.includes(tp)) continue;
+      const fields = touchedMeta.get(tp) || [];
+      const needsIngest = fields.some(f => iflLocTouch.has(f));
       try {
-        await resolveProvForProp(tp);
-        migratePropLocation(tp);
+        if (needsIngest) await ingestProperty(tp);
+        else {
+          await resolveProvForProp(tp);
+          migratePropLocation(tp);
+        }
       } catch (e) { console.warn('IFL touch prop failed:', e); }
     }
     if (newProps.length || reactivatedProps.length || touchedProps.length) {
@@ -8159,8 +8316,12 @@ window.addEventListener('message', async evt => {
     setTimeout(()=>document.getElementById('tile-'+pid)?.scrollIntoView({behavior:'smooth',block:'center'}),250);
     if (locUpdated) {
       await updatePropElevation(p);
-      const ok = await recalcDriveTimes(p);
-      if (ok) { await saveToStorage(); renderProps(); }
+      const ok = await recalcAllDriveTimes(p);
+      if (ok) {
+        touchPropFields(p, ['driveTimes', 'driveMiles', 'refAirport', 'driveTimesCoordsKey', 'elevation', 'elevationCoordsKey']);
+        await saveToStorage();
+        renderProps();
+      }
     }
   } else {
     showExtToast(`${p.name}: no new data extracted.`,'warn');
