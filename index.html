@@ -268,6 +268,8 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 .map-sched-mix-legend .mix-sched{color:#2E7D32}
 .map-sched-mix-legend .mix-other{color:var(--text2)}
 .map-day-wrap{position:relative;display:inline-flex;align-items:center;gap:4px}
+.map-day-wrap.map-day-locked{opacity:.55}
+.map-day-wrap.map-day-locked .io-btn{cursor:not-allowed}
 .map-day-wrap .io-btn{font-size:11px;padding:2px 8px;height:24px;min-width:120px;text-align:left}
 .map-day-dropdown{position:absolute;top:100%;left:0;z-index:1000;margin-top:2px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:6px 0;min-width:200px;max-height:220px;overflow-y:auto}
 .map-day-opt{display:flex;align-items:center;gap:6px;padding:4px 10px;font-size:11px;cursor:pointer;white-space:nowrap}
@@ -924,7 +926,7 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
 
 <script type="module" src="js/bootstrap.js"></script>
 <script>
-// ═══ SPA v2.29 — app core (config/api/location in js/) ═══════════════════════════
+// ═══ SPA v2.30 — app core (config/api/location in js/) ═══════════════════════════
 
 const PROPS_RAW=[{"id":30278342,"name":"Tuscania Villa","town":"Tuscania","prov":"VT","price":780,"rooms":10,"size":300,"grp":1,"fco":72,"cdp":80,"caf":140,"spo":105,"man":45,"url":"https://www.idealista.it/immobile/30278342/","lat":42.418,"lng":11.875,"plannedDate":"2026-07-09","plannedTime":"10:30 AM"},{"id":34998463,"name":"Vetralla Villa","town":"Vetralla","prov":"VT","price":670,"rooms":12,"size":509,"grp":1,"fco":75,"cdp":95,"caf":155,"spo":95,"man":70,"url":"https://www.idealista.it/immobile/34998463/","lat":42.32,"lng":12.05,"plannedDate":"2026-07-09","plannedTime":"11:30 AM"},{"id":35809714,"name":"Canino Villa","town":"Canino","prov":"VT","price":870,"rooms":7,"size":380,"grp":1,"fco":78,"cdp":80,"caf":130,"spo":115,"man":30,"url":"https://www.idealista.it/immobile/35809714/","lat":42.468,"lng":11.744,"plannedDate":"2026-07-09","plannedTime":"9:30 AM"},{"id":26448701,"name":"Montecastrilli Villa","town":"Montecastrilli","prov":"TR","price":820,"rooms":19,"size":480,"grp":1,"fco":85,"cdp":70,"caf":120,"spo":30,"man":105,"url":"https://www.idealista.it/immobile/26448701/","lat":42.649,"lng":12.487,"plannedDate":"2026-07-06","plannedTime":"11:00 AM"},{"id":21658129,"name":"Manciano SP159","town":"Manciano","prov":"GR","price":850,"rooms":18,"size":379,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":0,"url":"https://www.idealista.it/immobile/21658129/","lat":42.595,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"8:45 AM"},{"id":18085022,"name":"Manciano Scansanese","town":"Manciano","prov":"GR","price":870,"rooms":10,"size":520,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/18085022/","lat":42.605,"lng":11.52,"plannedDate":"2026-07-10","plannedTime":"9:30 AM"},{"id":33646557,"name":"Manciano Montemerano","town":"Manciano","prov":"GR","price":698,"rooms":8,"size":430,"grp":1,"fco":95,"cdp":75,"caf":125,"spo":130,"man":10,"url":"https://www.idealista.it/immobile/33646557/","lat":42.544,"lng":11.57,"plannedDate":"2026-07-10","plannedTime":"10:20 AM"},{"id":32530331,"name":"Manciano Saturnia","town":"Manciano","prov":"GR","price":720,"rooms":10,"size":395,"grp":1,"fco":95,"cdp":80,"caf":125,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/32530331/","lat":42.555,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"11:10 AM"},{"id":27864548,"name":"Baschi Villa","town":"Baschi","prov":"TR","price":780,"rooms":10,"size":580,"grp":1,"fco":99,"cdp":45,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/27864548/","lat":42.675,"lng":12.212,"plannedDate":"2026-06-26","plannedTime":"12:15 PM"},{"id":34980477,"name":"Baschi Civitella","town":"Baschi","prov":"TR","price":990,"rooms":15,"size":450,"grp":1,"fco":99,"cdp":50,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/34980477/","lat":42.67,"lng":12.205,"plannedDate":"2026-06-26","plannedTime":"1:05 PM"},{"id":35860173,"name":"Todi Piagge Casale","town":"Todi","prov":"PG","price":825,"rooms":10,"size":300,"grp":1,"fco":102,"cdp":50,"caf":100,"spo":35,"man":100,"url":"https://www.idealista.it/immobile/35860173/","lat":42.775,"lng":12.412,"plannedDate":"2026-07-07","plannedTime":"9:00 AM"},{"id":35822412,"name":"Todi Collarezzo","town":"Todi","prov":"PG","price":850,"rooms":10,"size":351,"grp":1,"fco":102,"cdp":55,"caf":100,"spo":35,"man":105,"url":"https://www.idealista.it/immobile/35822412/","lat":42.782,"lng":12.43,"plannedDate":"2026-07-07","plannedTime":"10:00 AM"},{"id":34024712,"name":"San Venanzo Civitella","town":"San Venanzo","prov":"TR","price":845,"rooms":18,"size":815,"grp":1,"fco":105,"cdp":30,"caf":80,"spo":55,"man":90,"url":"https://www.idealista.it/immobile/34024712/","lat":42.87,"lng":12.265,"plannedDate":"","plannedTime":""},{"id":33903982,"name":"Scansano Fonte Guerra","town":"Scansano","prov":"GR","price":790,"rooms":12,"size":475,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/33903982/","lat":42.683,"lng":11.34,"plannedDate":"2026-07-10","plannedTime":"12:30 PM"},{"id":35951463,"name":"Scansano Montorgiali","town":"Scansano","prov":"GR","price":960,"rooms":8,"size":390,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35951463/","lat":42.69,"lng":11.332,"plannedDate":"2026-07-09","plannedTime":"3:00 PM"},{"id":35048730,"name":"Scansano Agriturismo","town":"Scansano","prov":"GR","price":630,"rooms":7,"size":390,"grp":1,"fco":105,"cdp":85,"caf":120,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35048730/","lat":42.676,"lng":11.321,"plannedDate":"2026-07-09","plannedTime":"3:50 PM"},{"id":35397327,"name":"Sorano Piancasale","town":"Sorano","prov":"GR","price":700,"rooms":24,"size":480,"grp":1,"fco":108,"cdp":50,"caf":100,"spo":110,"man":25,"url":"https://www.idealista.it/immobile/35397327/","lat":42.685,"lng":11.713,"plannedDate":"","plannedTime":""},{"id":21287742,"name":"Ferentillo Rustico","town":"Ferentillo","prov":"TR","price":645,"rooms":12,"size":650,"grp":1,"fco":110,"cdp":100,"caf":145,"spo":20,"man":140,"url":"https://www.idealista.it/immobile/21287742/","lat":42.623,"lng":12.798,"plannedDate":"2026-07-06","plannedTime":"9:00 AM"},{"id":10679967,"name":"Semproniano Rustico","town":"Semproniano","prov":"GR","price":720,"rooms":11,"size":355,"grp":1,"fco":110,"cdp":70,"caf":115,"spo":130,"man":5,"url":"https://www.idealista.it/immobile/10679967/","lat":42.623,"lng":11.537,"plannedDate":"","plannedTime":""},{"id":34882496,"name":"Spoleto Baiano","town":"Spoleto","prov":"PG","price":980,"rooms":17,"size":451,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":135,"url":"https://www.idealista.it/immobile/34882496/","lat":42.722,"lng":12.718,"plannedDate":"2026-07-05","plannedTime":"8:45 AM"},{"id":30865904,"name":"Spoleto Terzo La Pieve","town":"Spoleto","prov":"PG","price":900,"rooms":11,"size":350,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":130,"url":"https://www.idealista.it/immobile/30865904/","lat":42.715,"lng":12.708,"plannedDate":"2026-07-05","plannedTime":"9:45 AM"},{"id":35103506,"name":"Montefalco Fabbri","town":"Montefalco","prov":"PG","price":910,"rooms":16,"size":450,"grp":1,"fco":121,"cdp":70,"caf":105,"spo":25,"man":130,"url":"https://www.idealista.it/immobile/35103506/","lat":42.89,"lng":12.652,"plannedDate":"2026-07-04","plannedTime":"12:30 PM"},{"id":35432103,"name":"Deruta Tiberina","town":"Deruta","prov":"PG","price":790,"rooms":12,"size":320,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/35432103/","lat":42.982,"lng":12.419,"plannedDate":"2026-07-04","plannedTime":"10:00 AM"},{"id":33533240,"name":"Deruta Tiberina 203","town":"Deruta","prov":"PG","price":685,"rooms":22,"size":611,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/33533240/","lat":42.981,"lng":12.421,"plannedDate":"2026-07-04","plannedTime":"10:50 AM"},{"id":27988041,"name":"Deruta Centro Casale","town":"Deruta","prov":"PG","price":650,"rooms":12,"size":400,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/27988041/","lat":42.982,"lng":12.416,"plannedDate":"","plannedTime":""},{"id":29370809,"name":"Deruta Castelleone","town":"Deruta","prov":"PG","price":890,"rooms":12,"size":316,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/29370809/","lat":42.984,"lng":12.413,"plannedDate":"","plannedTime":""},{"id":34783987,"name":"Bettona Villa","town":"Bettona","prov":"PG","price":850,"rooms":20,"size":484,"grp":1,"fco":129,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/34783987/","lat":42.992,"lng":12.43,"plannedDate":"2026-06-27","plannedTime":"11:00 AM"},{"id":34843857,"name":"Santa Fiora Monte Amiata","town":"Santa Fiora","prov":"GR","price":978,"rooms":12,"size":520,"grp":1,"fco":130,"cdp":50,"caf":85,"spo":125,"man":40,"url":"https://www.idealista.it/immobile/34843857/","lat":42.834,"lng":11.587,"plannedDate":"","plannedTime":""},{"id":34979131,"name":"Corciano Migiana","town":"Corciano","prov":"PG","price":830,"rooms":13,"size":700,"grp":1,"fco":133,"cdp":40,"caf":55,"spo":75,"man":115,"url":"https://www.idealista.it/immobile/34979131/","lat":43.11,"lng":12.289,"plannedDate":"","plannedTime":""},{"id":35300665,"name":"Perugia Olmo","town":"Perugia","prov":"PG","price":675,"rooms":5,"size":425,"grp":2,"fco":138,"cdp":50,"caf":70,"spo":60,"man":125,"url":"https://www.idealista.it/immobile/35300665/","lat":43.085,"lng":12.442,"plannedDate":"2026-06-25","plannedTime":"12:30 PM"},{"id":35456752,"name":"Perugia Eugubina","town":"Perugia","prov":"PG","price":650,"rooms":21,"size":953,"grp":2,"fco":138,"cdp":50,"caf":60,"spo":70,"man":125,"url":"https://www.idealista.it/immobile/35456752/","lat":43.138,"lng":12.408,"plannedDate":"2026-06-25","plannedTime":"1:15 PM"},{"id":32456550,"name":"Perugia Colli Albani","town":"Perugia","prov":"PG","price":650,"rooms":10,"size":530,"grp":2,"fco":138,"cdp":50,"caf":65,"spo":65,"man":125,"url":"https://www.idealista.it/immobile/32456550/","lat":43.093,"lng":12.415,"plannedDate":"2026-06-25","plannedTime":"2:15 PM"},{"id":16393910,"name":"Perugia Solfagnano","town":"Perugia","prov":"PG","price":1100,"rooms":16,"size":725,"grp":2,"fco":138,"cdp":45,"caf":50,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/16393910/","lat":43.155,"lng":12.33,"plannedDate":"2026-06-26","plannedTime":"2:30 PM"},{"id":34105542,"name":"Perugia Monte Tezio","town":"Perugia","prov":"PG","price":890,"rooms":10,"size":500,"grp":2,"fco":138,"cdp":45,"caf":55,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/34105542/","lat":43.148,"lng":12.34,"plannedDate":"2026-06-26","plannedTime":"3:15 PM"},{"id":33928859,"name":"Assisi Porziano","town":"Assisi","prov":"PG","price":580,"rooms":12,"size":485,"grp":2,"fco":148,"cdp":70,"caf":85,"spo":50,"man":140,"url":"https://www.idealista.it/immobile/33928859/","lat":43.07,"lng":12.612,"plannedDate":"2026-07-03","plannedTime":"11:30 AM"},{"id":35247592,"name":"Lisciano Niccone Villa","town":"Lisciano Niccone","prov":"PG","price":1050,"rooms":12,"size":520,"grp":2,"fco":148,"cdp":50,"caf":25,"spo":105,"man":120,"url":"https://www.idealista.it/immobile/35247592/","lat":43.265,"lng":12.125,"plannedDate":"2026-06-27","plannedTime":"9:30 AM"},{"id":35456269,"name":"Umbertide Casale","town":"Umbertide","prov":"PG","price":1150,"rooms":15,"size":700,"grp":2,"fco":148,"cdp":60,"caf":45,"spo":95,"man":140,"url":"https://www.idealista.it/immobile/35456269/","lat":43.297,"lng":12.332,"plannedDate":"2026-07-03","plannedTime":"8:45 AM"},{"id":34939305,"name":"Umbertide Preggio","town":"Umbertide","prov":"PG","price":895,"rooms":16,"size":320,"grp":2,"fco":148,"cdp":60,"caf":40,"spo":100,"man":135,"url":"https://www.idealista.it/immobile/34939305/","lat":43.312,"lng":12.29,"plannedDate":"2026-07-03","plannedTime":"9:30 AM"},{"id":23044407,"name":"Foiano della Chiana","town":"Foiano","prov":"AR","price":750,"rooms":12,"size":500,"grp":2,"fco":150,"cdp":50,"caf":20,"spo":125,"man":105,"url":"https://www.idealista.it/immobile/23044407/","lat":43.251,"lng":11.819,"plannedDate":"2026-06-30","plannedTime":"11:30 AM"},{"id":33291507,"name":"Cortona Fratticciola","town":"Cortona","prov":"AR","price":870,"rooms":10,"size":311,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":110,"man":115,"url":"https://www.idealista.it/immobile/33291507/","lat":43.264,"lng":12.002,"plannedDate":"2026-06-28","plannedTime":"11:00 AM"},{"id":33311877,"name":"Cortona Cegliolo Villa","town":"Cortona","prov":"AR","price":980,"rooms":11,"size":400,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/33311877/","lat":43.27,"lng":12.0,"plannedDate":"2026-06-30","plannedTime":"10:30 AM"},{"id":35710302,"name":"Cortona Cegliolo Casale","town":"Cortona","prov":"AR","price":590,"rooms":7,"size":460,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/35710302/","lat":43.272,"lng":11.992,"plannedDate":"","plannedTime":""},{"id":24846822,"name":"CaF Val di Chio","town":"Castiglion Fiorentino","prov":"AR","price":1000,"rooms":12,"size":760,"grp":2,"fco":155,"cdp":55,"caf":0,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/24846822/","lat":43.335,"lng":11.942,"plannedDate":"2026-06-28","plannedTime":"8:45 AM"},{"id":34980495,"name":"CaF Santa Cristina","town":"Castiglion Fiorentino","prov":"AR","price":900,"rooms":12,"size":800,"grp":2,"fco":155,"cdp":55,"caf":5,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/34980495/","lat":43.325,"lng":11.938,"plannedDate":"2026-06-28","plannedTime":"9:30 AM"},{"id":31961655,"name":"Monteroni d'Arbia","town":"Monteroni d'Arbia","prov":"SI","price":980,"rooms":12,"size":480,"grp":2,"fco":155,"cdp":75,"caf":60,"spo":160,"man":95,"url":"https://www.idealista.it/immobile/31961655/","lat":43.227,"lng":11.415,"plannedDate":"2026-07-01","plannedTime":"12:00 PM"},{"id":26833080,"name":"Capolona Pieve SG","town":"Capolona","prov":"AR","price":890,"rooms":9,"size":420,"grp":2,"fco":158,"cdp":90,"caf":35,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/26833080/","lat":43.559,"lng":11.86,"plannedDate":"2026-07-01","plannedTime":"9:45 AM"},{"id":35651252,"name":"Capolona Caliano","town":"Capolona","prov":"AR","price":595,"rooms":10,"size":350,"grp":2,"fco":158,"cdp":90,"caf":30,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/35651252/","lat":43.554,"lng":11.856,"plannedDate":"2026-07-01","plannedTime":"9:00 AM"}];
 const _propsRawById = new Map(PROPS_RAW.map(p => [p.id, p]));
@@ -4643,7 +4645,9 @@ async function buildMapDayPlanFromManualOrder(date, dayBase, routeMode) {
   }
 
   const mode = routeMode === 'opt-multiday' ? 'opt-multiday' : (
-    routeMode === 'timed' ? 'as-scheduled' : routeMode
+    routeMode === 'opt-free' ? 'opt-free' : (
+      routeMode === 'timed' ? 'as-scheduled' : routeMode
+    )
   );
   let plan = { date, day, base, endpoints, stops, skipped: [], mode };
   plan = await recalcPlanStopDrives(plan);
@@ -4798,10 +4802,27 @@ function isMapOptMultidayMode() {
   return getMapRouteMode() === 'opt-multiday';
 }
 
+function isMapUnconstrainedMode() {
+  return getMapRouteMode() === 'opt-free';
+}
+
+function isMapMultiDayRouteMode() {
+  return isMapOptMultidayMode() || isMapUnconstrainedMode();
+}
+
+function getMapAllDaysForSelectedBases() {
+  return getDaysForMapBases(_mapSelectedBases).map(d => d.date).sort();
+}
+
 function getMapEffectiveRouteDays() {
-  const days = getMapRouteDays();
-  if (isMapAsScheduledMode()) return days.length === 1 ? days : [];
-  return days;
+  if (isMapAsScheduledMode()) {
+    const days = getMapRouteDays();
+    return days.length === 1 ? days : [];
+  }
+  if (isMapUnconstrainedMode() && _mapSelectedBases.size) {
+    return getMapAllDaysForSelectedBases();
+  }
+  return getMapRouteDays();
 }
 
 function getMapRouteModeLabel(mode) {
@@ -4834,14 +4855,14 @@ function isPropIncludedInDayRoute(p, date, opts = {}) {
   const orderKey = _mapOrderKey(getMapOrderBaseForDate(date) || baseF, date);
   const manual = opts.manualOrder ?? _mapManualOrder[orderKey];
   if (manual?.includes(p.id)) return true;
-  if (getMapRouteMode() === 'opt-multiday') {
+  if (getMapRouteMode() === 'opt-multiday' || getMapRouteMode() === 'opt-free') {
     const opt = _mapOptimizedOrder[orderKey];
     if (opt?.includes(p.id)) return true;
   }
   const rs = getPropRouteSchedule(p);
   if (rs.date !== date) return false;
   const routeMode = opts.routeMode ?? getMapRouteMode();
-  if (routeMode === 'opt-free' || routeMode === 'opt-multiday') return true;
+  if (routeMode === 'opt-multiday') return true;
   return parseTimeToMinutes(getPropDayTime(p, date)) != null;
 }
 
@@ -5260,10 +5281,10 @@ async function _builtStopsFromRouteEntries(endpoints, route) {
   return { stops, finalDrive, usedDrive };
 }
 
-async function _isMultiDayRouteFeasible(stops, date, endpoints, base) {
+async function _isMultiDayRouteFeasible(stops, date, endpoints, base, { respectScheduledTimes = true } = {}) {
   if (!stops.length) return true;
   const ann = await annotateMapRouteStops(stops, date, endpoints, base, {
-    respectScheduledTimes: true,
+    respectScheduledTimes,
     impliedTimes: true,
   });
   if (stops.some(s => s.infeasible)) return false;
@@ -5285,7 +5306,7 @@ function shouldCountPropInMapDayColumn(p, date, dayBase) {
   return true;
 }
 
-async function _initMultiDayPlanState(baseAbbr, dates) {
+async function _initMultiDayPlanState(baseAbbr, dates, { unconstrained = false, statusFilter = 'all' } = {}) {
   const base = getBase(baseAbbr);
   if (!base) return null;
   if (isTransitBase(base)) await resolveTransitEndpoints(base);
@@ -5306,10 +5327,23 @@ async function _initMultiDayPlanState(baseAbbr, dates) {
   }
   const flexible = [];
   const seen = new Set();
+  const planDate = dates[0] || '';
   for (const p of state.props) {
-    if (ELIM_STATUSES.has(p.status)) continue;
+    if (!isPropMapEligible(p, statusFilter)) continue;
     if (_mapTempUnscheduled.has(p.id)) continue;
     if (!isPropOnActiveBase(p)) continue;
+    if (unconstrained) {
+      if (!propMatchesMapBaseForPlan(p, baseAbbr, planDate)) continue;
+      if (seen.has(p.id)) continue;
+      seen.add(p.id);
+      await resolvePropCoords(p, false);
+      if (p.lat == null) {
+        skippedByDate[planDate].push({ p, reason: 'no coordinates' });
+        continue;
+      }
+      flexible.push(p);
+      continue;
+    }
     const vd = getPropVisitDate(p);
     if (vd && dateSet.has(vd)) {
       if (!propMatchesMapBaseForPlan(p, baseAbbr, vd)) continue;
@@ -5340,10 +5374,11 @@ async function _initMultiDayPlanState(baseAbbr, dates) {
     const built = await _builtStopsFromRouteEntries(endpoints, dayStates[date].route);
     dayStates[date].usedDrive = built.usedDrive;
   }
-  return { dayStates, flexible, skippedByDate, base, endpoints, budget };
+  return { dayStates, flexible, skippedByDate, base, endpoints, budget, unconstrained };
 }
 
-async function _greedyAssignMultiDay(dayStates, flexible, dates, base, skippedByDate) {
+async function _greedyAssignMultiDay(dayStates, flexible, dates, base, skippedByDate, unconstrained = false) {
+  const respectTimes = !unconstrained;
   const startEnd = {};
   for (const date of dates) {
     const ep = dayStates[date].endpoints;
@@ -5371,7 +5406,7 @@ async function _greedyAssignMultiDay(dayStates, flexible, dates, base, skippedBy
         const built = await _builtStopsFromRouteEntries(ds.endpoints, trialRoute);
         if (built.usedDrive > ds.budget) continue;
         const trialStops = built.stops.map(s => ({ ...s, infeasible: false }));
-        const feasible = await _isMultiDayRouteFeasible(trialStops, date, ds.endpoints, base);
+        const feasible = await _isMultiDayRouteFeasible(trialStops, date, ds.endpoints, base, { respectScheduledTimes: respectTimes });
         if (!feasible) continue;
         const marginal = built.usedDrive - ds.usedDrive;
         const adjustedCost = _multiDayBalanceCost(marginal, ds);
@@ -5395,7 +5430,8 @@ async function _greedyAssignMultiDay(dayStates, flexible, dates, base, skippedBy
   }
 }
 
-async function _boostMultiDayMinimumVisits(dayStates, dates, base) {
+async function _boostMultiDayMinimumVisits(dayStates, dates, base, unconstrained = false) {
+  const respectTimes = !unconstrained;
   const sortedTargets = [...dates].sort(
     (a, b) => _multiDayVisitCount(dayStates[a]) - _multiDayVisitCount(dayStates[b])
       || a.localeCompare(b)
@@ -5427,14 +5463,14 @@ async function _boostMultiDayMinimumVisits(dayStates, dates, base) {
           const builtTarget = await _builtStopsFromRouteEntries(dsTarget.endpoints, trialTarget);
           if (builtTarget.usedDrive > dsTarget.budget) continue;
           const targetStops = builtTarget.stops.map(s => ({ ...s, infeasible: false }));
-          if (!await _isMultiDayRouteFeasible(targetStops, targetDate, dsTarget.endpoints, base)) continue;
+          if (!await _isMultiDayRouteFeasible(targetStops, targetDate, dsTarget.endpoints, base, { respectScheduledTimes: respectTimes })) continue;
 
           const srcRoute = [...dsSrc.route.slice(0, fi), ...dsSrc.route.slice(fi + 1)];
           const builtSrc = await _builtStopsFromRouteEntries(dsSrc.endpoints, srcRoute);
           if (srcRoute.length && builtSrc.usedDrive > dsSrc.budget) continue;
           if (srcRoute.length) {
             const srcStops = builtSrc.stops.map(s => ({ ...s, infeasible: false }));
-            if (!await _isMultiDayRouteFeasible(srcStops, srcDate, dsSrc.endpoints, base)) continue;
+            if (!await _isMultiDayRouteFeasible(srcStops, srcDate, dsSrc.endpoints, base, { respectScheduledTimes: respectTimes })) continue;
           }
 
           const marginal = builtTarget.usedDrive - dsTarget.usedDrive;
@@ -5455,7 +5491,8 @@ async function _boostMultiDayMinimumVisits(dayStates, dates, base) {
   }
 }
 
-async function _rebalanceMultiDay(dayStates, dates, base) {
+async function _rebalanceMultiDay(dayStates, dates, base, unconstrained = false) {
+  const respectTimes = !unconstrained;
   const startEnd = {};
   for (const date of dates) {
     const ep = dayStates[date].endpoints;
@@ -5494,14 +5531,14 @@ async function _rebalanceMultiDay(dayStates, dates, base) {
       const builtLight = await _builtStopsFromRouteEntries(dsLight.endpoints, trialLight);
       if (builtLight.usedDrive > dsLight.budget) continue;
       const lightStops = builtLight.stops.map(s => ({ ...s, infeasible: false }));
-      if (!await _isMultiDayRouteFeasible(lightStops, light, dsLight.endpoints, base)) continue;
+      if (!await _isMultiDayRouteFeasible(lightStops, light, dsLight.endpoints, base, { respectScheduledTimes: respectTimes })) continue;
 
       const heavyRoute = [...dayStates[heavy].route.slice(0, fi), ...dayStates[heavy].route.slice(fi + 1)];
       if (heavyRoute.length) {
         const builtHeavy = await _builtStopsFromRouteEntries(dayStates[heavy].endpoints, heavyRoute);
         if (builtHeavy.usedDrive > dayStates[heavy].budget) continue;
         const heavyStops = builtHeavy.stops.map(s => ({ ...s, infeasible: false }));
-        if (!await _isMultiDayRouteFeasible(heavyStops, heavy, dayStates[heavy].endpoints, base)) continue;
+        if (!await _isMultiDayRouteFeasible(heavyStops, heavy, dayStates[heavy].endpoints, base, { respectScheduledTimes: respectTimes })) continue;
         dayStates[heavy].usedDrive = builtHeavy.usedDrive;
       } else {
         dayStates[heavy].usedDrive = 0;
@@ -5516,9 +5553,15 @@ async function _rebalanceMultiDay(dayStates, dates, base) {
   }
 }
 
-async function _optimizeMultiDayDayOrder(dayState, date) {
+async function _optimizeMultiDayDayOrder(dayState, date, { unconstrained = false } = {}) {
   if (!dayState.route.length) return;
   const candidates = dayState.route.map(e => e.p);
+  if (unconstrained) {
+    const built = await buildUnconstrainedOptimizedStops(dayState.endpoints, candidates);
+    dayState.route = built.stops.map(s => ({ p: s.p, anchor: false }));
+    dayState.usedDrive = built.usedDrive;
+    return;
+  }
   const built = await buildAnchoredSuggestedStops(dayState.endpoints, candidates, date);
   dayState.route = built.stops.map(s => {
     const timeMin = parseTimeToMinutes(getPropDayTime(s.p, date));
@@ -5531,11 +5574,11 @@ async function _optimizeMultiDayDayOrder(dayState, date) {
   dayState.usedDrive = built.usedDrive;
 }
 
-async function _finalizeMultiDayPlan(date, dayState, skipped) {
+async function _finalizeMultiDayPlan(date, dayState, skipped, { mode = 'opt-multiday', respectScheduledTimes = true } = {}) {
   const { day, base, endpoints } = dayState;
   const built = await _builtStopsFromRouteEntries(endpoints, dayState.route);
   const ann = await annotateMapRouteStops(built.stops, date, endpoints, base, {
-    respectScheduledTimes: true,
+    respectScheduledTimes,
     impliedTimes: true,
   });
   const plan = {
@@ -5543,7 +5586,7 @@ async function _finalizeMultiDayPlan(date, dayState, skipped) {
     stops: built.stops,
     skipped,
     finalDrive: built.finalDrive,
-    mode: 'opt-multiday',
+    mode,
     totalDrive: built.usedDrive,
     totalDriveMin: built.usedDrive,
     baseToBaseDrive: await getTransitDirectDrive(base, endpoints),
@@ -5555,26 +5598,31 @@ async function _finalizeMultiDayPlan(date, dayState, skipped) {
   return plan;
 }
 
-async function _computeMultiDayOptimizedForBase(baseAbbr, dates, bustCache = false) {
+async function _computeMultiDayOptimizedForBase(baseAbbr, dates, { bustCache = false, unconstrained = false, statusFilter = 'all' } = {}) {
   const sortedDates = [...dates].sort();
-  const cacheKey = `multiday_${baseAbbr}_${sortedDates.join(',')}`;
+  const cacheKey = unconstrained
+    ? `optfree_${baseAbbr}_${sortedDates.join(',')}_${statusFilter}`
+    : `multiday_${baseAbbr}_${sortedDates.join(',')}`;
   if (!bustCache && _dayPlanCache[cacheKey]) {
     const cached = _dayPlanCache[cacheKey];
     _syncMapOptimizedOrderFromPlans(baseAbbr, cached);
     return cached;
   }
-  const state = await _initMultiDayPlanState(baseAbbr, sortedDates);
+  const state = await _initMultiDayPlanState(baseAbbr, sortedDates, { unconstrained, statusFilter });
   if (!state) return [];
-  await _greedyAssignMultiDay(state.dayStates, state.flexible, sortedDates, state.base, state.skippedByDate);
-  await _boostMultiDayMinimumVisits(state.dayStates, sortedDates, state.base);
-  await _rebalanceMultiDay(state.dayStates, sortedDates, state.base);
+  const u = !!state.unconstrained;
+  await _greedyAssignMultiDay(state.dayStates, state.flexible, sortedDates, state.base, state.skippedByDate, u);
+  await _boostMultiDayMinimumVisits(state.dayStates, sortedDates, state.base, u);
+  await _rebalanceMultiDay(state.dayStates, sortedDates, state.base, u);
   for (const date of sortedDates) {
-    await _optimizeMultiDayDayOrder(state.dayStates[date], date);
+    await _optimizeMultiDayDayOrder(state.dayStates[date], date, { unconstrained: u });
   }
+  const mode = u ? 'opt-free' : 'opt-multiday';
+  const respectTimes = !u;
   const plans = [];
   for (const date of sortedDates) {
     const ds = state.dayStates[date];
-    plans.push(await _finalizeMultiDayPlan(date, ds, state.skippedByDate[date] || []));
+    plans.push(await _finalizeMultiDayPlan(date, ds, state.skippedByDate[date] || [], { mode, respectScheduledTimes: respectTimes }));
   }
   _syncMapOptimizedOrderFromPlans(baseAbbr, plans);
   _dayPlanCache[cacheKey] = plans;
@@ -5591,7 +5639,25 @@ async function computeMultiDayOptimizedRoutes(routeDays, bustCache = false) {
   }
   const plans = [];
   for (const [baseAbbr, dates] of Object.entries(byBase)) {
-    const basePlans = await _computeMultiDayOptimizedForBase(baseAbbr, dates, bustCache);
+    const basePlans = await _computeMultiDayOptimizedForBase(baseAbbr, dates, { bustCache });
+    plans.push(...basePlans);
+  }
+  plans.sort((a, b) => a.date.localeCompare(b.date));
+  return plans;
+}
+
+async function computeUnconstrainedMultiDayRoutes(routeDays, bustCache = false) {
+  const statusFilter = getMapStatusFilter();
+  const byBase = {};
+  for (const date of routeDays) {
+    const baseF = getMapOrderBaseForDate(date);
+    if (!baseF) continue;
+    if (!byBase[baseF]) byBase[baseF] = [];
+    byBase[baseF].push(date);
+  }
+  const plans = [];
+  for (const [baseAbbr, dates] of Object.entries(byBase)) {
+    const basePlans = await _computeMultiDayOptimizedForBase(baseAbbr, dates, { bustCache, unconstrained: true, statusFilter });
     plans.push(...basePlans);
   }
   plans.sort((a, b) => a.date.localeCompare(b.date));
@@ -5624,8 +5690,11 @@ function getTripDays() {
 function populateMapDayDropdown() {
   const btn = document.getElementById('map-day-btn');
   const dd = document.getElementById('map-day-dropdown');
+  const dayWrap = document.getElementById('map-day-wrap');
   if (!btn || !dd) return;
   dd.style.display = 'none';
+  const unconstrained = isMapUnconstrainedMode();
+  if (dayWrap) dayWrap.classList.toggle('map-day-locked', unconstrained);
   if (!_mapSelectedBases.size) {
     btn.disabled = true;
     btn.textContent = 'Select bases first';
@@ -5640,6 +5709,15 @@ function populateMapDayDropdown() {
     btn.textContent = 'No days for base(s)';
     dd.innerHTML = '';
     _mapSelectedDays.clear();
+    updateMapRouteModeState();
+    return;
+  }
+  if (unconstrained) {
+    _mapSelectedDays = new Set(days.map(d => d.date));
+    _mapDayFilterManual = false;
+    btn.disabled = true;
+    btn.textContent = days.length === 1 ? days[0].label : `All ${days.length} day(s)`;
+    dd.innerHTML = '';
     updateMapRouteModeState();
     return;
   }
@@ -6349,7 +6427,7 @@ function filterMapDayPlan(plan, statusFilter, baseF, dayFilter) {
   const planDate = plan.date || '';
   const keep = p => {
     if (!isPropMapEligible(p, statusFilter)) return false;
-    if (plan.mode === 'opt-multiday') {
+    if (plan.mode === 'opt-multiday' || plan.mode === 'opt-free') {
       if (!propMatchesMapBaseForPlan(p, baseF, planDate)) return false;
     } else if (!isPropIncludedInDayRoute(p, planDate, { baseF, mapMode: true })) {
       return false;
@@ -6420,7 +6498,7 @@ function getMapUnscheduledProps(baseSet, statusFilter, dayFilter, routeMode, day
       if (!_mapTempUnscheduled.has(sk.p.id) && getPropRouteDate(sk.p)) inDayColumn.add(sk.p.id);
     }
   }
-  if (routeMode === 'opt-multiday' || _mapRouteManual) {
+  if (routeMode === 'opt-multiday' || routeMode === 'opt-free' || _mapRouteManual) {
     for (const date of getMapPanelDayDates()) {
       const dayBase = getMapOrderBaseForDate(date);
       const orderKey = _mapOrderKey(dayBase, date);
@@ -6686,7 +6764,7 @@ function _mapDropZoneKind(el) {
 function getMapDayRouteStops(plan, date, baseF, statusFilter) {
   if (!plan) return [];
   return (plan.stops || []).filter(s => {
-    if (plan.mode === 'opt-multiday') {
+    if (plan.mode === 'opt-multiday' || plan.mode === 'opt-free') {
       return isPropMapEligible(s.p, statusFilter) && propMatchesMapBaseForPlan(s.p, baseF, date);
     }
     if (!isPropIncludedInDayRoute(s.p, date, { baseF, mapMode: true })) return false;
@@ -6764,7 +6842,7 @@ function _clearMapDayPlanCache(date) {
   delete _dayPlanCache[date + '_opt_scheduled'];
   delete _dayPlanCache[date + '_opt_free'];
   for (const key of Object.keys(_dayPlanCache)) {
-    if (key.startsWith('multiday_') && key.includes(date)) delete _dayPlanCache[key];
+    if ((key.startsWith('multiday_') || key.startsWith('optfree_')) && key.includes(date)) delete _dayPlanCache[key];
   }
 }
 
@@ -6792,7 +6870,7 @@ function pruneMapManualOrders() {
       if (arr.indexOf(id) !== idx) return false;
       const p = getProp(id);
       if (!p) return false;
-      if (_mapRouteManual || getMapRouteMode() === 'opt-multiday') return true;
+      if (_mapRouteManual || getMapRouteMode() === 'opt-multiday' || getMapRouteMode() === 'opt-free') return true;
       const rd = getPropRouteDate(p);
       return !rd || rd === date;
     });
@@ -6851,6 +6929,10 @@ function onMapPropsDrop(evt) {
 
 function updateMapRouteModeState() {
   const mode = document.getElementById('map-route-mode');
+  const dayWrap = document.getElementById('map-day-wrap');
+  const dayBtn = document.getElementById('map-day-btn');
+  if (dayWrap) dayWrap.classList.toggle('map-day-locked', isMapUnconstrainedMode());
+  if (dayBtn && isMapUnconstrainedMode() && _mapSelectedBases.size) dayBtn.disabled = true;
   if (!mode) return;
   if (!_mapSelectedBases.size || !_mapSelectedDays.size) {
     mode.disabled = true;
@@ -6866,7 +6948,12 @@ function updateMapRouteModeState() {
 
 function onMapRouteModeChange() {
   _mapRouteManual = false;
-  updateMapRouteModeState();
+  if (isMapUnconstrainedMode() && _mapSelectedBases.size) {
+    const days = getDaysForMapBases(_mapSelectedBases);
+    _mapSelectedDays = new Set(days.map(d => d.date));
+    _mapDayFilterManual = false;
+  }
+  populateMapDayDropdown();
   const info = document.getElementById('map-route-info');
   const resetBtn = document.getElementById('map-reset-btn');
   if (resetBtn) resetBtn.title = 'Recalculate routes and redraw map';
@@ -6928,7 +7015,7 @@ function _updateMapRouteInfo(plans) {
   }
   const list = Array.isArray(plans) ? plans : (plans ? [plans] : []);
   if (!list.length) { el.textContent = ''; return; }
-  if (isMapOptMultidayMode() && list.length > 1) {
+  if ((isMapOptMultidayMode() || isMapUnconstrainedMode()) && list.length > 1) {
     const totalStops = list.reduce((n, plan) => n + (plan.stops?.length || 0), 0);
     const totalDrive = list.reduce((n, plan) => n + (plan.totalDriveMin || 0), 0);
     const issues = list.reduce((n, plan) => n + (plan.infeasibleCount || 0), 0);
@@ -7388,7 +7475,7 @@ async function refreshMapAsync() {
         'opt-multiday': 'Optimizing multi-day routes…',
       }[routeMode] || 'Loading routes…');
       setMapStatus(statusMsg);
-      if (routeMode === 'opt-multiday') {
+      if (routeMode === 'opt-multiday' || routeMode === 'opt-free') {
         if (_mapRouteManual) {
           for (let i = 0; i < routeDays.length; i++) {
             const date = routeDays[i];
@@ -7403,7 +7490,9 @@ async function refreshMapAsync() {
             dayPlans.push(filtered);
           }
         } else {
-          const multiPlans = await computeMultiDayOptimizedRoutes(routeDays, false);
+          const multiPlans = routeMode === 'opt-free'
+            ? await computeUnconstrainedMultiDayRoutes(routeDays, false)
+            : await computeMultiDayOptimizedRoutes(routeDays, false);
           if (stale()) return;
           _syncMapManualOrderFromPlans(multiPlans);
           for (let i = 0; i < multiPlans.length; i++) {
@@ -7442,8 +7531,6 @@ async function refreshMapAsync() {
             plan = await computeDayPlan(date, false, { asScheduled: true });
           } else if (routeMode === 'opt-scheduled') {
             plan = await computeOptScheduledRoute(date, false);
-          } else if (routeMode === 'opt-free') {
-            plan = await computeUnconstrainedOptimizedRoute(date, false);
           }
           if (stale()) return;
           if (!plan) continue;
