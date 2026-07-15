@@ -1,5 +1,5 @@
 /** @module config — shared SPA constants */
-export const SPA_VERSION = 'v2.25';
+export const SPA_VERSION = 'v2.26';
 export const API_TOKEN = 'jmjk05DK';
 export const UNASSIGNED_GRP = 'UNA';
 export const DAY_ROUTE_COLORS = ['#2C5F7A', '#7B1FA2', '#C0603A', '#5B7232', '#0891B2', '#DC2626', '#8B5CF6', '#059669'];
@@ -48,10 +48,11 @@ export const LS_STATUS_LABELS_MIGRATED = 'italy_hunt_status_labels_v31353';
 export const LS_PROV_MIGRATED = 'italy_hunt_prov_migrated_v3129';
 export const LS_ORPHAN_GRP_MIGRATED = 'italy_hunt_orphan_grp_v3138';
 export const LS_CALC_GPS_MIGRATED = 'italy_hunt_calc_gps_v3145';
+export const LS_DRIVE_TIMES_STALE_BACKFILL = 'italy_hunt_drive_times_stale_v226';
 export const LS_CLIENT_ID = 'italy_hunt_client_id';
 export const SYNC_POLL_MS = 3000;
 
 export const PERSIST_FIELDS = ['status','visitDate','visitTime','schedDate','schedTime','proposedDate','proposedTime','lastContacted',
   'firmName','firmPhone','broker','brokerPhone','brokerEmail',
   'address','gps','gpsPinExact','calcGps','idealistaGps','userPlannedDate','userPlannedTime','notes','realtorUrl','sourceIfl','grp',
-  'commune','town','prov','driveTimes','driveMiles','refAirport','name','price','rooms','size','lat','lng','elevation','elevationCoordsKey'];
+  'commune','town','prov','driveTimes','driveMiles','refAirport','driveTimesCoordsKey','name','price','rooms','size','lat','lng','elevation','elevationCoordsKey'];
