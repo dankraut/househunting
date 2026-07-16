@@ -37,5 +37,8 @@ js/location.js|geocode-town-fallback|Town fallback when street geocode fails
 index.html|computeOptScheduledRoute|Optimized w scheduled map route
 index.html|computeUnconstrainedOptimizedRoute|Unconstrained optimized map route
 index.html|annotateMapRouteStops|Map route implied timing and feasibility
+index.html|formatStopTimeMeta|Stop list shows implied times when appointments ignored
+index.html|getPropScheduleKind|Proposed/Scheduled stop name styling
+index.html|updateMapRouteModeState|Route mode select stays enabled with multi-day selection
 .github/workflows/auto-merge-cursor.yml|waitForSettlePeriod|Auto-merge settle period before production merge
 index.html|formatDurMin|Duration minutes always abbreviated as min
