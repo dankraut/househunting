@@ -4891,7 +4891,7 @@ function isPropIncludedInDayRoute(p, date, opts = {}) {
   const rs = getPropRouteSchedule(p);
   if (rs.date !== date) return false;
   const routeMode = opts.routeMode ?? getMapRouteMode();
-  if (routeMode === 'opt-multiday' || routeMode === 'find-base') return true;
+  if (routeMode === 'opt-multiday' || routeMode === 'opt-free' || routeMode === 'find-base') return true;
   return parseTimeToMinutes(getPropDayTime(p, date)) != null;
 }
 
@@ -5924,6 +5924,40 @@ async function _isMultiDayRouteFeasible(stops, date, endpoints, base, { respectS
   return !plan.returnOver;
 }
 
+/** Constrained multi-day assignment rejects over-budget or infeasible trials; unconstrained accepts all reachable insertions. */
+async function _multiDayAcceptsTrialAssignment(built, ds, trialStops, date, base, { unconstrained, respectTimes }) {
+  if (unconstrained) return true;
+  if (built.usedDrive > ds.budget) return false;
+  return _isMultiDayRouteFeasible(trialStops, date, ds.endpoints, base, { respectScheduledTimes: respectTimes });
+}
+
+async function _forcePackUnconstrainedRemaining(dayStates, remaining, dates, skippedByDate, startEnd) {
+  while (remaining.length) {
+    const p = remaining[0];
+    let placed = false;
+    const orderedDates = [...dates].sort(
+      (a, b) => _multiDayVisitCount(dayStates[a]) - _multiDayVisitCount(dayStates[b]) || a.localeCompare(b)
+    );
+    for (const date of orderedDates) {
+      const ds = dayStates[date];
+      const { start, end } = startEnd[date];
+      const { prop, idx } = await _bestFlexibleInsertion(start, ds.route, [p], end);
+      if (!prop) continue;
+      ds.route.splice(idx, 0, { p, anchor: false });
+      const built = await _builtStopsFromRouteEntries(ds.endpoints, ds.route);
+      ds.usedDrive = built.usedDrive;
+      remaining.shift();
+      placed = true;
+      break;
+    }
+    if (!placed) {
+      const target = _multiDayLightestDate(dayStates, dates);
+      if (target) skippedByDate[target].push({ p, reason: 'unreachable' });
+      remaining.shift();
+    }
+  }
+}
+
 function isPropOnMapManualDayOrder(p, date, dayBase) {
   if (!p || !date) return false;
   const key = _mapOrderKey(dayBase || getMapOrderBaseForDate(date), date);
@@ -6035,10 +6069,8 @@ async function _greedyAssignMultiDay(dayStates, flexible, dates, base, skippedBy
         if (!prop) continue;
         const trialRoute = [...ds.route.slice(0, idx), { p, anchor: false }, ...ds.route.slice(idx)];
         const built = await _builtStopsFromRouteEntries(ds.endpoints, trialRoute);
-        if (built.usedDrive > ds.budget) continue;
         const trialStops = built.stops.map(s => ({ ...s, infeasible: false }));
-        const feasible = await _isMultiDayRouteFeasible(trialStops, date, ds.endpoints, base, { respectScheduledTimes: respectTimes });
-        if (!feasible) continue;
+        if (!await _multiDayAcceptsTrialAssignment(built, ds, trialStops, date, base, { unconstrained, respectTimes })) continue;
         const marginal = built.usedDrive - ds.usedDrive;
         const adjustedCost = _multiDayBalanceCost(marginal, ds);
         if (adjustedCost < bestCost) {
@@ -6055,9 +6087,13 @@ async function _greedyAssignMultiDay(dayStates, flexible, dates, base, skippedBy
     dayStates[bestDate].usedDrive = built.usedDrive;
     remaining.splice(remaining.indexOf(bestProp), 1);
   }
-  for (const p of remaining) {
-    const target = _multiDayLightestDate(dayStates, dates);
-    if (target) skippedByDate[target].push({ p, reason: 'budget or time limit' });
+  if (unconstrained) {
+    await _forcePackUnconstrainedRemaining(dayStates, remaining, dates, skippedByDate, startEnd);
+  } else {
+    for (const p of remaining) {
+      const target = _multiDayLightestDate(dayStates, dates);
+      if (target) skippedByDate[target].push({ p, reason: 'budget or time limit' });
+    }
   }
 }
 
@@ -6092,20 +6128,18 @@ async function _boostMultiDayMinimumVisits(dayStates, dates, base, unconstrained
           if (!prop) continue;
           const trialTarget = [...dsTarget.route.slice(0, idx), { p, anchor: false }, ...dsTarget.route.slice(idx)];
           const builtTarget = await _builtStopsFromRouteEntries(dsTarget.endpoints, trialTarget);
-          if (builtTarget.usedDrive > dsTarget.budget) continue;
           const targetStops = builtTarget.stops.map(s => ({ ...s, infeasible: false }));
-          if (!await _isMultiDayRouteFeasible(targetStops, targetDate, dsTarget.endpoints, base, { respectScheduledTimes: respectTimes })) continue;
+          if (!await _multiDayAcceptsTrialAssignment(builtTarget, dsTarget, targetStops, targetDate, base, { unconstrained, respectTimes })) continue;
 
           const srcRoute = [...dsSrc.route.slice(0, fi), ...dsSrc.route.slice(fi + 1)];
           const builtSrc = await _builtStopsFromRouteEntries(dsSrc.endpoints, srcRoute);
-          if (srcRoute.length && builtSrc.usedDrive > dsSrc.budget) continue;
           if (srcRoute.length) {
             const srcStops = builtSrc.stops.map(s => ({ ...s, infeasible: false }));
-            if (!await _isMultiDayRouteFeasible(srcStops, srcDate, dsSrc.endpoints, base, { respectScheduledTimes: respectTimes })) continue;
+            if (!await _multiDayAcceptsTrialAssignment(builtSrc, dsSrc, srcStops, srcDate, base, { unconstrained, respectTimes })) continue;
           }
 
           const marginal = builtTarget.usedDrive - dsTarget.usedDrive;
-          if (!targetUnderMin && marginal > 90) continue;
+          if (!unconstrained && !targetUnderMin && marginal > 90) continue;
 
           const moveCost = marginal + _multiDayVisitCount(dsTarget) * 10 - _multiDayVisitCount(dsSrc) * 5;
           if (!bestMove || moveCost < bestMove.moveCost) {
@@ -6160,16 +6194,14 @@ async function _rebalanceMultiDay(dayStates, dates, base, unconstrained = false)
       if (!prop) continue;
       const trialLight = [...dsLight.route.slice(0, idx), { p, anchor: false }, ...dsLight.route.slice(idx)];
       const builtLight = await _builtStopsFromRouteEntries(dsLight.endpoints, trialLight);
-      if (builtLight.usedDrive > dsLight.budget) continue;
       const lightStops = builtLight.stops.map(s => ({ ...s, infeasible: false }));
-      if (!await _isMultiDayRouteFeasible(lightStops, light, dsLight.endpoints, base, { respectScheduledTimes: respectTimes })) continue;
+      if (!await _multiDayAcceptsTrialAssignment(builtLight, dsLight, lightStops, light, base, { unconstrained, respectTimes })) continue;
 
       const heavyRoute = [...dayStates[heavy].route.slice(0, fi), ...dayStates[heavy].route.slice(fi + 1)];
       if (heavyRoute.length) {
         const builtHeavy = await _builtStopsFromRouteEntries(dayStates[heavy].endpoints, heavyRoute);
-        if (builtHeavy.usedDrive > dayStates[heavy].budget) continue;
         const heavyStops = builtHeavy.stops.map(s => ({ ...s, infeasible: false }));
-        if (!await _isMultiDayRouteFeasible(heavyStops, heavy, dayStates[heavy].endpoints, base, { respectScheduledTimes: respectTimes })) continue;
+        if (!await _multiDayAcceptsTrialAssignment(builtHeavy, dayStates[heavy], heavyStops, heavy, base, { unconstrained, respectTimes })) continue;
         dayStates[heavy].usedDrive = builtHeavy.usedDrive;
       } else {
         dayStates[heavy].usedDrive = 0;
