@@ -241,6 +241,7 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 .map-legend-inner{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:6px}
 .map-props-row.skipped{opacity:.75;font-style:italic}
 .map-props-section{padding:6px 8px;border-bottom:1px solid var(--border)}
+.map-props-base{font-size:11px;font-weight:700;margin:8px 0 4px;padding:4px 6px;background:var(--bg2);border-radius:4px;border-left:3px solid var(--adriat)}
 .map-props-day{font-size:10px;font-weight:600;color:var(--adriat);margin:6px 0 4px}
 .map-props-row{display:flex;gap:4px;padding:5px 6px;border-bottom:1px solid rgba(0,0,0,.05);cursor:grab;align-items:center;user-select:none}
 .map-props-row:active{cursor:grabbing}
@@ -928,7 +929,7 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
 
 <script type="module" src="js/bootstrap.js"></script>
 <script>
-// ═══ SPA v2.37 — app core (config/api/location in js/) ═══════════════════════════
+// ═══ SPA v2.38 — app core (config/api/location in js/) ═══════════════════════════
 
 const PROPS_RAW=[{"id":30278342,"name":"Tuscania Villa","town":"Tuscania","prov":"VT","price":780,"rooms":10,"size":300,"grp":1,"fco":72,"cdp":80,"caf":140,"spo":105,"man":45,"url":"https://www.idealista.it/immobile/30278342/","lat":42.418,"lng":11.875,"plannedDate":"2026-07-09","plannedTime":"10:30 AM"},{"id":34998463,"name":"Vetralla Villa","town":"Vetralla","prov":"VT","price":670,"rooms":12,"size":509,"grp":1,"fco":75,"cdp":95,"caf":155,"spo":95,"man":70,"url":"https://www.idealista.it/immobile/34998463/","lat":42.32,"lng":12.05,"plannedDate":"2026-07-09","plannedTime":"11:30 AM"},{"id":35809714,"name":"Canino Villa","town":"Canino","prov":"VT","price":870,"rooms":7,"size":380,"grp":1,"fco":78,"cdp":80,"caf":130,"spo":115,"man":30,"url":"https://www.idealista.it/immobile/35809714/","lat":42.468,"lng":11.744,"plannedDate":"2026-07-09","plannedTime":"9:30 AM"},{"id":26448701,"name":"Montecastrilli Villa","town":"Montecastrilli","prov":"TR","price":820,"rooms":19,"size":480,"grp":1,"fco":85,"cdp":70,"caf":120,"spo":30,"man":105,"url":"https://www.idealista.it/immobile/26448701/","lat":42.649,"lng":12.487,"plannedDate":"2026-07-06","plannedTime":"11:00 AM"},{"id":21658129,"name":"Manciano SP159","town":"Manciano","prov":"GR","price":850,"rooms":18,"size":379,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":0,"url":"https://www.idealista.it/immobile/21658129/","lat":42.595,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"8:45 AM"},{"id":18085022,"name":"Manciano Scansanese","town":"Manciano","prov":"GR","price":870,"rooms":10,"size":520,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/18085022/","lat":42.605,"lng":11.52,"plannedDate":"2026-07-10","plannedTime":"9:30 AM"},{"id":33646557,"name":"Manciano Montemerano","town":"Manciano","prov":"GR","price":698,"rooms":8,"size":430,"grp":1,"fco":95,"cdp":75,"caf":125,"spo":130,"man":10,"url":"https://www.idealista.it/immobile/33646557/","lat":42.544,"lng":11.57,"plannedDate":"2026-07-10","plannedTime":"10:20 AM"},{"id":32530331,"name":"Manciano Saturnia","town":"Manciano","prov":"GR","price":720,"rooms":10,"size":395,"grp":1,"fco":95,"cdp":80,"caf":125,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/32530331/","lat":42.555,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"11:10 AM"},{"id":27864548,"name":"Baschi Villa","town":"Baschi","prov":"TR","price":780,"rooms":10,"size":580,"grp":1,"fco":99,"cdp":45,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/27864548/","lat":42.675,"lng":12.212,"plannedDate":"2026-06-26","plannedTime":"12:15 PM"},{"id":34980477,"name":"Baschi Civitella","town":"Baschi","prov":"TR","price":990,"rooms":15,"size":450,"grp":1,"fco":99,"cdp":50,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/34980477/","lat":42.67,"lng":12.205,"plannedDate":"2026-06-26","plannedTime":"1:05 PM"},{"id":35860173,"name":"Todi Piagge Casale","town":"Todi","prov":"PG","price":825,"rooms":10,"size":300,"grp":1,"fco":102,"cdp":50,"caf":100,"spo":35,"man":100,"url":"https://www.idealista.it/immobile/35860173/","lat":42.775,"lng":12.412,"plannedDate":"2026-07-07","plannedTime":"9:00 AM"},{"id":35822412,"name":"Todi Collarezzo","town":"Todi","prov":"PG","price":850,"rooms":10,"size":351,"grp":1,"fco":102,"cdp":55,"caf":100,"spo":35,"man":105,"url":"https://www.idealista.it/immobile/35822412/","lat":42.782,"lng":12.43,"plannedDate":"2026-07-07","plannedTime":"10:00 AM"},{"id":34024712,"name":"San Venanzo Civitella","town":"San Venanzo","prov":"TR","price":845,"rooms":18,"size":815,"grp":1,"fco":105,"cdp":30,"caf":80,"spo":55,"man":90,"url":"https://www.idealista.it/immobile/34024712/","lat":42.87,"lng":12.265,"plannedDate":"","plannedTime":""},{"id":33903982,"name":"Scansano Fonte Guerra","town":"Scansano","prov":"GR","price":790,"rooms":12,"size":475,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/33903982/","lat":42.683,"lng":11.34,"plannedDate":"2026-07-10","plannedTime":"12:30 PM"},{"id":35951463,"name":"Scansano Montorgiali","town":"Scansano","prov":"GR","price":960,"rooms":8,"size":390,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35951463/","lat":42.69,"lng":11.332,"plannedDate":"2026-07-09","plannedTime":"3:00 PM"},{"id":35048730,"name":"Scansano Agriturismo","town":"Scansano","prov":"GR","price":630,"rooms":7,"size":390,"grp":1,"fco":105,"cdp":85,"caf":120,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35048730/","lat":42.676,"lng":11.321,"plannedDate":"2026-07-09","plannedTime":"3:50 PM"},{"id":35397327,"name":"Sorano Piancasale","town":"Sorano","prov":"GR","price":700,"rooms":24,"size":480,"grp":1,"fco":108,"cdp":50,"caf":100,"spo":110,"man":25,"url":"https://www.idealista.it/immobile/35397327/","lat":42.685,"lng":11.713,"plannedDate":"","plannedTime":""},{"id":21287742,"name":"Ferentillo Rustico","town":"Ferentillo","prov":"TR","price":645,"rooms":12,"size":650,"grp":1,"fco":110,"cdp":100,"caf":145,"spo":20,"man":140,"url":"https://www.idealista.it/immobile/21287742/","lat":42.623,"lng":12.798,"plannedDate":"2026-07-06","plannedTime":"9:00 AM"},{"id":10679967,"name":"Semproniano Rustico","town":"Semproniano","prov":"GR","price":720,"rooms":11,"size":355,"grp":1,"fco":110,"cdp":70,"caf":115,"spo":130,"man":5,"url":"https://www.idealista.it/immobile/10679967/","lat":42.623,"lng":11.537,"plannedDate":"","plannedTime":""},{"id":34882496,"name":"Spoleto Baiano","town":"Spoleto","prov":"PG","price":980,"rooms":17,"size":451,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":135,"url":"https://www.idealista.it/immobile/34882496/","lat":42.722,"lng":12.718,"plannedDate":"2026-07-05","plannedTime":"8:45 AM"},{"id":30865904,"name":"Spoleto Terzo La Pieve","town":"Spoleto","prov":"PG","price":900,"rooms":11,"size":350,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":130,"url":"https://www.idealista.it/immobile/30865904/","lat":42.715,"lng":12.708,"plannedDate":"2026-07-05","plannedTime":"9:45 AM"},{"id":35103506,"name":"Montefalco Fabbri","town":"Montefalco","prov":"PG","price":910,"rooms":16,"size":450,"grp":1,"fco":121,"cdp":70,"caf":105,"spo":25,"man":130,"url":"https://www.idealista.it/immobile/35103506/","lat":42.89,"lng":12.652,"plannedDate":"2026-07-04","plannedTime":"12:30 PM"},{"id":35432103,"name":"Deruta Tiberina","town":"Deruta","prov":"PG","price":790,"rooms":12,"size":320,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/35432103/","lat":42.982,"lng":12.419,"plannedDate":"2026-07-04","plannedTime":"10:00 AM"},{"id":33533240,"name":"Deruta Tiberina 203","town":"Deruta","prov":"PG","price":685,"rooms":22,"size":611,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/33533240/","lat":42.981,"lng":12.421,"plannedDate":"2026-07-04","plannedTime":"10:50 AM"},{"id":27988041,"name":"Deruta Centro Casale","town":"Deruta","prov":"PG","price":650,"rooms":12,"size":400,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/27988041/","lat":42.982,"lng":12.416,"plannedDate":"","plannedTime":""},{"id":29370809,"name":"Deruta Castelleone","town":"Deruta","prov":"PG","price":890,"rooms":12,"size":316,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/29370809/","lat":42.984,"lng":12.413,"plannedDate":"","plannedTime":""},{"id":34783987,"name":"Bettona Villa","town":"Bettona","prov":"PG","price":850,"rooms":20,"size":484,"grp":1,"fco":129,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/34783987/","lat":42.992,"lng":12.43,"plannedDate":"2026-06-27","plannedTime":"11:00 AM"},{"id":34843857,"name":"Santa Fiora Monte Amiata","town":"Santa Fiora","prov":"GR","price":978,"rooms":12,"size":520,"grp":1,"fco":130,"cdp":50,"caf":85,"spo":125,"man":40,"url":"https://www.idealista.it/immobile/34843857/","lat":42.834,"lng":11.587,"plannedDate":"","plannedTime":""},{"id":34979131,"name":"Corciano Migiana","town":"Corciano","prov":"PG","price":830,"rooms":13,"size":700,"grp":1,"fco":133,"cdp":40,"caf":55,"spo":75,"man":115,"url":"https://www.idealista.it/immobile/34979131/","lat":43.11,"lng":12.289,"plannedDate":"","plannedTime":""},{"id":35300665,"name":"Perugia Olmo","town":"Perugia","prov":"PG","price":675,"rooms":5,"size":425,"grp":2,"fco":138,"cdp":50,"caf":70,"spo":60,"man":125,"url":"https://www.idealista.it/immobile/35300665/","lat":43.085,"lng":12.442,"plannedDate":"2026-06-25","plannedTime":"12:30 PM"},{"id":35456752,"name":"Perugia Eugubina","town":"Perugia","prov":"PG","price":650,"rooms":21,"size":953,"grp":2,"fco":138,"cdp":50,"caf":60,"spo":70,"man":125,"url":"https://www.idealista.it/immobile/35456752/","lat":43.138,"lng":12.408,"plannedDate":"2026-06-25","plannedTime":"1:15 PM"},{"id":32456550,"name":"Perugia Colli Albani","town":"Perugia","prov":"PG","price":650,"rooms":10,"size":530,"grp":2,"fco":138,"cdp":50,"caf":65,"spo":65,"man":125,"url":"https://www.idealista.it/immobile/32456550/","lat":43.093,"lng":12.415,"plannedDate":"2026-06-25","plannedTime":"2:15 PM"},{"id":16393910,"name":"Perugia Solfagnano","town":"Perugia","prov":"PG","price":1100,"rooms":16,"size":725,"grp":2,"fco":138,"cdp":45,"caf":50,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/16393910/","lat":43.155,"lng":12.33,"plannedDate":"2026-06-26","plannedTime":"2:30 PM"},{"id":34105542,"name":"Perugia Monte Tezio","town":"Perugia","prov":"PG","price":890,"rooms":10,"size":500,"grp":2,"fco":138,"cdp":45,"caf":55,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/34105542/","lat":43.148,"lng":12.34,"plannedDate":"2026-06-26","plannedTime":"3:15 PM"},{"id":33928859,"name":"Assisi Porziano","town":"Assisi","prov":"PG","price":580,"rooms":12,"size":485,"grp":2,"fco":148,"cdp":70,"caf":85,"spo":50,"man":140,"url":"https://www.idealista.it/immobile/33928859/","lat":43.07,"lng":12.612,"plannedDate":"2026-07-03","plannedTime":"11:30 AM"},{"id":35247592,"name":"Lisciano Niccone Villa","town":"Lisciano Niccone","prov":"PG","price":1050,"rooms":12,"size":520,"grp":2,"fco":148,"cdp":50,"caf":25,"spo":105,"man":120,"url":"https://www.idealista.it/immobile/35247592/","lat":43.265,"lng":12.125,"plannedDate":"2026-06-27","plannedTime":"9:30 AM"},{"id":35456269,"name":"Umbertide Casale","town":"Umbertide","prov":"PG","price":1150,"rooms":15,"size":700,"grp":2,"fco":148,"cdp":60,"caf":45,"spo":95,"man":140,"url":"https://www.idealista.it/immobile/35456269/","lat":43.297,"lng":12.332,"plannedDate":"2026-07-03","plannedTime":"8:45 AM"},{"id":34939305,"name":"Umbertide Preggio","town":"Umbertide","prov":"PG","price":895,"rooms":16,"size":320,"grp":2,"fco":148,"cdp":60,"caf":40,"spo":100,"man":135,"url":"https://www.idealista.it/immobile/34939305/","lat":43.312,"lng":12.29,"plannedDate":"2026-07-03","plannedTime":"9:30 AM"},{"id":23044407,"name":"Foiano della Chiana","town":"Foiano","prov":"AR","price":750,"rooms":12,"size":500,"grp":2,"fco":150,"cdp":50,"caf":20,"spo":125,"man":105,"url":"https://www.idealista.it/immobile/23044407/","lat":43.251,"lng":11.819,"plannedDate":"2026-06-30","plannedTime":"11:30 AM"},{"id":33291507,"name":"Cortona Fratticciola","town":"Cortona","prov":"AR","price":870,"rooms":10,"size":311,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":110,"man":115,"url":"https://www.idealista.it/immobile/33291507/","lat":43.264,"lng":12.002,"plannedDate":"2026-06-28","plannedTime":"11:00 AM"},{"id":33311877,"name":"Cortona Cegliolo Villa","town":"Cortona","prov":"AR","price":980,"rooms":11,"size":400,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/33311877/","lat":43.27,"lng":12.0,"plannedDate":"2026-06-30","plannedTime":"10:30 AM"},{"id":35710302,"name":"Cortona Cegliolo Casale","town":"Cortona","prov":"AR","price":590,"rooms":7,"size":460,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/35710302/","lat":43.272,"lng":11.992,"plannedDate":"","plannedTime":""},{"id":24846822,"name":"CaF Val di Chio","town":"Castiglion Fiorentino","prov":"AR","price":1000,"rooms":12,"size":760,"grp":2,"fco":155,"cdp":55,"caf":0,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/24846822/","lat":43.335,"lng":11.942,"plannedDate":"2026-06-28","plannedTime":"8:45 AM"},{"id":34980495,"name":"CaF Santa Cristina","town":"Castiglion Fiorentino","prov":"AR","price":900,"rooms":12,"size":800,"grp":2,"fco":155,"cdp":55,"caf":5,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/34980495/","lat":43.325,"lng":11.938,"plannedDate":"2026-06-28","plannedTime":"9:30 AM"},{"id":31961655,"name":"Monteroni d'Arbia","town":"Monteroni d'Arbia","prov":"SI","price":980,"rooms":12,"size":480,"grp":2,"fco":155,"cdp":75,"caf":60,"spo":160,"man":95,"url":"https://www.idealista.it/immobile/31961655/","lat":43.227,"lng":11.415,"plannedDate":"2026-07-01","plannedTime":"12:00 PM"},{"id":26833080,"name":"Capolona Pieve SG","town":"Capolona","prov":"AR","price":890,"rooms":9,"size":420,"grp":2,"fco":158,"cdp":90,"caf":35,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/26833080/","lat":43.559,"lng":11.86,"plannedDate":"2026-07-01","plannedTime":"9:45 AM"},{"id":35651252,"name":"Capolona Caliano","town":"Capolona","prov":"AR","price":595,"rooms":10,"size":350,"grp":2,"fco":158,"cdp":90,"caf":30,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/35651252/","lat":43.554,"lng":11.856,"plannedDate":"2026-07-01","plannedTime":"9:00 AM"}];
 const _propsRawById = new Map(PROPS_RAW.map(p => [p.id, p]));
@@ -980,6 +981,9 @@ let _mapOptimizedOrder = {};
 let _mapRouteManual = false;
 let _mapFindBaseResult = null;
 let _mapTempUnscheduled = new Set();
+let _schedMapState = { manualOrder: {}, excluded: {}, tempUnscheduled: new Set() };
+let _schedMapRouteManual = false;
+const SCHED_MAP_SESSION_KEY = 'hh_sched_map_state';
 let _mapSortables = {};
 let _propLegPopupEl = null;
 let _propLegPopupTimer = null;
@@ -1594,13 +1598,20 @@ async function refreshMapContextDriveTimes() {
 }
 
 function refreshMapFromStops() {
+  if (isMapAsScheduledMode()) {
+    _schedMapRouteManual = true;
+    syncMapManualOrdersFromDom();
+    _saveSchedMapSession();
+    refreshMap({ preserveView: true });
+    return;
+  }
   _mapRouteManual = true;
   _driveLegCache.clear();
   refreshMap({ preserveView: true });
 }
 
 function onMapParamsChange() {
-  recalculateMapRoutes();
+  _refreshMapAfterParamsChange();
 }
 
 function onMapStatusFilterChange() {
@@ -1632,6 +1643,84 @@ function _saveStatusFilterSession() {
       props: document.getElementById('f-status')?.value ?? DEFAULT_PROPS_STATUS_FILTER,
     }));
   } catch (e) {}
+}
+
+function _loadSchedMapSession() {
+  try {
+    const raw = sessionStorage.getItem(SCHED_MAP_SESSION_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    _schedMapState.manualOrder = data.manualOrder && typeof data.manualOrder === 'object' ? data.manualOrder : {};
+    _schedMapState.excluded = {};
+    if (data.excluded && typeof data.excluded === 'object') {
+      for (const [date, ids] of Object.entries(data.excluded)) {
+        _schedMapState.excluded[date] = new Set(Array.isArray(ids) ? ids : []);
+      }
+    }
+    _schedMapState.tempUnscheduled = new Set(Array.isArray(data.tempUnscheduled) ? data.tempUnscheduled : []);
+  } catch (e) {}
+}
+
+function _saveSchedMapSession() {
+  if (!isMapAsScheduledMode()) return;
+  try {
+    sessionStorage.setItem(SCHED_MAP_SESSION_KEY, JSON.stringify({
+      manualOrder: _schedMapState.manualOrder,
+      excluded: Object.fromEntries(
+        Object.entries(_schedMapState.excluded).map(([d, set]) => [d, [...set]])
+      ),
+      tempUnscheduled: [..._schedMapState.tempUnscheduled],
+    }));
+  } catch (e) {}
+}
+
+function _activeMapManualOrderStore() {
+  return isMapAsScheduledMode() ? _schedMapState.manualOrder : _mapManualOrder;
+}
+
+function _activeMapTempUnscheduledStore() {
+  return isMapAsScheduledMode() ? _schedMapState.tempUnscheduled : _mapTempUnscheduled;
+}
+
+function getMapModeManualOrder(baseF, date) {
+  return _activeMapManualOrderStore()[_mapOrderKey(baseF, date)];
+}
+
+function getMapModeExcludedSet(date, mapMode) {
+  if (!date) return new Set();
+  if (mapMode && isMapAsScheduledMode()) {
+    if (!_schedMapState.excluded[date]) _schedMapState.excluded[date] = new Set();
+    return _schedMapState.excluded[date];
+  }
+  return getDpExcludedSet(date);
+}
+
+function resetScheduledMapView() {
+  _schedMapState = { manualOrder: {}, excluded: {}, tempUnscheduled: new Set() };
+  _schedMapRouteManual = false;
+  try { sessionStorage.removeItem(SCHED_MAP_SESSION_KEY); } catch (e) {}
+  refreshMap({ preserveView: true });
+}
+
+function updateMapResetButton() {
+  const btn = document.getElementById('map-reset-btn');
+  if (!btn) return;
+  if (isMapAsScheduledMode()) {
+    btn.textContent = 'Reset';
+    btn.title = 'Clear Scheduled stop-order changes and redraw map';
+    btn.onclick = resetScheduledMapView;
+  } else {
+    btn.textContent = 'Recalculate';
+    btn.title = isMapFindBaseMode()
+      ? 'Recompute proposed base location and schedule'
+      : 'Recalculate routes and redraw map';
+    btn.onclick = recalculateMapRoutes;
+  }
+}
+
+function _refreshMapAfterParamsChange() {
+  if (isMapAsScheduledMode()) refreshMap({ preserveView: true });
+  else recalculateMapRoutes();
 }
 
 function applyStatusFilterDefaults() {
@@ -1716,7 +1805,7 @@ function applyDefaultDpDay() {
 }
 
 function isMapTempUnscheduled(p) {
-  return !!(p && _mapTempUnscheduled.has(p.id));
+  return !!(p && _activeMapTempUnscheduledStore().has(p.id));
 }
 
 function hasPropTimeOnDay(p, date) {
@@ -2204,6 +2293,7 @@ function startSyncPoll() {
 
 async function loadFromStorage() {
   _ensureClientId();
+  _loadSchedMapSession();
   _syncStatus = 'loading';
   updateSyncStatus();
   let initOk = true;
@@ -3846,7 +3936,7 @@ function refreshGeoViewsAfterPropMapEdit(p, prev = {}) {
   const schedPanel = document.getElementById('tab-schedule');
   if (schedPanel?.classList.contains('active')) renderSchedule();
   if (_mapInited) {
-    if (_propMapEditChanged(p, prev)) recalculateMapRoutes();
+    if (_propMapEditChanged(p, prev)) _refreshMapAfterParamsChange();
     else refreshMap({ preserveView: true });
   }
 }
@@ -4979,10 +5069,7 @@ function getMapAllDaysForSelectedBases() {
 }
 
 function getMapEffectiveRouteDays() {
-  if (isMapAsScheduledMode()) {
-    const days = getMapRouteDays();
-    return days.length === 1 ? days : [];
-  }
+  if (isMapAsScheduledMode()) return getMapRouteDays();
   if (isMapUnconstrainedMode() && _mapSelectedBases.size) {
     return getMapAllDaysForSelectedBases();
   }
@@ -5008,8 +5095,8 @@ function getDpExcludedSet(date) {
 
 function isPropExcludedFromDayRoute(p, date, opts = {}) {
   if (!p || !date) return true;
-  if (opts.mapMode && _mapTempUnscheduled.has(p.id)) return true;
-  if (getDpExcludedSet(date).has(p.id)) return true;
+  if (opts.mapMode && _activeMapTempUnscheduledStore().has(p.id)) return true;
+  if (getMapModeExcludedSet(date, opts.mapMode).has(p.id)) return true;
   return false;
 }
 
@@ -5018,7 +5105,11 @@ function isPropIncludedInDayRoute(p, date, opts = {}) {
   if (!p || !date || isPropExcludedFromDayRoute(p, date, opts)) return false;
   const baseF = opts.baseF || getMapOrderBaseForDate(date) || getDayForDate(date)?.base || '';
   const orderKey = _mapOrderKey(getMapOrderBaseForDate(date) || baseF, date);
-  const manual = opts.manualOrder ?? _mapManualOrder[orderKey];
+  const manual = opts.manualOrder ?? (
+    isMapAsScheduledMode()
+      ? getMapModeManualOrder(getMapOrderBaseForDate(date) || baseF, date)
+      : _mapManualOrder[orderKey]
+  );
   if (manual?.includes(p.id)) return true;
   if (getMapRouteMode() === 'opt-multiday' || getMapRouteMode() === 'opt-free' || getMapRouteMode() === 'find-base') {
     const opt = _mapOptimizedOrder[orderKey];
@@ -5033,8 +5124,11 @@ function isPropIncludedInDayRoute(p, date, opts = {}) {
 
 function getRoutePlanProperties(date, baseAbbr, opts = {}) {
   const baseF = baseAbbr || getMapOrderBaseForDate(date) || getDayForDate(date)?.base || '';
-  const manual = opts.manualOrder
-    ?? _mapManualOrder[_mapOrderKey(getMapOrderBaseForDate(date) || baseF, date)];
+  const manual = opts.manualOrder ?? (
+    isMapAsScheduledMode()
+      ? getMapModeManualOrder(getMapOrderBaseForDate(date) || baseF, date)
+      : _mapManualOrder[_mapOrderKey(getMapOrderBaseForDate(date) || baseF, date)]
+  );
   const ids = new Set();
   const result = [];
   const add = p => {
@@ -5219,6 +5313,51 @@ function _pruneDpExcluded(date, validIds) {
   for (const id of [...ex]) {
     if (!validIds.has(id)) ex.delete(id);
   }
+}
+
+function buildScheduledDisplayPlan(date, dayBase, lineColor) {
+  const day = getDayForDate(date);
+  if (!day) return null;
+  const base = day.baseObj || getBase(dayBase);
+  const baseF = base?.abbr || dayBase;
+  const manual = getMapModeManualOrder(baseF, date);
+  const rawProps = getRoutePlanProperties(date, baseF, { mapMode: true, routeMode: 'timed' });
+  const props = orderAsScheduledProperties(rawProps, date, manual);
+  const timed = props.filter(p => parseTimeToMinutes(getPropDayTime(p, date)) != null);
+  const stops = timed.map((p, i) => ({ p, seq: i + 1, drive: null, infeasible: false }));
+  return {
+    date, day, base, endpoints: null, stops, skipped: [], excluded: [],
+    mode: 'as-scheduled', lineColor,
+    departBaseMin: null, totalDriveMin: null, infeasibleCount: 0,
+  };
+}
+
+function getMapPanelBaseGroups(baseSet, panelDayDates) {
+  const dateSet = panelDayDates?.length ? new Set(panelDayDates) : null;
+  const groups = [];
+  for (const abbr of [...(baseSet || _mapSelectedBases)].sort()) {
+    if (abbr === UNASSIGNED_GRP) continue;
+    const base = getBase(abbr);
+    if (!base) continue;
+    const days = getDaysForBase(abbr)
+      .map(d => d.date)
+      .filter(d => !dateSet || dateSet.has(d));
+    groups.push({ abbr, base, days });
+  }
+  if (baseSet?.has(UNASSIGNED_GRP)) {
+    groups.push({
+      abbr: UNASSIGNED_GRP,
+      base: getBase(UNASSIGNED_GRP) || { abbr: UNASSIGNED_GRP, name: 'Unassigned' },
+      days: [],
+    });
+  }
+  return groups;
+}
+
+function getMapUnscheduledForBase(abbr, unscheduled) {
+  return (unscheduled || []).filter(p =>
+    abbr === UNASSIGNED_GRP ? isUnassignedProp(p) : p.grp === abbr
+  );
 }
 
 async function computeDayPlan(date, bustCache = false, opts = {}) {
@@ -7214,7 +7353,7 @@ function onMapBaseCheckChange() {
   updateMapRouteModeState();
   updateFindBaseApplyBtn();
   renderMapPropsPanel({ baseSet: _mapSelectedBases, dayPlans: [], unscheduled: [], listed: [], shadedIds: new Set(), loading: !!_mapSelectedBases.size });
-  recalculateMapRoutes();
+  _refreshMapAfterParamsChange();
 }
 
 function isUnassignedProp(p) {
@@ -7339,14 +7478,16 @@ function getMapUnscheduledProps(baseSet, statusFilter, dayFilter, routeMode, day
       if (shouldCountPropInMapDayColumn(s.p, date, dayBase)) inDayColumn.add(s.p.id);
     }
     for (const sk of plan.skipped || []) {
-      if (!_mapTempUnscheduled.has(sk.p.id) && getPropRouteDate(sk.p)) inDayColumn.add(sk.p.id);
+      if (!_activeMapTempUnscheduledStore().has(sk.p.id) && getPropRouteDate(sk.p)) inDayColumn.add(sk.p.id);
     }
   }
-  if (routeMode === 'opt-multiday' || routeMode === 'opt-free' || routeMode === 'find-base' || _mapRouteManual) {
+  if (routeMode === 'opt-multiday' || routeMode === 'opt-free' || routeMode === 'find-base' || _mapRouteManual || (routeMode === 'timed' && _schedMapRouteManual)) {
     for (const date of getMapPanelDayDates()) {
       const dayBase = getMapOrderBaseForDate(date);
       const orderKey = _mapOrderKey(dayBase, date);
-      const order = _mapRouteManual ? _mapManualOrder[orderKey] : _mapOptimizedOrder[orderKey];
+      const order = (routeMode === 'timed' && _schedMapRouteManual)
+        ? getMapModeManualOrder(dayBase, date)
+        : (_mapRouteManual ? _mapManualOrder[orderKey] : _mapOptimizedOrder[orderKey]);
       for (const id of (order || [])) {
         const p = getProp(id);
         if (!p) continue;
@@ -7362,7 +7503,7 @@ function getMapUnscheduledProps(baseSet, statusFilter, dayFilter, routeMode, day
   return state.props.filter(p => {
     if (!isPropMapEligible(p, statusFilter)) return false;
     if (!propMatchesMapBases(p, baseSet)) return false;
-    if (_mapTempUnscheduled.has(p.id)) return true;
+    if (_activeMapTempUnscheduledStore().has(p.id)) return true;
     if (inDayColumn.has(p.id)) return false;
     if (routeMode === 'timed') {
       if (getPropRouteDate(p)) return false;
@@ -7457,8 +7598,7 @@ function resolveMapMarkerVisuals(p, ctx, plan, stop) {
   } else if (plan?.lineColor) {
     fill = plan.lineColor;
   }
-  const timed = date && hasPropTimeOnDay(p, date);
-  const seq = timed && stop?.seq != null ? stop.seq : null;
+  const seq = stop?.seq != null ? stop.seq : null;
   return {
     fill,
     dayColor,
@@ -7566,6 +7706,7 @@ function getMapRouteDays() {
   if (_mapSelectedDays.size) return [..._mapSelectedDays].sort();
   if (!_mapSelectedBases.size) return [];
   const days = getDaysForMapBases(_mapSelectedBases);
+  if (isMapAsScheduledMode()) return days.map(d => d.date);
   return days.length === 1 ? [days[0].date] : [];
 }
 
@@ -7590,7 +7731,7 @@ function _mapPropRowLocked(p) {
 
 function _mapDropZoneDate(el) {
   if (!el) return null;
-  if (el.id === 'map-props-unsched') return '';
+  if (el.id === 'map-props-unsched' || el.classList?.contains('map-props-unsched-base')) return '';
   if (el.id === 'map-props-listed') return null;
   if (el.classList?.contains('map-props-not-included') && el.dataset?.date) return el.dataset.date;
   if (el.dataset?.date != null && el.dataset.date !== '') return el.dataset.date;
@@ -7601,7 +7742,7 @@ function _mapDropZoneDate(el) {
 
 function _mapDropZoneKind(el) {
   if (!el) return '';
-  if (el.id === 'map-props-unsched') return 'unsched';
+  if (el.id === 'map-props-unsched' || el.classList?.contains('map-props-unsched-base')) return 'unsched';
   if (el.classList?.contains('map-props-not-included')) return 'not-included';
   if (el.classList?.contains('map-props-sort-timed')) return 'timed';
   return 'day';
@@ -7624,7 +7765,7 @@ function getMapDayNotIncludedProps(date, baseF, statusFilter, dayPlans) {
   if (plan) {
     for (const s of plan.stops || []) inRoute.add(s.p.id);
   }
-  const excluded = getDpExcludedSet(date);
+  const excluded = getMapModeExcludedSet(date, true);
   const result = [];
   const seen = new Set();
   for (const p of getDayProperties(date, baseF)) {
@@ -7649,7 +7790,7 @@ function buildMapDayRowsWithoutPlan(date, baseF, statusFilter) {
   const timed = props.filter(p => parseTimeToMinutes(getPropDayTime(p, date)) != null);
   const notIncluded = getDayProperties(date, baseF).filter(p => {
     if (!isPropMapEligible(p, statusFilter) || !propMatchesMapBaseForPlan(p, baseF, date)) return false;
-    return isPropDateOnlyOnDay(p, date) || getDpExcludedSet(date).has(p.id);
+    return isPropDateOnlyOnDay(p, date) || getMapModeExcludedSet(date, true).has(p.id);
   });
   return {
     timed: timed.map((p, i) => ({ p, seq: i + 1, drive: null, infeasible: false })),
@@ -7659,6 +7800,8 @@ function buildMapDayRowsWithoutPlan(date, baseF, statusFilter) {
 
 function syncMapManualOrdersFromDom() {
   const inRoute = new Set();
+  const store = _activeMapManualOrderStore();
+  const tempStore = _activeMapTempUnscheduledStore();
   document.querySelectorAll('.map-props-sort-timed').forEach(el => {
     const date = el.dataset.date;
     if (!date) return;
@@ -7666,17 +7809,23 @@ function syncMapManualOrdersFromDom() {
     const ids = [...new Set([...el.querySelectorAll('.map-props-row')].map(r => parseInt(r.dataset.pid, 10)).filter(Boolean))];
     ids.forEach(id => inRoute.add(id));
     const key = _mapOrderKey(orderBase, date);
-    if (ids.length) _mapManualOrder[key] = ids;
-    else delete _mapManualOrder[key];
+    if (ids.length) store[key] = ids;
+    else delete store[key];
   });
-  for (const pid of [..._mapTempUnscheduled]) {
-    if (inRoute.has(pid)) _mapTempUnscheduled.delete(pid);
+  for (const pid of [...tempStore]) {
+    if (inRoute.has(pid)) tempStore.delete(pid);
   }
   const unsched = document.getElementById('map-props-unsched');
   if (unsched) {
     const unschedIds = new Set([...unsched.querySelectorAll('.map-props-row')].map(r => parseInt(r.dataset.pid, 10)).filter(Boolean));
-    for (const pid of unschedIds) _mapTempUnscheduled.add(pid);
+    for (const pid of unschedIds) tempStore.add(pid);
   }
+  document.querySelectorAll('.map-props-unsched-base').forEach(el => {
+    const abbr = el.dataset.base || '';
+    const unschedIds = new Set([...el.querySelectorAll('.map-props-row')].map(r => parseInt(r.dataset.pid, 10)).filter(Boolean));
+    for (const pid of unschedIds) tempStore.add(pid);
+  });
+  if (isMapAsScheduledMode()) _saveSchedMapSession();
 }
 
 function _clearMapDayPlanCache(date) {
@@ -7693,34 +7842,40 @@ function _clearMapDayPlanCache(date) {
 }
 
 function _removePidFromMapManualOrders(pid) {
-  for (const key of Object.keys(_mapManualOrder)) {
-    _mapManualOrder[key] = _mapManualOrder[key].filter(id => id !== pid);
-    if (!_mapManualOrder[key].length) delete _mapManualOrder[key];
+  const store = _activeMapManualOrderStore();
+  for (const key of Object.keys(store)) {
+    store[key] = store[key].filter(id => id !== pid);
+    if (!store[key].length) delete store[key];
   }
+  if (isMapAsScheduledMode()) _saveSchedMapSession();
 }
 
 function _removePidFromOtherDayManualOrders(pid, keepDate) {
-  for (const key of Object.keys(_mapManualOrder)) {
+  const store = _activeMapManualOrderStore();
+  for (const key of Object.keys(store)) {
     const date = key.split('|')[1];
     if (!date || date === keepDate) continue;
-    _mapManualOrder[key] = _mapManualOrder[key].filter(id => id !== pid);
-    if (!_mapManualOrder[key].length) delete _mapManualOrder[key];
+    store[key] = store[key].filter(id => id !== pid);
+    if (!store[key].length) delete store[key];
   }
+  if (isMapAsScheduledMode()) _saveSchedMapSession();
 }
 
 function pruneMapManualOrders() {
-  for (const key of Object.keys(_mapManualOrder)) {
+  const store = _activeMapManualOrderStore();
+  for (const key of Object.keys(store)) {
     const date = key.split('|')[1];
     if (!date) continue;
-    _mapManualOrder[key] = _mapManualOrder[key].filter((id, idx, arr) => {
+    store[key] = store[key].filter((id, idx, arr) => {
       if (arr.indexOf(id) !== idx) return false;
       const p = getProp(id);
       if (!p) return false;
+      if (isMapAsScheduledMode()) return true;
       if (_mapRouteManual || getMapRouteMode() === 'opt-multiday' || getMapRouteMode() === 'opt-free' || getMapRouteMode() === 'find-base') return true;
       const rd = getPropRouteDate(p);
       return !rd || rd === date;
     });
-    if (!_mapManualOrder[key].length) delete _mapManualOrder[key];
+    if (!store[key].length) delete store[key];
   }
 }
 
@@ -7740,19 +7895,20 @@ function onMapPropsDrop(evt) {
       refreshMapFromStops();
       return;
     }
-    if (!isPropDateOnlyOnDay(p, toDate)) getDpExcludedSet(toDate).add(pid);
+    if (!isPropDateOnlyOnDay(p, toDate)) getMapModeExcludedSet(toDate, true).add(pid);
     const key = _mapOrderKey(getMapOrderBaseForDate(toDate), toDate);
-    if (_mapManualOrder[key]) {
-      _mapManualOrder[key] = _mapManualOrder[key].filter(id => id !== pid);
-      if (!_mapManualOrder[key].length) delete _mapManualOrder[key];
+    const store = _activeMapManualOrderStore();
+    if (store[key]) {
+      store[key] = store[key].filter(id => id !== pid);
+      if (!store[key].length) delete store[key];
     }
     syncMapManualOrdersFromDom();
     refreshMapFromStops();
     return;
   }
 
-  if (toKind === 'unsched' || (toDate === '' && evt.to?.id === 'map-props-unsched')) {
-    _mapTempUnscheduled.add(pid);
+  if (toKind === 'unsched' || (toDate === '' && (evt.to?.id === 'map-props-unsched' || evt.to?.classList?.contains('map-props-unsched-base')))) {
+    _activeMapTempUnscheduledStore().add(pid);
     _removePidFromMapManualOrders(pid);
     syncMapManualOrdersFromDom();
     refreshMapFromStops();
@@ -7760,11 +7916,11 @@ function onMapPropsDrop(evt) {
   }
 
   if (fromKind === 'not-included' && fromDate) {
-    getDpExcludedSet(fromDate).delete(pid);
+    getMapModeExcludedSet(fromDate, true).delete(pid);
   }
 
-  if (fromKind === 'unsched' || (fromDate === '' && evt.from?.id === 'map-props-unsched')) {
-    _mapTempUnscheduled.delete(pid);
+  if (fromKind === 'unsched' || (fromDate === '' && (evt.from?.id === 'map-props-unsched' || evt.from?.classList?.contains('map-props-unsched-base')))) {
+    _activeMapTempUnscheduledStore().delete(pid);
   }
 
   if (toDate) _removePidFromOtherDayManualOrders(pid, toDate);
@@ -7780,14 +7936,14 @@ function updateMapRouteModeState() {
   if (dayWrap) dayWrap.classList.toggle('map-day-locked', isMapUnconstrainedMode());
   if (dayBtn && isMapUnconstrainedMode() && _mapSelectedBases.size) dayBtn.disabled = true;
   if (!mode) return;
-  // Keep the Route select enabled whenever bases/days exist so users can leave
-  // system views (incl. after Unconstrained auto-selects all days).
   mode.disabled = !_mapSelectedBases.size || !_mapSelectedDays.size;
+  updateMapResetButton();
   updateFindBaseApplyBtn();
 }
 
 function onMapRouteModeChange() {
   _mapRouteManual = false;
+  _schedMapRouteManual = false;
   if (isMapFindBaseMode()) {
     const stay = [..._mapSelectedBases].find(ab => {
       const b = getBase(ab);
@@ -7804,30 +7960,13 @@ function onMapRouteModeChange() {
     const days = getDaysForMapBases(_mapSelectedBases);
     _mapSelectedDays = new Set(days.map(d => d.date));
     _mapDayFilterManual = false;
-  } else if (isMapAsScheduledMode() && _mapSelectedDays.size !== 1 && _mapSelectedBases.size) {
-    // Scheduled needs one day — narrow from a multi-day system view without trapping the select.
-    const sorted = [..._mapSelectedDays].sort();
-    const keep = sorted[0] || getDaysForMapBases(_mapSelectedBases)[0]?.date;
-    if (keep) {
-      _mapSelectedDays = new Set([keep]);
-      _mapDayFilterManual = true;
-    }
   }
   populateMapDayDropdown();
   const info = document.getElementById('map-route-info');
-  const resetBtn = document.getElementById('map-reset-btn');
-  if (resetBtn) {
-    resetBtn.title = isMapFindBaseMode()
-      ? 'Recompute proposed base location and schedule'
-      : 'Recalculate routes and redraw map';
-  }
-  if (info && isMapAsScheduledMode() && getMapEffectiveRouteDays().length !== 1) {
-    info.textContent = 'Scheduled route requires exactly one day.';
-  } else if (info) {
-    info.textContent = '';
-  }
+  updateMapResetButton();
+  if (info) info.textContent = '';
   updateFindBaseApplyBtn();
-  recalculateMapRoutes();
+  _refreshMapAfterParamsChange();
 }
 
 function toggleMapDayDropdown() {
@@ -7847,16 +7986,13 @@ function onMapDayCheckChange() {
   if (btn) btn.textContent = _mapSelectedDays.size ? `${_mapSelectedDays.size} day(s) selected` : 'Select days…';
   updateMapRouteModeState();
   const info = document.getElementById('map-route-info');
-  if (info && isMapAsScheduledMode() && getMapEffectiveRouteDays().length !== 1) {
-    info.textContent = 'Scheduled route requires exactly one day.';
-  } else if (info) {
-    info.textContent = '';
-  }
-  recalculateMapRoutes();
+  if (info) info.textContent = '';
+  _refreshMapAfterParamsChange();
 }
 
 function initMap() {
   if (_mapInited) return;
+  _loadSchedMapSession();
   _mapObj = L.map('map', { preferCanvas: false }).setView([42.85, 12.0], 8);
   _mapObj.getPane('popupPane').style.zIndex = 900;
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -7866,19 +8002,20 @@ function initMap() {
   applyDefaultMapTabFilters();
   populateMapBaseDropdown();
   populateMapDayDropdown();
-  const resetBtn = document.getElementById('map-reset-btn');
-  if (resetBtn) resetBtn.title = 'Recalculate routes and redraw map';
+  updateMapResetButton();
   refreshMap();
 }
 
 function _updateMapRouteInfo(plans) {
   const el = document.getElementById('map-route-info');
   if (!el) return;
-  if (isMapAsScheduledMode() && getMapEffectiveRouteDays().length !== 1) {
-    el.textContent = 'Scheduled route requires exactly one day.';
+  const list = Array.isArray(plans) ? plans : (plans ? [plans] : []);
+  if (isMapAsScheduledMode()) {
+    if (!list.length) { el.textContent = ''; return; }
+    const totalStops = list.reduce((n, plan) => n + (plan.stops?.length || 0), 0);
+    el.textContent = `${list.length} day(s) · ${totalStops} timed stop(s)`;
     return;
   }
-  const list = Array.isArray(plans) ? plans : (plans ? [plans] : []);
   if (isMapFindBaseMode()) {
     const r = _mapFindBaseResult;
     if (!r) { el.textContent = ''; updateFindBaseApplyBtn(); return; }
@@ -8087,19 +8224,22 @@ function _dayPlanRouteLegs(plan) {
 async function _drawMapDayRoute(mapObj, plan, allLatLngs, lineColor, statusFilter = 'all', scheduleMix = null, markerCtx = null) {
   const routedIds = new Set();
   const color = lineColor || (plan.mode === 'suggested' ? '#7B1FA2' : '#2C5F7A');
-  if (plan.endpoints?.isTransit && plan.base) {
+  const schedDisplayOnly = plan.mode === 'as-scheduled' && isMapAsScheduledMode();
+  if (!schedDisplayOnly && plan.endpoints?.isTransit && plan.base) {
     addTransitBaseMarkers(mapObj, plan.base, {
       fromLat: plan.endpoints.startLat, fromLng: plan.endpoints.startLng,
       toLat: plan.endpoints.endLat, toLng: plan.endpoints.endLng,
     }, baseColor(plan.base.abbr), allLatLngs);
   }
-  const legs = _dayPlanRouteLegs(plan);
-  if (legs.length) {
-    const dash = (plan.mode === 'suggested' || plan.mode === 'opt-free' || plan.mode === 'opt-multiday' || plan.mode === 'find-base') ? '8,6' : null;
-    await drawRoadLegs(mapObj, legs, color, {
-      weight: 4, opacity: 0.85,
-      dashArray: dash,
-    });
+  if (!schedDisplayOnly) {
+    const legs = _dayPlanRouteLegs(plan);
+    if (legs.length) {
+      const dash = (plan.mode === 'suggested' || plan.mode === 'opt-free' || plan.mode === 'opt-multiday' || plan.mode === 'find-base') ? '8,6' : null;
+      await drawRoadLegs(mapObj, legs, color, {
+        weight: 4, opacity: 0.85,
+        dashArray: dash,
+      });
+    }
   }
   const ctx = markerCtx || getMapMarkerContext(_mapSelectedBases, [plan], getMapDayFilter());
   for (const s of plan.stops) {
@@ -8109,14 +8249,16 @@ async function _drawMapDayRoute(mapObj, plan, allLatLngs, lineColor, statusFilte
     if (scheduleMix) _noteMapScheduleMix(p, statusFilter, scheduleMix);
     const sk = getPropScheduleKind(p, plan.date);
     const visuals = resolveMapMarkerVisuals(p, ctx, plan, s);
-    const extra = (plan.mode === 'suggested' || plan.mode === 'opt-scheduled' || plan.mode === 'opt-free' || plan.mode === 'opt-multiday' || plan.mode === 'find-base')
+    const extra = schedDisplayOnly
+      ? `${formatStopTimeMeta(s, p, plan.date) !== '—' ? `Time ${formatStopTimeMeta(s, p, plan.date)}<br>` : ''}`
+      : ((plan.mode === 'suggested' || plan.mode === 'opt-scheduled' || plan.mode === 'opt-free' || plan.mode === 'opt-multiday' || plan.mode === 'find-base')
       ? `${s.startViewMin != null ? `View ${formatMinToTime(s.startViewMin)}–${formatMinToTime(s.departMin)}<br>` : ''}` +
         `${formatDurMin(s.drive)} from previous<br>` +
         (s.infeasible ? '<span style="color:#C0392B">⚠ Not enough time</span><br>' : '')
       : `${formatStopTimeMeta(s, p, plan.date) !== '—' ? `Time ${formatStopTimeMeta(s, p, plan.date)}<br>` : ''}` +
         `Arrive: ${formatMinToTime(s.arriveMin)} · Drive: ${formatDurMin(s.drive)}<br>` +
         (s.timeOrderViolation ? '<span style="color:#F5A623">⚠ Out of time order</span><br>' : '') +
-        (s.infeasible ? '<span style="color:#C0392B">⚠ Not enough time</span><br>' : '');
+        (s.infeasible ? '<span style="color:#C0392B">⚠ Not enough time</span><br>' : ''));
     L.marker([p.lat, p.lng], {
       icon: makePropMarkerIcon({ ...visuals, size: 26, scheduleKind: sk })
     }).addTo(mapObj).bindPopup(makeMapPropPopupHtml(p, { seq: visuals.seq, extra, scheduleKind: sk }), { autoPan: true, autoPanPadding: [48, 48] });
@@ -8179,6 +8321,60 @@ function _bindMapPropsLegPopups() {
   });
 }
 
+function _renderMapPropsDayBlock(date, plan, dayBase, statusFilter, shadedIds, plans) {
+  const dayLbl = getDayForDate(date)?.label || date;
+  const lineColor = plan?.lineColor || '#2C5F7A';
+  let html = `<div class="map-props-day" style="color:${lineColor}">${escHtml(dayLbl)}</div>`;
+  if (!isMapAsScheduledMode() && plan?.departBaseMin != null && plan.stops?.length) {
+    const departAnchor = plan.mode === 'opt-free'
+      ? null
+      : findEarliestTimedViewingAnchor(plan.stops, date);
+    const leaveLbl = departAnchor
+      ? `Leave base ${formatMinToTime(plan.departBaseMin)}`
+      : `Depart ${formatMinToTime(plan.departBaseMin)}`;
+    html += `<div class="map-props-day-untimed" style="font-style:normal;color:${lineColor}">${escHtml(leaveLbl)}</div>`;
+  }
+  const routeStops = plan
+    ? getMapDayRouteStops(plan, date, dayBase, statusFilter)
+    : buildMapDayRowsWithoutPlan(date, dayBase, statusFilter).timed;
+  html += `<div class="map-props-sort map-props-sort-timed" data-date="${date}">`;
+  for (const s of routeStops) {
+    const meta = formatStopTimeMeta(s, s.p, date);
+    html += _mapPropsRowHtml(s.p, {
+      date, seq: s.seq, meta, shaded: shadedIds?.has(s.p.id),
+      extraCls: s.infeasible ? ' skipped' : '', plan, stop: s,
+    });
+  }
+  for (const sk of (plan?.skipped || [])) {
+    if (!sk?.p || !isPropMapEligible(sk.p, statusFilter)) continue;
+    if (!propMatchesMapBaseForPlan(sk.p, dayBase, date)) continue;
+    const meta = sk.reason ? sk.reason.replace(/^\w/, c => c.toUpperCase()) : 'Skipped';
+    html += _mapPropsRowHtml(sk.p, {
+      date, meta, shaded: shadedIds?.has(sk.p.id),
+      extraCls: ' skipped', plan, stop: null,
+    });
+  }
+  html += '</div>';
+  if (!isMapAsScheduledMode() && routeStops.length && plan?.endpoints) {
+    html += _mapPropsReturnRowHtml(plan);
+  }
+  const notIncluded = plan
+    ? getMapDayNotIncludedProps(date, dayBase, statusFilter, plans)
+    : buildMapDayRowsWithoutPlan(date, dayBase, statusFilter).notIncluded;
+  if (notIncluded.length) {
+    html += `<div class="map-props-day-untimed">Not included</div>`;
+    html += `<div class="map-props-sort map-props-not-included" data-date="${date}">`;
+    for (const p of notIncluded) {
+      const sk = getPropScheduleKind(p, date);
+      const lbl = sk === 'scheduled' ? 'date only' : (sk === 'proposed' ? 'proposed · no time' : 'no time');
+      const stop = plan?.stops?.find(s => s.p.id === p.id);
+      html += _mapPropsRowHtml(p, { date, meta: lbl, shaded: shadedIds?.has(p.id), plan, stop });
+    }
+    html += '</div>';
+  }
+  return html;
+}
+
 function renderMapPropsPanel({ baseSet, baseF, dayPlans, unscheduled, listed, shadedIds, loading }) {
   const panel = document.getElementById('map-props-panel');
   if (!panel) return;
@@ -8195,83 +8391,41 @@ function renderMapPropsPanel({ baseSet, baseF, dayPlans, unscheduled, listed, sh
   const plans = dayPlans?.length ? dayPlans : [];
   const planByDate = Object.fromEntries(plans.map(p => [p.date, p]));
   const panelDayDates = getMapPanelDayDates();
-  let html = '<div class="map-props-section" id="map-props-ordered">';
   const datesToRender = panelDayDates.length ? panelDayDates : plans.map(p => p.date);
-  if (datesToRender.length) {
-    for (const date of datesToRender) {
-      const dayBase = getMapOrderBaseForDate(date);
-      const plan = planByDate[date];
-      const dayLbl = getDayForDate(date)?.label || date;
-      const lineColor = plan?.lineColor || '#2C5F7A';
-      html += `<div class="map-props-day" style="color:${lineColor}">${escHtml(dayLbl)}</div>`;
-      if (plan?.departBaseMin != null && plan.stops?.length) {
-        const departAnchor = plan.mode === 'opt-free'
-          ? null
-          : findEarliestTimedViewingAnchor(plan.stops, date);
-        const leaveLbl = departAnchor
-          ? `Leave base ${formatMinToTime(plan.departBaseMin)}`
-          : `Depart ${formatMinToTime(plan.departBaseMin)}`;
-        html += `<div class="map-props-day-untimed" style="font-style:normal;color:${lineColor}">${escHtml(leaveLbl)}</div>`;
+  const baseGroups = getMapPanelBaseGroups(bases, datesToRender);
+  const tempUnsched = _activeMapTempUnscheduledStore();
+  let html = '<div class="map-props-section" id="map-props-ordered">';
+  if (baseGroups.length && datesToRender.length) {
+    for (const grp of baseGroups) {
+      const bColor = baseColor(grp.abbr);
+      html += `<div class="map-props-base" style="border-left-color:${bColor}">${escHtml(grp.base?.name || grp.abbr)} (${grp.abbr})</div>`;
+      for (const date of grp.days) {
+        const dayBase = getMapOrderBaseForDate(date);
+        html += _renderMapPropsDayBlock(date, planByDate[date], dayBase, statusFilter, shadedIds, plans);
       }
-      const routeStops = plan
-        ? getMapDayRouteStops(plan, date, dayBase, statusFilter)
-        : buildMapDayRowsWithoutPlan(date, dayBase, statusFilter).timed;
-      html += `<div class="map-props-sort map-props-sort-timed" data-date="${date}">`;
-      for (const s of routeStops) {
-        const meta = formatStopTimeMeta(s, s.p, date);
-        html += _mapPropsRowHtml(s.p, {
-          date, seq: s.seq, meta, shaded: shadedIds?.has(s.p.id),
-          extraCls: s.infeasible ? ' skipped' : '', plan, stop: s,
+      const baseUnsched = getMapUnscheduledForBase(grp.abbr, unscheduled);
+      if (baseUnsched.length) {
+        html += `<div class="map-props-day-untimed">No date or time</div>`;
+        html += `<div class="map-props-sort map-props-unsched-base" data-base="${grp.abbr}" data-date="">`;
+        const sorted = [...baseUnsched].sort((a, b) => {
+          if (tempUnsched.has(a.id) && !tempUnsched.has(b.id)) return -1;
+          if (!tempUnsched.has(a.id) && tempUnsched.has(b.id)) return 1;
+          return String(a.name).localeCompare(String(b.name));
         });
-      }
-      for (const sk of (plan?.skipped || [])) {
-        if (!sk?.p || !isPropMapEligible(sk.p, statusFilter)) continue;
-        if (!propMatchesMapBaseForPlan(sk.p, dayBase, date)) continue;
-        const meta = sk.reason ? sk.reason.replace(/^\w/, c => c.toUpperCase()) : 'Skipped';
-        html += _mapPropsRowHtml(sk.p, {
-          date, meta, shaded: shadedIds?.has(sk.p.id),
-          extraCls: ' skipped', plan, stop: null,
-        });
-      }
-      html += '</div>';
-      if (routeStops.length && plan?.endpoints) {
-        html += _mapPropsReturnRowHtml(plan);
-      }
-      const notIncluded = plan
-        ? getMapDayNotIncludedProps(date, dayBase, statusFilter, plans)
-        : buildMapDayRowsWithoutPlan(date, dayBase, statusFilter).notIncluded;
-      if (notIncluded.length) {
-        html += `<div class="map-props-day-untimed">Not included</div>`;
-        html += `<div class="map-props-sort map-props-not-included" data-date="${date}">`;
-        for (const p of notIncluded) {
-          const sk = getPropScheduleKind(p, date);
-          const lbl = sk === 'scheduled' ? 'date only' : (sk === 'proposed' ? 'proposed · no time' : 'no time');
-          const stop = plan?.stops?.find(s => s.p.id === p.id);
-          html += _mapPropsRowHtml(p, { date, meta: lbl, shaded: shadedIds?.has(p.id), plan, stop });
+        for (const p of sorted) {
+          html += _mapPropsRowHtml(p, { meta: 'no date', shaded: shadedIds?.has(p.id) });
         }
         html += '</div>';
       }
     }
   } else if (!plans.length) {
     const hint = isMapAsScheduledMode()
-      ? 'Select exactly one day for the scheduled route.'
+      ? 'Select base(s) and day(s) to show scheduled properties.'
       : 'Select base(s) and day(s) to show scheduled and proposed properties.';
     html += `<div style="color:var(--text3);padding:4px 0">${hint}</div>`;
   }
   html += '</div>';
-  const unsched = unscheduled || [];
-  if (datesToRender.length) {
-    html += `<div class="map-props-section"><h4>Not included</h4><div id="map-props-unsched" data-date="">`;
-    const sorted = [...unsched].sort((a, b) => {
-      if (_mapTempUnscheduled.has(a.id) && !_mapTempUnscheduled.has(b.id)) return -1;
-      if (!_mapTempUnscheduled.has(a.id) && _mapTempUnscheduled.has(b.id)) return 1;
-      return String(a.name).localeCompare(String(b.name));
-    });
-    for (const p of sorted) {
-      html += _mapPropsRowHtml(p, { meta: 'no date', shaded: shadedIds?.has(p.id) });
-    }
-    html += '</div></div>';
-  } else if (!plans.length) {
+  if (!baseGroups.length && !plans.length) {
     html += '<div style="padding:8px 0;color:var(--text3)">No properties match this filter.</div>';
   }
   panel.innerHTML = html;
@@ -8285,7 +8439,8 @@ function initMapPropsSortable() {
   if (typeof Sortable === 'undefined') return;
   const asScheduled = isMapAsScheduledMode();
   const dayDates = [...document.querySelectorAll('.map-props-sort-timed')].map(el => el.dataset.date).filter(Boolean);
-  const unsched = document.getElementById('map-props-unsched');
+  const unschedLegacy = document.getElementById('map-props-unsched');
+  const unschedBases = [...document.querySelectorAll('.map-props-unsched-base')];
   const sortOptsBase = {
     animation: 120,
     handle: '.map-props-drag-handle',
@@ -8304,9 +8459,17 @@ function initMapPropsSortable() {
       const timed = document.querySelector(`.map-props-sort-timed[data-date="${date}"]`);
       const notIncluded = document.querySelector(`.map-props-not-included[data-date="${date}"]`);
       const group = { name: 'map-as-' + date, pull: true, put: true };
-      [timed, notIncluded, unsched].filter(Boolean).forEach(el => {
-        const key = el.id === 'map-props-unsched' ? 'unsched' : ((el.classList.contains('map-props-sort-timed') ? 't-' : 'ni-') + date);
+      const dropTargets = [timed, notIncluded, unschedLegacy, ...unschedBases].filter(Boolean);
+      dropTargets.forEach(el => {
+        const key = el.id === 'map-props-unsched' ? 'unsched'
+          : (el.classList.contains('map-props-unsched-base') ? 'ub-' + (el.dataset.base || '') : ((el.classList.contains('map-props-sort-timed') ? 't-' : 'ni-') + date));
         _mapSortables[key] = Sortable.create(el, { ...sortOptsBase, group });
+      });
+    }
+    if (!dayDates.length) {
+      [...unschedBases, unschedLegacy].filter(Boolean).forEach(el => {
+        const key = el.id === 'map-props-unsched' ? 'unsched' : 'ub-' + (el.dataset.base || '');
+        _mapSortables[key] = Sortable.create(el, { ...sortOptsBase, group: { name: 'map-as-unsched', pull: true, put: true } });
       });
     }
   } else {
@@ -8315,9 +8478,12 @@ function initMapPropsSortable() {
       const key = (el.classList.contains('map-props-sort-timed') ? 't-' : 'ni-') + (el.dataset.date || String(idx));
       _mapSortables[key] = Sortable.create(el, { ...sortOptsBase, group: crossGroup });
     });
-    if (unsched) {
-      _mapSortables['unsched'] = Sortable.create(unsched, { ...sortOptsBase, group: crossGroup });
+    if (unschedLegacy) {
+      _mapSortables['unsched'] = Sortable.create(unschedLegacy, { ...sortOptsBase, group: crossGroup });
     }
+    unschedBases.forEach(el => {
+      _mapSortables['ub-' + (el.dataset.base || '')] = Sortable.create(el, { ...sortOptsBase, group: crossGroup });
+    });
   }
 }
 
@@ -8368,16 +8534,29 @@ async function refreshMapAsync() {
     }
 
     if (baseSet.size && routeDays.length) {
-      const statusMsg = _mapRouteManual ? 'Updating routes…' : ({
+      const routeManual = isMapAsScheduledMode() ? _schedMapRouteManual : _mapRouteManual;
+      const statusMsg = routeManual ? 'Updating stops…' : ({
         suggested: 'Planning routes…',
-        timed: 'Calculating routes…',
+        timed: 'Loading scheduled stops…',
         'opt-scheduled': 'Optimizing routes…',
         'opt-free': 'Optimizing routes…',
         'opt-multiday': 'Optimizing multi-day routes…',
         'find-base': 'Finding optimal base…',
       }[routeMode] || 'Loading routes…');
       setMapStatus(statusMsg);
-      if (routeMode === 'opt-multiday' || routeMode === 'opt-free' || routeMode === 'find-base') {
+      if (routeMode === 'timed') {
+        for (let i = 0; i < routeDays.length; i++) {
+          const date = routeDays[i];
+          const dayBase = getMapOrderBaseForDate(date);
+          let plan = buildScheduledDisplayPlan(date, dayBase, DAY_ROUTE_COLORS[i % DAY_ROUTE_COLORS.length]);
+          if (stale()) return;
+          if (!plan) continue;
+          for (const s of plan.stops) await resolvePropCoords(s.p, false);
+          if (stale()) return;
+          let filtered = filterMapDayPlan(plan, statusFilter, dayBase, dayFilter);
+          dayPlans.push(filtered);
+        }
+      } else if (routeMode === 'opt-multiday' || routeMode === 'opt-free' || routeMode === 'find-base') {
         if (_mapRouteManual) {
           for (let i = 0; i < routeDays.length; i++) {
             const date = routeDays[i];
@@ -8441,8 +8620,6 @@ async function refreshMapAsync() {
           let plan;
           if (routeMode === 'suggested') {
             plan = await computeSuggestedDayRoute(date, false, { honorTimes: true });
-          } else if (routeMode === 'timed') {
-            plan = await computeDayPlan(date, false, { asScheduled: true });
           } else if (routeMode === 'opt-scheduled') {
             plan = await computeOptScheduledRoute(date, false);
           }
