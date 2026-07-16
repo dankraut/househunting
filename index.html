@@ -5649,12 +5649,9 @@ async function _findBaseAssignDays(endpoints, props, dates, base, { road = false
         const built = await _builtStopsFromRouteEntries(endpoints, trialRoute, { road });
         if (built.usedDrive > ds.budget) continue;
         if (!_findBaseQuickFeasible(trialRoute.length, built.usedDrive)) continue;
-        if (road) {
-          const trialStops = built.stops.map(s => ({ ...s, infeasible: false }));
-          if (!await _isMultiDayRouteFeasible(trialStops, date, endpoints, base, { respectScheduledTimes: false })) continue;
-        }
         const marginal = built.usedDrive - ds.usedDrive;
-        const adjustedCost = _multiDayBalanceCost(marginal, ds);
+        // Prefer lighter days (under-min penalty biases against empty days).
+        const adjustedCost = marginal + _multiDayStopLoad(ds) * MULTIDAY_BALANCE_PENALTY + _multiDayVisitCount(ds) * 15;
         if (adjustedCost < bestCost) {
           bestCost = adjustedCost;
           bestProp = p;
@@ -5669,6 +5666,29 @@ async function _findBaseAssignDays(endpoints, props, dates, base, { road = false
     dayStates[bestDate].usedDrive = built.usedDrive;
     remaining.splice(remaining.indexOf(bestProp), 1);
   }
+  // Soft-pack leftovers onto lightest feasible days before marking skipped.
+  while (remaining.length) {
+    const p = remaining[0];
+    let placed = false;
+    const orderedDates = [...dates].sort((a, b) => _multiDayVisitCount(dayStates[a]) - _multiDayVisitCount(dayStates[b]) || a.localeCompare(b));
+    for (const date of orderedDates) {
+      const ds = dayStates[date];
+      const start = { lat: endpoints.startLat, lng: endpoints.startLng };
+      const end = { lat: endpoints.endLat, lng: endpoints.endLng };
+      const { prop, idx } = await _findBaseBestInsertion(start, ds.route, [p], end, { road });
+      if (!prop) continue;
+      const trialRoute = [...ds.route.slice(0, idx), { p, anchor: false }, ...ds.route.slice(idx)];
+      const built = await _builtStopsFromRouteEntries(endpoints, trialRoute, { road });
+      if (!_findBaseQuickFeasible(trialRoute.length, built.usedDrive)) continue;
+      if (built.usedDrive > ds.budget + 60) continue;
+      ds.route = trialRoute;
+      ds.usedDrive = built.usedDrive;
+      remaining.shift();
+      placed = true;
+      break;
+    }
+    if (!placed) break;
+  }
   for (const p of remaining) {
     const target = _multiDayLightestDate(dayStates, dates);
     if (target) skippedByDate[target].push({ p, reason: 'budget or time limit' });
@@ -5679,7 +5699,7 @@ async function _findBaseAssignDays(endpoints, props, dates, base, { road = false
     while (_multiDayVisitCount(dayStates[targetDate]) < MULTIDAY_MIN_VISITS) {
       let moved = false;
       const srcDates = [...dates]
-        .filter(d => d !== targetDate && _multiDayVisitCount(dayStates[d]) > MULTIDAY_MIN_VISITS)
+        .filter(d => d !== targetDate && _multiDayVisitCount(dayStates[d]) > 1)
         .sort((a, b) => _multiDayVisitCount(dayStates[b]) - _multiDayVisitCount(dayStates[a]));
       for (const srcDate of srcDates) {
         const dsSrc = dayStates[srcDate];
@@ -5694,7 +5714,7 @@ async function _findBaseAssignDays(endpoints, props, dates, base, { road = false
           if (!prop) continue;
           const trialTarget = [...dsTarget.route.slice(0, idx), { p, anchor: false }, ...dsTarget.route.slice(idx)];
           const builtTarget = await _builtStopsFromRouteEntries(endpoints, trialTarget, { road });
-          if (builtTarget.usedDrive > dsTarget.budget) continue;
+          if (builtTarget.usedDrive > dsTarget.budget + 60) continue;
           if (!_findBaseQuickFeasible(trialTarget.length, builtTarget.usedDrive)) continue;
           dsSrc.route.splice(fi, 1);
           dsTarget.route = trialTarget;
@@ -5741,7 +5761,7 @@ async function _findBaseAssignDays(endpoints, props, dates, base, { road = false
 
 async function _evaluateFindBaseLocation(lat, lng, props, dates, base, { road = false } = {}) {
   const endpoints = _makeFindBaseEndpoints(lat, lng);
-  const { dayStates, skippedByDate } = await _findBaseAssignDays(endpoints, props, dates, base, { road });
+  const { dayStates, skippedByDate } = await _findBaseAssignDays(endpoints, props, dates, base, { road: false });
   if (!road) {
     let totalDrive = 0;
     let infeasible = 0;
@@ -5760,6 +5780,11 @@ async function _evaluateFindBaseLocation(lat, lng, props, dates, base, { road = 
       });
     }
     return { lat, lng, plans, totalDrive, infeasible };
+  }
+  // Keep haversine day packing; polish legs/timing with road distances only.
+  for (const date of dates) {
+    const built = await _builtStopsFromRouteEntries(endpoints, dayStates[date].route, { road: true });
+    dayStates[date].usedDrive = built.usedDrive;
   }
   const plans = [];
   let totalDrive = 0;
