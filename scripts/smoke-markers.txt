@@ -27,6 +27,8 @@ index.html|map-legend-collapsible|Mobile collapsible map legend
 index.html|hh-modules-ready|ES module bootstrap event
 index.html|@media(max-width:767px)|Mobile responsive CSS breakpoint
 functions/api/[[path]].js|ifl-sync|IFL sync API route
+functions/api/[[path]].js|/settings|App settings API (last message template)
+index.html|persistLastMsgTemplateIndex|Server-persisted last Msg template on Done
 functions/api/[[path]].js|propOnBaseGrp|IFL delete by base group
 js/bootstrap.js|__hhModulesReady|Module bootstrap flag
 js/config.js|SPA_VERSION|SPA version constant

@@ -31,6 +31,8 @@ export function createApiClient(getToken) {
     putData(payload) { return request('/data', { method: 'PUT', body: payload }); },
     getBases() { return request('/bases'); },
     putBases(bases) { return request('/bases', { method: 'PUT', body: bases }); },
+    getSettings() { return request('/settings'); },
+    putSettings(settings) { return request('/settings', { method: 'PUT', body: settings }); },
 
     geocode(address) {
       return request(`/geocode?address=${encodeURIComponent(address)}`);
