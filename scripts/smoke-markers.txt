@@ -36,6 +36,9 @@ extension/background.js|RUN_IFL_SYNC|Background IFL sync job
 js/location.js|geocode-town-fallback|Town fallback when street geocode fails
 index.html|computeOptScheduledRoute|Optimized w scheduled map route
 index.html|computeUnconstrainedOptimizedRoute|Unconstrained optimized map route
+index.html|computeFindBaseRoutes|Find Base optimal location and schedule
+index.html|propMatchesFindBase|Find Base excludes props on other bases
+index.html|FIND_BASE_MAX_PROPS|Find Base property cap (15)
 index.html|annotateMapRouteStops|Map route implied timing and feasibility
 index.html|formatStopTimeMeta|Stop list shows implied times when appointments ignored
 index.html|getPropScheduleKind|Proposed/Scheduled stop name styling
