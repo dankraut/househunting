@@ -6,8 +6,8 @@ Last updated: 2026-07-04
 
 | Component | Version | File |
 |-----------|---------|------|
-| SPA | v2.31 | js/config.js → SPA_VERSION |
-| Extension | v1.8.37 | extension/manifest.json |
+| SPA | v2.32 | js/config.js → SPA_VERSION |
+| Extension | v1.8.38 | extension/manifest.json |
 | API | (no semver) | functions/api/[[path]].js header comment |
 
 Bump SPA when shipping SPA/API changes; bump Extension only when `extension/` files change. Run `scripts/smoke-check.sh` before ship.

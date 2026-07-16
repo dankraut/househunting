@@ -452,8 +452,10 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
       <option value="opt-scheduled">Optimized w Scheduled</option>
       <option value="opt-free">Unconstrained Optimized</option>
       <option value="opt-multiday">Multi-day optimize</option>
+      <option value="find-base">Find Base</option>
     </select></label>
     <button type="button" class="io-btn" id="map-reset-btn" onclick="recalculateMapRoutes()" title="Refresh stored drive times, recalculate routes, and redraw map">Recalculate</button>
+    <button type="button" class="io-btn" id="map-apply-find-base-btn" onclick="applyFindBaseToSelectedBase()" style="display:none" title="Write the proposed GPS onto the selected stay base">Apply base GPS</button>
     <span id="map-status"></span>
     <span id="map-route-info" style="font-size:11px;color:var(--text3)"></span>
   </div>
@@ -467,9 +469,9 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
   </div>
   <details class="map-legend-collapsible">
     <summary>Map legend</summary>
-    <div class="map-legend-inner"><span>★ Stay bases</span><span>⇄ Transit routes</span><span>1–9 Viewing order</span><span style="color:var(--red)">★ Exact GPS</span><span style="color:var(--amber)">○ Listing/town pin</span><span>🟢 Scheduled ring</span><span>🟡 Proposed ring</span><span>● Fill = base (multi-base)</span><span>● Fill/line = day (multi-day)</span><span style="opacity:.5">● Shaded = off-filter</span><span style="color:var(--red)">● No time / skipped</span><span>── Road route</span></div>
+    <div class="map-legend-inner"><span>★ Stay bases</span><span style="color:#C0603A">★ Proposed base (Find Base)</span><span>⇄ Transit routes</span><span>1–9 Viewing order</span><span style="color:var(--red)">★ Exact GPS</span><span style="color:var(--amber)">○ Listing/town pin</span><span>🟢 Scheduled ring</span><span>🟡 Proposed ring</span><span>● Fill = base (multi-base)</span><span>● Fill/line = day (multi-day)</span><span style="opacity:.5">● Shaded = off-filter</span><span style="color:var(--red)">● No time / skipped</span><span>── Road route</span></div>
   </details>
-  <div class="map-legend map-legend-full"><span>★ Stay bases</span><span>⇄ Transit routes</span><span>1–9 Viewing order</span><span style="color:var(--red)">★ Exact GPS</span><span style="color:var(--amber)">○ Listing/town pin</span><span>🟢 Scheduled ring</span><span>🟡 Proposed ring</span><span>● Fill = base (multi-base)</span><span>● Fill/line = day (multi-day)</span><span style="opacity:.5">● Shaded = off-filter</span><span style="color:var(--red)">● No time / skipped</span><span>── Road route</span></div>
+  <div class="map-legend map-legend-full"><span>★ Stay bases</span><span style="color:#C0603A">★ Proposed base (Find Base)</span><span>⇄ Transit routes</span><span>1–9 Viewing order</span><span style="color:var(--red)">★ Exact GPS</span><span style="color:var(--amber)">○ Listing/town pin</span><span>🟢 Scheduled ring</span><span>🟡 Proposed ring</span><span>● Fill = base (multi-base)</span><span>● Fill/line = day (multi-day)</span><span style="opacity:.5">● Shaded = off-filter</span><span style="color:var(--red)">● No time / skipped</span><span>── Road route</span></div>
 </div>
 
 <!-- LOG TAB -->
@@ -926,7 +928,7 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
 
 <script type="module" src="js/bootstrap.js"></script>
 <script>
-// ═══ SPA v2.31 — app core (config/api/location in js/) ═══════════════════════════
+// ═══ SPA v2.32 — app core (config/api/location in js/) ═══════════════════════════
 
 const PROPS_RAW=[{"id":30278342,"name":"Tuscania Villa","town":"Tuscania","prov":"VT","price":780,"rooms":10,"size":300,"grp":1,"fco":72,"cdp":80,"caf":140,"spo":105,"man":45,"url":"https://www.idealista.it/immobile/30278342/","lat":42.418,"lng":11.875,"plannedDate":"2026-07-09","plannedTime":"10:30 AM"},{"id":34998463,"name":"Vetralla Villa","town":"Vetralla","prov":"VT","price":670,"rooms":12,"size":509,"grp":1,"fco":75,"cdp":95,"caf":155,"spo":95,"man":70,"url":"https://www.idealista.it/immobile/34998463/","lat":42.32,"lng":12.05,"plannedDate":"2026-07-09","plannedTime":"11:30 AM"},{"id":35809714,"name":"Canino Villa","town":"Canino","prov":"VT","price":870,"rooms":7,"size":380,"grp":1,"fco":78,"cdp":80,"caf":130,"spo":115,"man":30,"url":"https://www.idealista.it/immobile/35809714/","lat":42.468,"lng":11.744,"plannedDate":"2026-07-09","plannedTime":"9:30 AM"},{"id":26448701,"name":"Montecastrilli Villa","town":"Montecastrilli","prov":"TR","price":820,"rooms":19,"size":480,"grp":1,"fco":85,"cdp":70,"caf":120,"spo":30,"man":105,"url":"https://www.idealista.it/immobile/26448701/","lat":42.649,"lng":12.487,"plannedDate":"2026-07-06","plannedTime":"11:00 AM"},{"id":21658129,"name":"Manciano SP159","town":"Manciano","prov":"GR","price":850,"rooms":18,"size":379,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":0,"url":"https://www.idealista.it/immobile/21658129/","lat":42.595,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"8:45 AM"},{"id":18085022,"name":"Manciano Scansanese","town":"Manciano","prov":"GR","price":870,"rooms":10,"size":520,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/18085022/","lat":42.605,"lng":11.52,"plannedDate":"2026-07-10","plannedTime":"9:30 AM"},{"id":33646557,"name":"Manciano Montemerano","town":"Manciano","prov":"GR","price":698,"rooms":8,"size":430,"grp":1,"fco":95,"cdp":75,"caf":125,"spo":130,"man":10,"url":"https://www.idealista.it/immobile/33646557/","lat":42.544,"lng":11.57,"plannedDate":"2026-07-10","plannedTime":"10:20 AM"},{"id":32530331,"name":"Manciano Saturnia","town":"Manciano","prov":"GR","price":720,"rooms":10,"size":395,"grp":1,"fco":95,"cdp":80,"caf":125,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/32530331/","lat":42.555,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"11:10 AM"},{"id":27864548,"name":"Baschi Villa","town":"Baschi","prov":"TR","price":780,"rooms":10,"size":580,"grp":1,"fco":99,"cdp":45,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/27864548/","lat":42.675,"lng":12.212,"plannedDate":"2026-06-26","plannedTime":"12:15 PM"},{"id":34980477,"name":"Baschi Civitella","town":"Baschi","prov":"TR","price":990,"rooms":15,"size":450,"grp":1,"fco":99,"cdp":50,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/34980477/","lat":42.67,"lng":12.205,"plannedDate":"2026-06-26","plannedTime":"1:05 PM"},{"id":35860173,"name":"Todi Piagge Casale","town":"Todi","prov":"PG","price":825,"rooms":10,"size":300,"grp":1,"fco":102,"cdp":50,"caf":100,"spo":35,"man":100,"url":"https://www.idealista.it/immobile/35860173/","lat":42.775,"lng":12.412,"plannedDate":"2026-07-07","plannedTime":"9:00 AM"},{"id":35822412,"name":"Todi Collarezzo","town":"Todi","prov":"PG","price":850,"rooms":10,"size":351,"grp":1,"fco":102,"cdp":55,"caf":100,"spo":35,"man":105,"url":"https://www.idealista.it/immobile/35822412/","lat":42.782,"lng":12.43,"plannedDate":"2026-07-07","plannedTime":"10:00 AM"},{"id":34024712,"name":"San Venanzo Civitella","town":"San Venanzo","prov":"TR","price":845,"rooms":18,"size":815,"grp":1,"fco":105,"cdp":30,"caf":80,"spo":55,"man":90,"url":"https://www.idealista.it/immobile/34024712/","lat":42.87,"lng":12.265,"plannedDate":"","plannedTime":""},{"id":33903982,"name":"Scansano Fonte Guerra","town":"Scansano","prov":"GR","price":790,"rooms":12,"size":475,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/33903982/","lat":42.683,"lng":11.34,"plannedDate":"2026-07-10","plannedTime":"12:30 PM"},{"id":35951463,"name":"Scansano Montorgiali","town":"Scansano","prov":"GR","price":960,"rooms":8,"size":390,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35951463/","lat":42.69,"lng":11.332,"plannedDate":"2026-07-09","plannedTime":"3:00 PM"},{"id":35048730,"name":"Scansano Agriturismo","town":"Scansano","prov":"GR","price":630,"rooms":7,"size":390,"grp":1,"fco":105,"cdp":85,"caf":120,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35048730/","lat":42.676,"lng":11.321,"plannedDate":"2026-07-09","plannedTime":"3:50 PM"},{"id":35397327,"name":"Sorano Piancasale","town":"Sorano","prov":"GR","price":700,"rooms":24,"size":480,"grp":1,"fco":108,"cdp":50,"caf":100,"spo":110,"man":25,"url":"https://www.idealista.it/immobile/35397327/","lat":42.685,"lng":11.713,"plannedDate":"","plannedTime":""},{"id":21287742,"name":"Ferentillo Rustico","town":"Ferentillo","prov":"TR","price":645,"rooms":12,"size":650,"grp":1,"fco":110,"cdp":100,"caf":145,"spo":20,"man":140,"url":"https://www.idealista.it/immobile/21287742/","lat":42.623,"lng":12.798,"plannedDate":"2026-07-06","plannedTime":"9:00 AM"},{"id":10679967,"name":"Semproniano Rustico","town":"Semproniano","prov":"GR","price":720,"rooms":11,"size":355,"grp":1,"fco":110,"cdp":70,"caf":115,"spo":130,"man":5,"url":"https://www.idealista.it/immobile/10679967/","lat":42.623,"lng":11.537,"plannedDate":"","plannedTime":""},{"id":34882496,"name":"Spoleto Baiano","town":"Spoleto","prov":"PG","price":980,"rooms":17,"size":451,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":135,"url":"https://www.idealista.it/immobile/34882496/","lat":42.722,"lng":12.718,"plannedDate":"2026-07-05","plannedTime":"8:45 AM"},{"id":30865904,"name":"Spoleto Terzo La Pieve","town":"Spoleto","prov":"PG","price":900,"rooms":11,"size":350,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":130,"url":"https://www.idealista.it/immobile/30865904/","lat":42.715,"lng":12.708,"plannedDate":"2026-07-05","plannedTime":"9:45 AM"},{"id":35103506,"name":"Montefalco Fabbri","town":"Montefalco","prov":"PG","price":910,"rooms":16,"size":450,"grp":1,"fco":121,"cdp":70,"caf":105,"spo":25,"man":130,"url":"https://www.idealista.it/immobile/35103506/","lat":42.89,"lng":12.652,"plannedDate":"2026-07-04","plannedTime":"12:30 PM"},{"id":35432103,"name":"Deruta Tiberina","town":"Deruta","prov":"PG","price":790,"rooms":12,"size":320,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/35432103/","lat":42.982,"lng":12.419,"plannedDate":"2026-07-04","plannedTime":"10:00 AM"},{"id":33533240,"name":"Deruta Tiberina 203","town":"Deruta","prov":"PG","price":685,"rooms":22,"size":611,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/33533240/","lat":42.981,"lng":12.421,"plannedDate":"2026-07-04","plannedTime":"10:50 AM"},{"id":27988041,"name":"Deruta Centro Casale","town":"Deruta","prov":"PG","price":650,"rooms":12,"size":400,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/27988041/","lat":42.982,"lng":12.416,"plannedDate":"","plannedTime":""},{"id":29370809,"name":"Deruta Castelleone","town":"Deruta","prov":"PG","price":890,"rooms":12,"size":316,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/29370809/","lat":42.984,"lng":12.413,"plannedDate":"","plannedTime":""},{"id":34783987,"name":"Bettona Villa","town":"Bettona","prov":"PG","price":850,"rooms":20,"size":484,"grp":1,"fco":129,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/34783987/","lat":42.992,"lng":12.43,"plannedDate":"2026-06-27","plannedTime":"11:00 AM"},{"id":34843857,"name":"Santa Fiora Monte Amiata","town":"Santa Fiora","prov":"GR","price":978,"rooms":12,"size":520,"grp":1,"fco":130,"cdp":50,"caf":85,"spo":125,"man":40,"url":"https://www.idealista.it/immobile/34843857/","lat":42.834,"lng":11.587,"plannedDate":"","plannedTime":""},{"id":34979131,"name":"Corciano Migiana","town":"Corciano","prov":"PG","price":830,"rooms":13,"size":700,"grp":1,"fco":133,"cdp":40,"caf":55,"spo":75,"man":115,"url":"https://www.idealista.it/immobile/34979131/","lat":43.11,"lng":12.289,"plannedDate":"","plannedTime":""},{"id":35300665,"name":"Perugia Olmo","town":"Perugia","prov":"PG","price":675,"rooms":5,"size":425,"grp":2,"fco":138,"cdp":50,"caf":70,"spo":60,"man":125,"url":"https://www.idealista.it/immobile/35300665/","lat":43.085,"lng":12.442,"plannedDate":"2026-06-25","plannedTime":"12:30 PM"},{"id":35456752,"name":"Perugia Eugubina","town":"Perugia","prov":"PG","price":650,"rooms":21,"size":953,"grp":2,"fco":138,"cdp":50,"caf":60,"spo":70,"man":125,"url":"https://www.idealista.it/immobile/35456752/","lat":43.138,"lng":12.408,"plannedDate":"2026-06-25","plannedTime":"1:15 PM"},{"id":32456550,"name":"Perugia Colli Albani","town":"Perugia","prov":"PG","price":650,"rooms":10,"size":530,"grp":2,"fco":138,"cdp":50,"caf":65,"spo":65,"man":125,"url":"https://www.idealista.it/immobile/32456550/","lat":43.093,"lng":12.415,"plannedDate":"2026-06-25","plannedTime":"2:15 PM"},{"id":16393910,"name":"Perugia Solfagnano","town":"Perugia","prov":"PG","price":1100,"rooms":16,"size":725,"grp":2,"fco":138,"cdp":45,"caf":50,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/16393910/","lat":43.155,"lng":12.33,"plannedDate":"2026-06-26","plannedTime":"2:30 PM"},{"id":34105542,"name":"Perugia Monte Tezio","town":"Perugia","prov":"PG","price":890,"rooms":10,"size":500,"grp":2,"fco":138,"cdp":45,"caf":55,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/34105542/","lat":43.148,"lng":12.34,"plannedDate":"2026-06-26","plannedTime":"3:15 PM"},{"id":33928859,"name":"Assisi Porziano","town":"Assisi","prov":"PG","price":580,"rooms":12,"size":485,"grp":2,"fco":148,"cdp":70,"caf":85,"spo":50,"man":140,"url":"https://www.idealista.it/immobile/33928859/","lat":43.07,"lng":12.612,"plannedDate":"2026-07-03","plannedTime":"11:30 AM"},{"id":35247592,"name":"Lisciano Niccone Villa","town":"Lisciano Niccone","prov":"PG","price":1050,"rooms":12,"size":520,"grp":2,"fco":148,"cdp":50,"caf":25,"spo":105,"man":120,"url":"https://www.idealista.it/immobile/35247592/","lat":43.265,"lng":12.125,"plannedDate":"2026-06-27","plannedTime":"9:30 AM"},{"id":35456269,"name":"Umbertide Casale","town":"Umbertide","prov":"PG","price":1150,"rooms":15,"size":700,"grp":2,"fco":148,"cdp":60,"caf":45,"spo":95,"man":140,"url":"https://www.idealista.it/immobile/35456269/","lat":43.297,"lng":12.332,"plannedDate":"2026-07-03","plannedTime":"8:45 AM"},{"id":34939305,"name":"Umbertide Preggio","town":"Umbertide","prov":"PG","price":895,"rooms":16,"size":320,"grp":2,"fco":148,"cdp":60,"caf":40,"spo":100,"man":135,"url":"https://www.idealista.it/immobile/34939305/","lat":43.312,"lng":12.29,"plannedDate":"2026-07-03","plannedTime":"9:30 AM"},{"id":23044407,"name":"Foiano della Chiana","town":"Foiano","prov":"AR","price":750,"rooms":12,"size":500,"grp":2,"fco":150,"cdp":50,"caf":20,"spo":125,"man":105,"url":"https://www.idealista.it/immobile/23044407/","lat":43.251,"lng":11.819,"plannedDate":"2026-06-30","plannedTime":"11:30 AM"},{"id":33291507,"name":"Cortona Fratticciola","town":"Cortona","prov":"AR","price":870,"rooms":10,"size":311,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":110,"man":115,"url":"https://www.idealista.it/immobile/33291507/","lat":43.264,"lng":12.002,"plannedDate":"2026-06-28","plannedTime":"11:00 AM"},{"id":33311877,"name":"Cortona Cegliolo Villa","town":"Cortona","prov":"AR","price":980,"rooms":11,"size":400,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/33311877/","lat":43.27,"lng":12.0,"plannedDate":"2026-06-30","plannedTime":"10:30 AM"},{"id":35710302,"name":"Cortona Cegliolo Casale","town":"Cortona","prov":"AR","price":590,"rooms":7,"size":460,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/35710302/","lat":43.272,"lng":11.992,"plannedDate":"","plannedTime":""},{"id":24846822,"name":"CaF Val di Chio","town":"Castiglion Fiorentino","prov":"AR","price":1000,"rooms":12,"size":760,"grp":2,"fco":155,"cdp":55,"caf":0,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/24846822/","lat":43.335,"lng":11.942,"plannedDate":"2026-06-28","plannedTime":"8:45 AM"},{"id":34980495,"name":"CaF Santa Cristina","town":"Castiglion Fiorentino","prov":"AR","price":900,"rooms":12,"size":800,"grp":2,"fco":155,"cdp":55,"caf":5,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/34980495/","lat":43.325,"lng":11.938,"plannedDate":"2026-06-28","plannedTime":"9:30 AM"},{"id":31961655,"name":"Monteroni d'Arbia","town":"Monteroni d'Arbia","prov":"SI","price":980,"rooms":12,"size":480,"grp":2,"fco":155,"cdp":75,"caf":60,"spo":160,"man":95,"url":"https://www.idealista.it/immobile/31961655/","lat":43.227,"lng":11.415,"plannedDate":"2026-07-01","plannedTime":"12:00 PM"},{"id":26833080,"name":"Capolona Pieve SG","town":"Capolona","prov":"AR","price":890,"rooms":9,"size":420,"grp":2,"fco":158,"cdp":90,"caf":35,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/26833080/","lat":43.559,"lng":11.86,"plannedDate":"2026-07-01","plannedTime":"9:45 AM"},{"id":35651252,"name":"Capolona Caliano","town":"Capolona","prov":"AR","price":595,"rooms":10,"size":350,"grp":2,"fco":158,"cdp":90,"caf":30,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/35651252/","lat":43.554,"lng":11.856,"plannedDate":"2026-07-01","plannedTime":"9:00 AM"}];
 const _propsRawById = new Map(PROPS_RAW.map(p => [p.id, p]));
@@ -976,6 +978,7 @@ let _mapShadedPropIds = new Set();
 let _mapManualOrder = {};
 let _mapOptimizedOrder = {};
 let _mapRouteManual = false;
+let _mapFindBaseResult = null;
 let _mapTempUnscheduled = new Set();
 let _mapSortables = {};
 let _propLegPopupEl = null;
@@ -1605,7 +1608,7 @@ function isMapRouteMode(mode) {
 
 function isMapOptimizedMode() {
   const m = getMapRouteMode();
-  return m === 'opt-scheduled' || m === 'opt-free' || m === 'opt-multiday';
+  return m === 'opt-scheduled' || m === 'opt-free' || m === 'opt-multiday' || m === 'find-base';
 }
 
 function isMapTimedRouteMode() {
@@ -4362,8 +4365,22 @@ async function calcDriveLeg(fromLat, fromLng, toLat, toLng) {
   const key = `${fromLat.toFixed(4)},${fromLng.toFixed(4)}|${toLat.toFixed(4)},${toLng.toFixed(4)}`;
   if (_driveLegCache.has(key)) return _driveLegCache.get(key);
   const mins = await calcDriveTimeMinutes(fromLat, fromLng, toLat, toLng);
-  _driveLegCache.set(key, mins);
+  // Do not cache nulls — transient OSRM/API failures would poison later route builds.
+  if (mins != null) _driveLegCache.set(key, mins);
   return mins;
+}
+
+function _haversineDriveMin(lat1, lng1, lat2, lng2) {
+  if (lat1 == null || lng1 == null || lat2 == null || lng2 == null) return null;
+  return Math.max(1, Math.round(_haversineKm(lat1, lng1, lat2, lng2) * 1.4));
+}
+
+async function _driveLegOrEstimate(fromLat, fromLng, toLat, toLng, { road = true } = {}) {
+  if (road) {
+    const leg = await calcDriveLeg(fromLat, fromLng, toLat, toLng);
+    if (leg != null) return leg;
+  }
+  return _haversineDriveMin(fromLat, fromLng, toLat, toLng);
 }
 
 async function getBaseStartEndCoords(base) {
@@ -4651,13 +4668,15 @@ async function buildMapDayPlanFromManualOrder(date, dayBase, routeMode) {
 
   const mode = routeMode === 'opt-multiday' ? 'opt-multiday' : (
     routeMode === 'opt-free' ? 'opt-free' : (
-      routeMode === 'timed' ? 'as-scheduled' : routeMode
+      routeMode === 'find-base' ? 'find-base' : (
+        routeMode === 'timed' ? 'as-scheduled' : routeMode
+      )
     )
   );
   let plan = { date, day, base, endpoints, stops, skipped: [], mode };
   plan = await recalcPlanStopDrives(plan);
   const ann = await annotateMapRouteStops(plan.stops, date, endpoints, base, {
-    respectScheduledTimes: routeMode !== 'opt-free',
+    respectScheduledTimes: routeMode !== 'opt-free' && routeMode !== 'find-base',
     impliedTimes: true,
   });
   plan.departBaseMin = ann.departBaseMin;
@@ -4696,7 +4715,7 @@ async function applyManualOrderToMapStops(plan, date, dayBase, routeMode) {
     plan = await recalcPlanStopDrives(plan);
   }
   const ann = await annotateMapRouteStops(plan.stops || [], date, plan.endpoints, plan.base, {
-    respectScheduledTimes: routeMode !== 'opt-free',
+    respectScheduledTimes: routeMode !== 'opt-free' && routeMode !== 'find-base',
     impliedTimes: true,
   });
   plan.departBaseMin = ann.departBaseMin;
@@ -4811,8 +4830,12 @@ function isMapUnconstrainedMode() {
   return getMapRouteMode() === 'opt-free';
 }
 
+function isMapFindBaseMode() {
+  return getMapRouteMode() === 'find-base';
+}
+
 function isMapMultiDayRouteMode() {
-  return isMapOptMultidayMode() || isMapUnconstrainedMode();
+  return isMapOptMultidayMode() || isMapUnconstrainedMode() || isMapFindBaseMode();
 }
 
 function getMapAllDaysForSelectedBases() {
@@ -4837,6 +4860,7 @@ function getMapRouteModeLabel(mode) {
     'opt-scheduled': 'Optimized w Scheduled',
     'opt-free': 'Unconstrained Optimized',
     'opt-multiday': 'Multi-day optimize',
+    'find-base': 'Find Base',
   })[mode] || mode;
 }
 
@@ -4860,14 +4884,14 @@ function isPropIncludedInDayRoute(p, date, opts = {}) {
   const orderKey = _mapOrderKey(getMapOrderBaseForDate(date) || baseF, date);
   const manual = opts.manualOrder ?? _mapManualOrder[orderKey];
   if (manual?.includes(p.id)) return true;
-  if (getMapRouteMode() === 'opt-multiday' || getMapRouteMode() === 'opt-free') {
+  if (getMapRouteMode() === 'opt-multiday' || getMapRouteMode() === 'opt-free' || getMapRouteMode() === 'find-base') {
     const opt = _mapOptimizedOrder[orderKey];
     if (opt?.includes(p.id)) return true;
   }
   const rs = getPropRouteSchedule(p);
   if (rs.date !== date) return false;
   const routeMode = opts.routeMode ?? getMapRouteMode();
-  if (routeMode === 'opt-multiday') return true;
+  if (routeMode === 'opt-multiday' || routeMode === 'find-base') return true;
   return parseTimeToMinutes(getPropDayTime(p, date)) != null;
 }
 
@@ -5224,6 +5248,263 @@ async function computeUnconstrainedOptimizedRoute(date, bustCache = false) {
   return plan;
 }
 
+/** Props eligible for Find Base: selected stay base or Unassigned — never other bases. */
+function propMatchesFindBase(p, baseAbbr) {
+  if (!p || !baseAbbr || baseAbbr === UNASSIGNED_GRP) return isUnassignedProp(p);
+  if (isUnassignedProp(p)) return true;
+  return p.grp === baseAbbr;
+}
+
+function _rankFindBaseProps(props, dayFilter) {
+  const daySet = dayFilter instanceof Set ? dayFilter : new Set(dayFilter || []);
+  return [...props].sort((a, b) => {
+    const aRd = getPropRouteDate(a);
+    const bRd = getPropRouteDate(b);
+    const aOnDay = aRd && daySet.has(aRd) ? 0 : 1;
+    const bOnDay = bRd && daySet.has(bRd) ? 0 : 1;
+    if (aOnDay !== bOnDay) return aOnDay - bOnDay;
+    const aBase = isUnassignedProp(a) ? 1 : 0;
+    const bBase = isUnassignedProp(b) ? 1 : 0;
+    if (aBase !== bBase) return aBase - bBase;
+    const rank = s => (s === 'Scheduled' ? 0 : (s === 'Proposed' || s === 'To Be Scheduled' ? 1 : 2));
+    const rs = rank(a.status) - rank(b.status);
+    if (rs) return rs;
+    return String(a.name).localeCompare(String(b.name));
+  });
+}
+
+function _geometricMedianLatLng(points, iters = 40) {
+  if (!points?.length) return null;
+  let x = 0, y = 0;
+  for (const p of points) { x += p.lat; y += p.lng; }
+  x /= points.length;
+  y /= points.length;
+  for (let i = 0; i < iters; i++) {
+    let numX = 0, numY = 0, den = 0, onPoint = false;
+    for (const p of points) {
+      const d = Math.hypot(x - p.lat, y - p.lng);
+      if (d < 1e-12) { onPoint = true; break; }
+      const w = 1 / d;
+      numX += p.lat * w;
+      numY += p.lng * w;
+      den += w;
+    }
+    if (onPoint || !den) break;
+    x = numX / den;
+    y = numY / den;
+  }
+  return { lat: x, lng: y };
+}
+
+function _findBaseApproxScore(lat, lng, props) {
+  let s = 0;
+  for (const p of props) s += _haversineKm(lat, lng, p.lat, p.lng);
+  return s;
+}
+
+function _buildFindBaseLocationCandidates(props, base) {
+  const pts = props.map(p => ({ lat: p.lat, lng: p.lng }));
+  const median = _geometricMedianLatLng(pts) || pts[0];
+  const centroid = {
+    lat: pts.reduce((s, p) => s + p.lat, 0) / pts.length,
+    lng: pts.reduce((s, p) => s + p.lng, 0) / pts.length,
+  };
+  const candidates = [median, centroid];
+  const cur = stayBaseCoordsSync(base);
+  if (cur) candidates.push(cur);
+  const steps = [-0.08, -0.04, 0.04, 0.08];
+  for (const dLat of steps) {
+    for (const dLng of steps) {
+      candidates.push({ lat: median.lat + dLat, lng: median.lng + dLng });
+    }
+  }
+  for (const d of [-0.06, 0.06]) {
+    candidates.push({ lat: median.lat + d, lng: median.lng });
+    candidates.push({ lat: median.lat, lng: median.lng + d });
+  }
+  const seen = new Set();
+  const out = [];
+  for (const c of candidates) {
+    if (c?.lat == null || c?.lng == null) continue;
+    const key = `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ lat: c.lat, lng: c.lng });
+  }
+  return out;
+}
+
+function _makeFindBaseEndpoints(lat, lng) {
+  return {
+    startLat: lat, startLng: lng,
+    endLat: lat, endLng: lng,
+    startLabel: 'Proposed base', endLabel: 'Proposed base',
+    isTransit: false,
+  };
+}
+
+async function collectFindBaseProps(baseAbbr, statusFilter, dates) {
+  const daySet = new Set(dates);
+  const out = [];
+  const skipped = [];
+  for (const p of state.props) {
+    if (!isPropMapEligible(p, statusFilter)) continue;
+    if (!propMatchesFindBase(p, baseAbbr)) continue;
+    if (_mapTempUnscheduled.has(p.id)) continue;
+    const rd = getPropRouteDate(p);
+    if (rd && !daySet.has(rd)) continue;
+    await resolvePropCoords(p, false);
+    if (p.lat == null || p.lng == null) {
+      skipped.push({ p, reason: 'no coordinates' });
+      continue;
+    }
+    out.push(p);
+  }
+  const maxProps = (typeof FIND_BASE_MAX_PROPS === 'number' && FIND_BASE_MAX_PROPS > 0) ? FIND_BASE_MAX_PROPS : 15;
+  const ranked = _rankFindBaseProps(out, daySet);
+  const truncated = ranked.length > maxProps;
+  return {
+    props: ranked.slice(0, maxProps),
+    skipped,
+    truncated,
+    totalEligible: ranked.length,
+    maxProps,
+  };
+}
+
+async function computeFindBaseRoutes(routeDays, bustCache = false) {
+  const baseAbbr = [..._mapSelectedBases][0];
+  const base = getBase(baseAbbr);
+  const sortedDates = [...routeDays].filter(Boolean).sort();
+  if (!base || isTransitBase(base) || baseAbbr === UNASSIGNED_GRP || !sortedDates.length) {
+    _mapFindBaseResult = null;
+    return [];
+  }
+  const statusFilter = getMapStatusFilter();
+  const cacheKey = `findbase_${baseAbbr}_${sortedDates.join(',')}_${statusFilter}`;
+  if (!bustCache && _dayPlanCache[cacheKey] && _mapFindBaseResult?.cacheKey === cacheKey) {
+    _syncMapOptimizedOrderFromPlans(baseAbbr, _dayPlanCache[cacheKey]);
+    return _dayPlanCache[cacheKey];
+  }
+
+  const collected = await collectFindBaseProps(baseAbbr, statusFilter, sortedDates);
+  const { props, skipped, truncated, totalEligible, maxProps } = collected;
+    if (!props.length) {
+    _mapFindBaseResult = {
+      cacheKey, baseAbbr, lat: null, lng: null, totalDrive: 0, infeasible: 0,
+      propCount: 0, totalEligible, truncated: false, maxProps, skippedCount: skipped.length,
+    };
+    const empty = [];
+    for (const date of sortedDates) {
+      empty.push({
+        date, day: getDayForDate(date), base,
+        endpoints: null,
+        stops: [], skipped: [...skipped], finalDrive: null,
+        mode: 'find-base', totalDrive: 0, totalDriveMin: 0,
+        infeasibleCount: skipped.length, findBaseProposed: true,
+      });
+    }
+    _dayPlanCache[cacheKey] = empty;
+    return empty;
+  }
+
+  const candidates = _buildFindBaseLocationCandidates(props, base);
+  const approx = candidates.map(c => ({
+    ...c,
+    approxScore: _findBaseApproxScore(c.lat, c.lng, props),
+  })).sort((a, b) => a.approxScore - b.approxScore);
+  const topN = approx.slice(0, Math.min(5, approx.length));
+
+  // Search with haversine drive estimates (fast, rate-limit safe), then polish winner with road times.
+  let best = null;
+  for (const c of topN) {
+    const scored = await _evaluateFindBaseLocation(c.lat, c.lng, props, sortedDates, base, { road: false });
+    if (!best
+      || scored.totalDrive < best.totalDrive - 0.5
+      || (Math.abs(scored.totalDrive - best.totalDrive) <= 0.5 && scored.infeasible < best.infeasible)) {
+      best = scored;
+    }
+  }
+  best = await _refineFindBaseLocation(best, props, sortedDates, base);
+  best = await _evaluateFindBaseLocation(best.lat, best.lng, props, sortedDates, base, { road: true });
+
+  if (skipped.length && best?.plans?.length) {
+    const first = best.plans[0];
+    first.skipped = [...(first.skipped || []), ...skipped];
+    first.infeasibleCount = (first.infeasibleCount || 0) + skipped.length;
+  }
+
+  _syncMapOptimizedOrderFromPlans(baseAbbr, best.plans);
+  _mapFindBaseResult = {
+    cacheKey,
+    baseAbbr,
+    lat: best.lat,
+    lng: best.lng,
+    totalDrive: best.totalDrive,
+    infeasible: best.infeasible,
+    propCount: props.length,
+    totalEligible,
+    truncated,
+    maxProps,
+    skippedCount: skipped.length,
+  };
+  _dayPlanCache[cacheKey] = best.plans;
+  return best.plans;
+}
+
+async function applyFindBaseToSelectedBase() {
+  const result = _mapFindBaseResult;
+  if (!result || result.lat == null || result.lng == null) {
+    alert('Run Find Base first to get a proposed location.');
+    return;
+  }
+  const abbr = result.baseAbbr || [..._mapSelectedBases][0];
+  const base = getBase(abbr);
+  if (!base || isTransitBase(base)) {
+    alert('Select a stay base to apply the proposed GPS.');
+    return;
+  }
+  const gps = `${Number(result.lat).toFixed(5)},${Number(result.lng).toFixed(5)}`;
+  const prevCoords = stayBaseCoordsSync(base);
+  base.gps = gps;
+  base.lat = Number(result.lat);
+  base.lng = Number(result.lng);
+  try {
+    const loc = await syncEntityLocation(base, {
+      gps, address: base.address || '', isBase: true, mode: 'gps', overwriteTown: false,
+    });
+    if (!loc.ok) {
+      // Keep numeric coords even if reverse-geocode fails offline
+      base.gps = gps;
+      base.lat = Number(result.lat);
+      base.lng = Number(result.lng);
+    }
+  } catch (e) {
+    base.gps = gps;
+    base.lat = Number(result.lat);
+    base.lng = Number(result.lng);
+  }
+  try {
+    const pr = await HHApi.putBases(state_bases);
+    if (pr.ok && pr.data?.rev != null) _basesRev = pr.data.rev;
+  } catch (e) {}
+  localStorage.setItem(LS_BASES, JSON.stringify(state_bases));
+  if (!coordsEqual(prevCoords, stayBaseCoordsSync(base))) {
+    const n = await recalcPropsForBase(abbr);
+    if (n) { try { await saveToStorage(); } catch (e) {} }
+  }
+  _mapFindBaseResult = { ...result, applied: true };
+  updateFindBaseApplyBtn();
+  recalculateMapRoutes();
+}
+
+function updateFindBaseApplyBtn() {
+  const btn = document.getElementById('map-apply-find-base-btn');
+  if (!btn) return;
+  const show = isMapFindBaseMode() && _mapFindBaseResult && _mapFindBaseResult.lat != null;
+  btn.style.display = show ? '' : 'none';
+}
+
 const MULTIDAY_MIN_VISITS = 3;
 const MULTIDAY_BALANCE_PENALTY = 6;
 const MULTIDAY_UNDER_MIN_PENALTY = 450;
@@ -5263,27 +5544,284 @@ function _syncMapOptimizedOrderFromPlans(baseAbbr, plans) {
   }
 }
 
-async function _builtStopsFromRouteEntries(endpoints, route) {
+async function _builtStopsFromRouteEntries(endpoints, route, { road = true } = {}) {
   const start = { lat: endpoints.startLat, lng: endpoints.startLng };
   const end = { lat: endpoints.endLat, lng: endpoints.endLng };
   const stops = [];
   let cur = start;
   let usedDrive = 0;
   for (let i = 0; i < route.length; i++) {
-    const leg = await calcDriveLeg(cur.lat, cur.lng, route[i].p.lat, route[i].p.lng);
+    const leg = await _driveLegOrEstimate(cur.lat, cur.lng, route[i].p.lat, route[i].p.lng, { road });
     if (leg != null) usedDrive += leg;
     stops.push({ p: route[i].p, drive: leg, seq: i + 1, infeasible: false });
     cur = { lat: route[i].p.lat, lng: route[i].p.lng };
   }
   let finalDrive = null;
   if (stops.length) {
-    finalDrive = await calcDriveLeg(cur.lat, cur.lng, end.lat, end.lng);
+    finalDrive = await _driveLegOrEstimate(cur.lat, cur.lng, end.lat, end.lng, { road });
     if (finalDrive != null) usedDrive += finalDrive;
   } else if (endpoints.isTransit) {
-    finalDrive = await calcDriveLeg(start.lat, start.lng, end.lat, end.lng);
+    finalDrive = await _driveLegOrEstimate(start.lat, start.lng, end.lat, end.lng, { road });
     if (finalDrive != null) usedDrive = finalDrive;
   }
   return { stops, finalDrive, usedDrive };
+}
+
+function _findBaseQuickFeasible(routeLen, usedDrive) {
+  const daySpan = DAY_END_MIN - DAY_START_MIN;
+  return usedDrive + routeLen * VIEWING_MIN <= daySpan;
+}
+
+async function _findBaseSuggestedRouteDrive(start, route, end, { road = false } = {}) {
+  let total = 0;
+  let cur = start;
+  for (const entry of route) {
+    const leg = await _driveLegOrEstimate(cur.lat, cur.lng, entry.p.lat, entry.p.lng, { road });
+    if (leg == null) return Infinity;
+    total += leg;
+    cur = { lat: entry.p.lat, lng: entry.p.lng };
+  }
+  const fin = await _driveLegOrEstimate(cur.lat, cur.lng, end.lat, end.lng, { road });
+  return fin == null ? Infinity : total + fin;
+}
+
+async function _findBaseBestInsertion(start, route, flexible, end, { road = false } = {}) {
+  let bestProp = null, bestIdx = 0, bestCost = Infinity;
+  for (const p of flexible) {
+    for (let i = 0; i <= route.length; i++) {
+      const trial = [...route.slice(0, i), { p, anchor: false }, ...route.slice(i)];
+      const cost = await _findBaseSuggestedRouteDrive(start, trial, end, { road });
+      if (cost < bestCost) { bestCost = cost; bestProp = p; bestIdx = i; }
+    }
+  }
+  return { prop: bestProp, idx: bestIdx, cost: bestCost };
+}
+
+async function _findBaseAssignDays(endpoints, props, dates, base, { road = false } = {}) {
+  const dayStates = {};
+  const skippedByDate = {};
+  const dateSet = new Set(dates);
+  for (const date of dates) {
+    dayStates[date] = {
+      date,
+      day: getDayForDate(date),
+      base,
+      endpoints,
+      budget: SUGGESTED_DRIVE_STAY,
+      route: [],
+      usedDrive: 0,
+    };
+    skippedByDate[date] = [];
+  }
+  const flexible = [];
+  for (const p of props) {
+    const vd = getPropVisitDate(p);
+    if (vd && dateSet.has(vd)) {
+      const timeMin = parseTimeToMinutes(getPropDayTime(p, vd));
+      if (timeMin != null) {
+        dayStates[vd].route.push({ p, anchor: true, timeMin });
+        continue;
+      }
+    }
+    flexible.push(p);
+  }
+  for (const date of dates) {
+    dayStates[date].route.sort((a, b) => {
+      if (a.anchor && b.anchor) return (a.timeMin ?? 99999) - (b.timeMin ?? 99999);
+      if (a.anchor !== b.anchor) return a.anchor ? -1 : 1;
+      return String(a.p.name).localeCompare(String(b.p.name));
+    });
+    const built = await _builtStopsFromRouteEntries(endpoints, dayStates[date].route, { road });
+    dayStates[date].usedDrive = built.usedDrive;
+  }
+
+  let remaining = [...flexible];
+  while (remaining.length) {
+    let bestProp = null, bestDate = null, bestIdx = 0, bestCost = Infinity;
+    for (const p of remaining) {
+      for (const date of dates) {
+        const ds = dayStates[date];
+        const start = { lat: endpoints.startLat, lng: endpoints.startLng };
+        const end = { lat: endpoints.endLat, lng: endpoints.endLng };
+        const { prop, idx, cost } = await _findBaseBestInsertion(start, ds.route, [p], end, { road });
+        if (!prop || cost === Infinity) continue;
+        const trialRoute = [...ds.route.slice(0, idx), { p, anchor: false }, ...ds.route.slice(idx)];
+        const built = await _builtStopsFromRouteEntries(endpoints, trialRoute, { road });
+        if (built.usedDrive > ds.budget) continue;
+        if (!_findBaseQuickFeasible(trialRoute.length, built.usedDrive)) continue;
+        const marginal = built.usedDrive - ds.usedDrive;
+        // Prefer lighter days (under-min penalty biases against empty days).
+        const adjustedCost = marginal + _multiDayStopLoad(ds) * MULTIDAY_BALANCE_PENALTY + _multiDayVisitCount(ds) * 15;
+        if (adjustedCost < bestCost) {
+          bestCost = adjustedCost;
+          bestProp = p;
+          bestDate = date;
+          bestIdx = idx;
+        }
+      }
+    }
+    if (!bestProp || bestDate == null) break;
+    dayStates[bestDate].route.splice(bestIdx, 0, { p: bestProp, anchor: false });
+    const built = await _builtStopsFromRouteEntries(endpoints, dayStates[bestDate].route, { road });
+    dayStates[bestDate].usedDrive = built.usedDrive;
+    remaining.splice(remaining.indexOf(bestProp), 1);
+  }
+  // Soft-pack leftovers onto lightest feasible days before marking skipped.
+  while (remaining.length) {
+    const p = remaining[0];
+    let placed = false;
+    const orderedDates = [...dates].sort((a, b) => _multiDayVisitCount(dayStates[a]) - _multiDayVisitCount(dayStates[b]) || a.localeCompare(b));
+    for (const date of orderedDates) {
+      const ds = dayStates[date];
+      const start = { lat: endpoints.startLat, lng: endpoints.startLng };
+      const end = { lat: endpoints.endLat, lng: endpoints.endLng };
+      const { prop, idx } = await _findBaseBestInsertion(start, ds.route, [p], end, { road });
+      if (!prop) continue;
+      const trialRoute = [...ds.route.slice(0, idx), { p, anchor: false }, ...ds.route.slice(idx)];
+      const built = await _builtStopsFromRouteEntries(endpoints, trialRoute, { road });
+      if (!_findBaseQuickFeasible(trialRoute.length, built.usedDrive)) continue;
+      if (built.usedDrive > ds.budget + 60) continue;
+      ds.route = trialRoute;
+      ds.usedDrive = built.usedDrive;
+      remaining.shift();
+      placed = true;
+      break;
+    }
+    if (!placed) break;
+  }
+  for (const p of remaining) {
+    const target = _multiDayLightestDate(dayStates, dates);
+    if (target) skippedByDate[target].push({ p, reason: 'budget or time limit' });
+  }
+
+  // Light rebalance toward min visits using same drive mode
+  for (const targetDate of [...dates].sort((a, b) => _multiDayVisitCount(dayStates[a]) - _multiDayVisitCount(dayStates[b]))) {
+    while (_multiDayVisitCount(dayStates[targetDate]) < MULTIDAY_MIN_VISITS) {
+      let moved = false;
+      const srcDates = [...dates]
+        .filter(d => d !== targetDate && _multiDayVisitCount(dayStates[d]) > 1)
+        .sort((a, b) => _multiDayVisitCount(dayStates[b]) - _multiDayVisitCount(dayStates[a]));
+      for (const srcDate of srcDates) {
+        const dsSrc = dayStates[srcDate];
+        const dsTarget = dayStates[targetDate];
+        for (let fi = dsSrc.route.length - 1; fi >= 0; fi--) {
+          const entry = dsSrc.route[fi];
+          if (entry.anchor) continue;
+          const p = entry.p;
+          const start = { lat: endpoints.startLat, lng: endpoints.startLng };
+          const end = { lat: endpoints.endLat, lng: endpoints.endLng };
+          const { prop, idx } = await _findBaseBestInsertion(start, dsTarget.route, [p], end, { road });
+          if (!prop) continue;
+          const trialTarget = [...dsTarget.route.slice(0, idx), { p, anchor: false }, ...dsTarget.route.slice(idx)];
+          const builtTarget = await _builtStopsFromRouteEntries(endpoints, trialTarget, { road });
+          if (builtTarget.usedDrive > dsTarget.budget + 60) continue;
+          if (!_findBaseQuickFeasible(trialTarget.length, builtTarget.usedDrive)) continue;
+          dsSrc.route.splice(fi, 1);
+          dsTarget.route = trialTarget;
+          dsTarget.usedDrive = builtTarget.usedDrive;
+          const builtSrc = await _builtStopsFromRouteEntries(endpoints, dsSrc.route, { road });
+          dsSrc.usedDrive = builtSrc.usedDrive;
+          moved = true;
+          break;
+        }
+        if (moved) break;
+      }
+      if (!moved) break;
+    }
+  }
+
+  for (const date of dates) {
+    const candidates = dayStates[date].route.map(e => e.p);
+    if (!candidates.length) continue;
+    const ordered = [];
+    let cur = { lat: endpoints.startLat, lng: endpoints.startLng };
+    const left = [...candidates];
+    while (left.length) {
+      let best = null, bestLeg = Infinity;
+      for (const p of left) {
+        const leg = await _driveLegOrEstimate(cur.lat, cur.lng, p.lat, p.lng, { road });
+        if (leg != null && leg < bestLeg) { best = p; bestLeg = leg; }
+      }
+      if (!best) break;
+      ordered.push(best);
+      cur = { lat: best.lat, lng: best.lng };
+      left.splice(left.indexOf(best), 1);
+    }
+    ordered.push(...left);
+    dayStates[date].route = ordered.map(p => {
+      const timeMin = parseTimeToMinutes(getPropDayTime(p, date));
+      return { p, anchor: timeMin != null, timeMin };
+    });
+    const built = await _builtStopsFromRouteEntries(endpoints, dayStates[date].route, { road });
+    dayStates[date].usedDrive = built.usedDrive;
+  }
+
+  return { dayStates, skippedByDate };
+}
+
+async function _evaluateFindBaseLocation(lat, lng, props, dates, base, { road = false } = {}) {
+  const endpoints = _makeFindBaseEndpoints(lat, lng);
+  const { dayStates, skippedByDate } = await _findBaseAssignDays(endpoints, props, dates, base, { road: false });
+  if (!road) {
+    let totalDrive = 0;
+    let infeasible = 0;
+    const plans = [];
+    for (const date of dates) {
+      const ds = dayStates[date];
+      const skipped = skippedByDate[date] || [];
+      totalDrive += ds.usedDrive || 0;
+      infeasible += skipped.length;
+      plans.push({
+        date, day: ds.day, base, endpoints,
+        stops: ds.route.map((e, i) => ({ p: e.p, drive: null, seq: i + 1, infeasible: false })),
+        skipped, finalDrive: null, mode: 'find-base',
+        totalDrive: ds.usedDrive, totalDriveMin: ds.usedDrive,
+        infeasibleCount: skipped.length, findBaseProposed: true,
+      });
+    }
+    return { lat, lng, plans, totalDrive, infeasible };
+  }
+  // Keep haversine day packing; polish legs/timing with road distances only.
+  for (const date of dates) {
+    const built = await _builtStopsFromRouteEntries(endpoints, dayStates[date].route, { road: true });
+    dayStates[date].usedDrive = built.usedDrive;
+  }
+  const plans = [];
+  let totalDrive = 0;
+  let infeasible = 0;
+  for (const date of dates) {
+    const plan = await _finalizeMultiDayPlan(date, dayStates[date], skippedByDate[date] || [], {
+      mode: 'find-base',
+      respectScheduledTimes: false,
+    });
+    plan.endpoints = endpoints;
+    plan.findBaseProposed = true;
+    plans.push(plan);
+    totalDrive += plan.totalDriveMin || 0;
+    infeasible += plan.infeasibleCount || 0;
+  }
+  return { lat, lng, plans, totalDrive, infeasible };
+}
+
+async function _refineFindBaseLocation(best, props, dates, base, { maxSteps = 4, stepDeg = 0.025 } = {}) {
+  if (!best) return null;
+  let current = best;
+  for (let step = 0; step < maxSteps; step++) {
+    let improved = null;
+    for (const [dLat, dLng] of [[stepDeg, 0], [-stepDeg, 0], [0, stepDeg], [0, -stepDeg], [stepDeg, stepDeg], [stepDeg, -stepDeg], [-stepDeg, stepDeg], [-stepDeg, -stepDeg]]) {
+      const trial = await _evaluateFindBaseLocation(current.lat + dLat, current.lng + dLng, props, dates, base, { road: false });
+      const betterDrive = trial.totalDrive < current.totalDrive - 0.5;
+      const sameDriveFewerIssues = Math.abs(trial.totalDrive - current.totalDrive) <= 0.5 && trial.infeasible < current.infeasible;
+      if (betterDrive || sameDriveFewerIssues) {
+        if (!improved || trial.totalDrive < improved.totalDrive || (trial.totalDrive === improved.totalDrive && trial.infeasible < improved.infeasible)) {
+          improved = trial;
+        }
+      }
+    }
+    if (!improved) break;
+    current = improved;
+  }
+  return current;
 }
 
 async function _isMultiDayRouteFeasible(stops, date, endpoints, base, { respectScheduledTimes = true } = {}) {
@@ -5702,7 +6240,7 @@ function populateMapDayDropdown() {
   if (dayWrap) dayWrap.classList.toggle('map-day-locked', unconstrained);
   if (!_mapSelectedBases.size) {
     btn.disabled = true;
-    btn.textContent = 'Select bases first';
+    btn.textContent = isMapFindBaseMode() ? 'Select base first' : 'Select bases first';
     dd.innerHTML = '';
     _mapSelectedDays.clear();
     updateMapRouteModeState();
@@ -6334,6 +6872,10 @@ function getMapOrderBaseForDate(date) {
 
 function propMatchesMapBases(p, baseSet) {
   if (!baseSet?.size) return false;
+  if (isMapFindBaseMode()) {
+    const abbr = [...baseSet][0];
+    return propMatchesFindBase(p, abbr);
+  }
   for (const abbr of baseSet) {
     if (propMatchesMapBase(p, abbr)) return true;
   }
@@ -6345,17 +6887,39 @@ function populateMapBaseDropdown() {
   const dd = document.getElementById('map-base-dropdown');
   if (!btn || !dd) return;
   dd.style.display = 'none';
-  const bases = getMapBases();
+  const findBase = isMapFindBaseMode();
+  const baseLbl = document.querySelector('#map-base-wrap > label');
+  if (baseLbl) baseLbl.textContent = findBase ? 'Base' : 'Bases';
+  const bases = findBase
+    ? getActiveBasesSorted().filter(b => !isTransitBase(b))
+    : getMapBases();
+  if (findBase) {
+    const keep = [..._mapSelectedBases].find(ab => bases.some(b => b.abbr === ab));
+    _mapSelectedBases = keep ? new Set([keep]) : new Set();
+  }
   if (!_mapBaseFilterManual && !_mapSelectedBases.size) {
     applyDefaultMapTabFilters();
+    if (findBase) {
+      const keep = [..._mapSelectedBases].find(ab => bases.some(b => b.abbr === ab));
+      _mapSelectedBases = keep ? new Set([keep]) : new Set();
+    }
     if (_mapSelectedBases.size) return populateMapBaseDropdown();
   }
-  btn.textContent = _mapSelectedBases.size
-    ? `${_mapSelectedBases.size} base(s) selected`
-    : 'Select bases…';
-  dd.innerHTML = bases.map(b =>
-    `<label class="map-day-opt"><input type="checkbox" value="${b.abbr}" ${ _mapSelectedBases.has(b.abbr) ? 'checked' : '' } onchange="onMapBaseCheckChange()"> ${escHtml(b.name)} (${b.abbr})</label>`
-  ).join('');
+  if (findBase) {
+    const sel = [..._mapSelectedBases][0];
+    const selBase = sel ? getBase(sel) : null;
+    btn.textContent = selBase ? `${selBase.name} (${selBase.abbr})` : 'Select base…';
+    dd.innerHTML = bases.map(b =>
+      `<label class="map-day-opt"><input type="radio" name="map-base-radio" value="${b.abbr}" ${ _mapSelectedBases.has(b.abbr) ? 'checked' : '' } onchange="onMapBaseCheckChange()"> ${escHtml(b.name)} (${b.abbr})</label>`
+    ).join('') || '<div style="padding:6px 8px;font-size:11px;color:var(--text3)">No stay bases</div>';
+  } else {
+    btn.textContent = _mapSelectedBases.size
+      ? `${_mapSelectedBases.size} base(s) selected`
+      : 'Select bases…';
+    dd.innerHTML = bases.map(b =>
+      `<label class="map-day-opt"><input type="checkbox" value="${b.abbr}" ${ _mapSelectedBases.has(b.abbr) ? 'checked' : '' } onchange="onMapBaseCheckChange()"> ${escHtml(b.name)} (${b.abbr})</label>`
+    ).join('');
+  }
 }
 
 function toggleMapBaseDropdown() {
@@ -6370,14 +6934,29 @@ function onMapBaseCheckChange() {
   if (!dd) return;
   _mapBaseFilterManual = true;
   _mapSelectedBases.clear();
-  dd.querySelectorAll('input[type=checkbox]:checked').forEach(cb => _mapSelectedBases.add(cb.value));
+  if (isMapFindBaseMode()) {
+    const checked = dd.querySelector('input[type=radio]:checked');
+    if (checked) _mapSelectedBases.add(checked.value);
+  } else {
+    dd.querySelectorAll('input[type=checkbox]:checked').forEach(cb => _mapSelectedBases.add(cb.value));
+  }
   const btn = document.getElementById('map-base-btn');
-  if (btn) btn.textContent = _mapSelectedBases.size ? `${_mapSelectedBases.size} base(s) selected` : 'Select bases…';
+  if (btn) {
+    if (isMapFindBaseMode()) {
+      const sel = [..._mapSelectedBases][0];
+      const selBase = sel ? getBase(sel) : null;
+      btn.textContent = selBase ? `${selBase.name} (${selBase.abbr})` : 'Select base…';
+    } else {
+      btn.textContent = _mapSelectedBases.size ? `${_mapSelectedBases.size} base(s) selected` : 'Select bases…';
+    }
+  }
   _mapSelectedDays.clear();
   _mapDayFilterManual = false;
   _mapShadedPropIds.clear();
+  _mapFindBaseResult = null;
   populateMapDayDropdown();
   updateMapRouteModeState();
+  updateFindBaseApplyBtn();
   renderMapPropsPanel({ baseSet: _mapSelectedBases, dayPlans: [], unscheduled: [], listed: [], shadedIds: new Set(), loading: !!_mapSelectedBases.size });
   recalculateMapRoutes();
 }
@@ -6434,7 +7013,7 @@ function filterMapDayPlan(plan, statusFilter, baseF, dayFilter) {
   const planDate = plan.date || '';
   const keep = p => {
     if (!isPropMapEligible(p, statusFilter)) return false;
-    if (plan.mode === 'opt-multiday' || plan.mode === 'opt-free') {
+    if (plan.mode === 'opt-multiday' || plan.mode === 'opt-free' || plan.mode === 'find-base') {
       if (!propMatchesMapBaseForPlan(p, baseF, planDate)) return false;
     } else if (!isPropIncludedInDayRoute(p, planDate, { baseF, mapMode: true })) {
       return false;
@@ -6456,6 +7035,7 @@ function filterMapDayPlan(plan, statusFilter, baseF, dayFilter) {
 
 /** Base/day match for an already-built day plan (uses plan date, not live route-day picker). */
 function propMatchesMapBaseForPlan(p, baseAbbr, planDate) {
+  if (isMapFindBaseMode()) return propMatchesFindBase(p, baseAbbr);
   if (!baseAbbr) return !isUnassignedProp(p);
   if (baseAbbr === UNASSIGNED_GRP) return isUnassignedProp(p);
   const base = getBase(baseAbbr);
@@ -6473,6 +7053,7 @@ function propMatchesMapBaseForPlan(p, baseAbbr, planDate) {
 }
 
 function propMatchesMapBase(p, baseAbbr) {
+  if (isMapFindBaseMode()) return propMatchesFindBase(p, baseAbbr);
   if (!baseAbbr) return !isUnassignedProp(p);
   if (baseAbbr === UNASSIGNED_GRP) return isUnassignedProp(p);
   const base = getBase(baseAbbr);
@@ -6505,7 +7086,7 @@ function getMapUnscheduledProps(baseSet, statusFilter, dayFilter, routeMode, day
       if (!_mapTempUnscheduled.has(sk.p.id) && getPropRouteDate(sk.p)) inDayColumn.add(sk.p.id);
     }
   }
-  if (routeMode === 'opt-multiday' || routeMode === 'opt-free' || _mapRouteManual) {
+  if (routeMode === 'opt-multiday' || routeMode === 'opt-free' || routeMode === 'find-base' || _mapRouteManual) {
     for (const date of getMapPanelDayDates()) {
       const dayBase = getMapOrderBaseForDate(date);
       const orderKey = _mapOrderKey(dayBase, date);
@@ -6539,7 +7120,7 @@ function getMapUnscheduledProps(baseSet, statusFilter, dayFilter, routeMode, day
 }
 
 function getMapListedProps(baseSet, dayPlans, dayFilter, statusFilter, routeMode) {
-  if (!baseSet?.size || routeMode === 'suggested' || routeMode === 'opt-scheduled' || routeMode === 'opt-free' || routeMode === 'opt-multiday') return [];
+  if (!baseSet?.size || routeMode === 'suggested' || routeMode === 'opt-scheduled' || routeMode === 'opt-free' || routeMode === 'opt-multiday' || routeMode === 'find-base') return [];
   const inPlan = new Set();
   for (const plan of dayPlans || []) {
     for (const s of plan.stops || []) inPlan.add(s.p.id);
@@ -6555,7 +7136,7 @@ function propMatchesMapFilters(p, baseSet, dayFilter, statusFilter) {
   if (!isPropMapEligible(p, statusFilter)) return false;
   if (!baseSet?.size) return false;
   if (!propMatchesMapBases(p, baseSet)) return false;
-  if (!isUnassignedProp(p) && !isPropOnActiveBase(p)) return false;
+  if (!isUnassignedProp(p) && !isPropOnActiveBase(p) && !isMapFindBaseMode()) return false;
   if (!propMatchesMapDayFilter(p, baseSet, dayFilter)) return false;
   return true;
 }
@@ -6569,8 +7150,8 @@ function getPropScheduleKind(p, date) {
   const rs = getPropRouteSchedule(p);
   if (!rs.source) return null;
   if (date && rs.date && rs.date !== date) {
-    // Unconstrained may place props on other days — keep Proposed/Scheduled styling.
-    if (isMapUnconstrainedMode()) return rs.source;
+    // Unconstrained / Find Base may place props on other days — keep Proposed/Scheduled styling.
+    if (isMapUnconstrainedMode() || isMapFindBaseMode()) return rs.source;
     return null;
   }
   return rs.source;
@@ -6773,7 +7354,7 @@ function _mapDropZoneKind(el) {
 function getMapDayRouteStops(plan, date, baseF, statusFilter) {
   if (!plan) return [];
   return (plan.stops || []).filter(s => {
-    if (plan.mode === 'opt-multiday' || plan.mode === 'opt-free') {
+    if (plan.mode === 'opt-multiday' || plan.mode === 'opt-free' || plan.mode === 'find-base') {
       return isPropMapEligible(s.p, statusFilter) && propMatchesMapBaseForPlan(s.p, baseF, date);
     }
     if (!isPropIncludedInDayRoute(s.p, date, { baseF, mapMode: true })) return false;
@@ -6879,7 +7460,7 @@ function pruneMapManualOrders() {
       if (arr.indexOf(id) !== idx) return false;
       const p = getProp(id);
       if (!p) return false;
-      if (_mapRouteManual || getMapRouteMode() === 'opt-multiday' || getMapRouteMode() === 'opt-free') return true;
+      if (_mapRouteManual || getMapRouteMode() === 'opt-multiday' || getMapRouteMode() === 'opt-free' || getMapRouteMode() === 'find-base') return true;
       const rd = getPropRouteDate(p);
       return !rd || rd === date;
     });
@@ -6946,10 +7527,23 @@ function updateMapRouteModeState() {
   // Keep the Route select enabled whenever bases/days exist so users can leave
   // system views (incl. after Unconstrained auto-selects all days).
   mode.disabled = !_mapSelectedBases.size || !_mapSelectedDays.size;
+  updateFindBaseApplyBtn();
 }
 
 function onMapRouteModeChange() {
   _mapRouteManual = false;
+  if (isMapFindBaseMode()) {
+    const stay = [..._mapSelectedBases].find(ab => {
+      const b = getBase(ab);
+      return b && !isTransitBase(b) && ab !== UNASSIGNED_GRP;
+    });
+    _mapSelectedBases = stay ? new Set([stay]) : new Set();
+    _mapFindBaseResult = null;
+    populateMapBaseDropdown();
+  } else {
+    _mapFindBaseResult = null;
+    populateMapBaseDropdown();
+  }
   if (isMapUnconstrainedMode() && _mapSelectedBases.size) {
     const days = getDaysForMapBases(_mapSelectedBases);
     _mapSelectedDays = new Set(days.map(d => d.date));
@@ -6966,12 +7560,17 @@ function onMapRouteModeChange() {
   populateMapDayDropdown();
   const info = document.getElementById('map-route-info');
   const resetBtn = document.getElementById('map-reset-btn');
-  if (resetBtn) resetBtn.title = 'Recalculate routes and redraw map';
+  if (resetBtn) {
+    resetBtn.title = isMapFindBaseMode()
+      ? 'Recompute proposed base location and schedule'
+      : 'Recalculate routes and redraw map';
+  }
   if (info && isMapAsScheduledMode() && getMapEffectiveRouteDays().length !== 1) {
     info.textContent = 'Scheduled route requires exactly one day.';
   } else if (info) {
     info.textContent = '';
   }
+  updateFindBaseApplyBtn();
   recalculateMapRoutes();
 }
 
@@ -7024,6 +7623,25 @@ function _updateMapRouteInfo(plans) {
     return;
   }
   const list = Array.isArray(plans) ? plans : (plans ? [plans] : []);
+  if (isMapFindBaseMode()) {
+    const r = _mapFindBaseResult;
+    if (!r) { el.textContent = ''; updateFindBaseApplyBtn(); return; }
+    if (r.lat == null) {
+      el.textContent = r.skippedCount
+        ? `Find Base: no mappable properties (${r.skippedCount} missing GPS)`
+        : 'Find Base: no eligible properties (unassigned + this base only)';
+      updateFindBaseApplyBtn();
+      return;
+    }
+    const gps = `${Number(r.lat).toFixed(5)}, ${Number(r.lng).toFixed(5)}`;
+    const trunc = r.truncated ? ` · using ${r.propCount}/${r.totalEligible} (cap ${r.maxProps})` : ` · ${r.propCount} props`;
+    const drive = formatDurMin(r.totalDrive);
+    const issues = r.infeasible ? ` · ${r.infeasible} issues` : '';
+    const daysNote = list.length > 1 ? `${list.length} days · ` : '';
+    el.textContent = `Proposed base ${gps} · ${daysNote}${drive} drive${trunc}${issues}`;
+    updateFindBaseApplyBtn();
+    return;
+  }
   if (!list.length) { el.textContent = ''; return; }
   if ((isMapOptMultidayMode() || isMapUnconstrainedMode()) && list.length > 1) {
     const totalStops = list.reduce((n, plan) => n + (plan.stops?.length || 0), 0);
@@ -7207,7 +7825,7 @@ async function _drawMapDayRoute(mapObj, plan, allLatLngs, lineColor, statusFilte
   }
   const legs = _dayPlanRouteLegs(plan);
   if (legs.length) {
-    const dash = (plan.mode === 'suggested' || plan.mode === 'opt-free' || plan.mode === 'opt-multiday') ? '8,6' : null;
+    const dash = (plan.mode === 'suggested' || plan.mode === 'opt-free' || plan.mode === 'opt-multiday' || plan.mode === 'find-base') ? '8,6' : null;
     await drawRoadLegs(mapObj, legs, color, {
       weight: 4, opacity: 0.85,
       dashArray: dash,
@@ -7221,7 +7839,7 @@ async function _drawMapDayRoute(mapObj, plan, allLatLngs, lineColor, statusFilte
     if (scheduleMix) _noteMapScheduleMix(p, statusFilter, scheduleMix);
     const sk = getPropScheduleKind(p, plan.date);
     const visuals = resolveMapMarkerVisuals(p, ctx, plan, s);
-    const extra = (plan.mode === 'suggested' || plan.mode === 'opt-scheduled' || plan.mode === 'opt-free' || plan.mode === 'opt-multiday')
+    const extra = (plan.mode === 'suggested' || plan.mode === 'opt-scheduled' || plan.mode === 'opt-free' || plan.mode === 'opt-multiday' || plan.mode === 'find-base')
       ? `${s.startViewMin != null ? `View ${formatMinToTime(s.startViewMin)}–${formatMinToTime(s.departMin)}<br>` : ''}` +
         `${formatDurMin(s.drive)} from previous<br>` +
         (s.infeasible ? '<span style="color:#C0392B">⚠ Not enough time</span><br>' : '')
@@ -7468,6 +8086,7 @@ async function refreshMapAsync() {
 
   setMapStatus('Loading map…');
   _mapObj.eachLayer(l => { if (l instanceof L.Marker || l instanceof L.Polyline) _mapObj.removeLayer(l); });
+  if (!isMapFindBaseMode()) _mapFindBaseResult = null;
 
   try {
     for (const abbr of baseSet) {
@@ -7485,9 +8104,10 @@ async function refreshMapAsync() {
         'opt-scheduled': 'Optimizing routes…',
         'opt-free': 'Optimizing routes…',
         'opt-multiday': 'Optimizing multi-day routes…',
+        'find-base': 'Finding optimal base…',
       }[routeMode] || 'Loading routes…');
       setMapStatus(statusMsg);
-      if (routeMode === 'opt-multiday' || routeMode === 'opt-free') {
+      if (routeMode === 'opt-multiday' || routeMode === 'opt-free' || routeMode === 'find-base') {
         if (_mapRouteManual) {
           for (let i = 0; i < routeDays.length; i++) {
             const date = routeDays[i];
@@ -7495,6 +8115,16 @@ async function refreshMapAsync() {
             let plan = await buildMapDayPlanFromManualOrder(date, dayBase, routeMode);
             if (stale()) return;
             if (!plan) continue;
+            if (routeMode === 'find-base' && _mapFindBaseResult?.lat != null) {
+              plan.endpoints = _makeFindBaseEndpoints(_mapFindBaseResult.lat, _mapFindBaseResult.lng);
+              plan = await recalcPlanStopDrives(plan);
+              const ann = await annotateMapRouteStops(plan.stops || [], date, plan.endpoints, plan.base, {
+                respectScheduledTimes: false,
+                impliedTimes: true,
+              });
+              plan.departBaseMin = ann.departBaseMin;
+              await annotatePlanReturnLeg(plan);
+            }
             plan.lineColor = DAY_ROUTE_COLORS[i % DAY_ROUTE_COLORS.length];
             let filtered = filterMapDayPlan(plan, statusFilter, dayBase, dayFilter);
             const displayStops = getMapDayRouteStops(filtered, date, dayBase, statusFilter);
@@ -7502,9 +8132,11 @@ async function refreshMapAsync() {
             dayPlans.push(filtered);
           }
         } else {
-          const multiPlans = routeMode === 'opt-free'
-            ? await computeUnconstrainedMultiDayRoutes(routeDays, false)
-            : await computeMultiDayOptimizedRoutes(routeDays, false);
+          const multiPlans = routeMode === 'find-base'
+            ? await computeFindBaseRoutes(routeDays, false)
+            : (routeMode === 'opt-free'
+              ? await computeUnconstrainedMultiDayRoutes(routeDays, false)
+              : await computeMultiDayOptimizedRoutes(routeDays, false));
           if (stale()) return;
           _syncMapManualOrderFromPlans(multiPlans);
           for (let i = 0; i < multiPlans.length; i++) {
@@ -7588,6 +8220,19 @@ async function refreshMapAsync() {
       L.marker([bc.lat, bc.lng], { icon }).addTo(_mapObj)
         .bindPopup(`<b>★ ${base.name}</b> (Stay)<br>${base.visitFrom || ''}${base.visitTo && base.visitTo !== base.visitFrom ? ' – ' + base.visitTo : ''}`);
       allLatLngs.push([bc.lat, bc.lng]);
+    }
+    if (stale()) return;
+
+    if (routeMode === 'find-base' && _mapFindBaseResult?.lat != null && _mapFindBaseResult?.lng != null) {
+      const fb = _mapFindBaseResult;
+      const fbIcon = L.divIcon({
+        html: `<div style="background:#fff;color:#C0603A;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;border:3px dashed #C0603A;box-shadow:0 2px 8px rgba(0,0,0,.35)" title="Proposed base">★</div>`,
+        iconSize: [36, 36],
+        className: '',
+      });
+      L.marker([fb.lat, fb.lng], { icon: fbIcon, zIndexOffset: 600 }).addTo(_mapObj)
+        .bindPopup(`<b>Proposed base</b><br>${Number(fb.lat).toFixed(5)}, ${Number(fb.lng).toFixed(5)}<br>${formatDurMin(fb.totalDrive)} total drive · ${fb.propCount} properties`);
+      allLatLngs.push([fb.lat, fb.lng]);
     }
     if (stale()) return;
 
