@@ -1,7 +1,7 @@
 // House Hunt API — Cloudflare Pages Function v1.4
 // Routes: GET/PUT /api/data, GET /api/sync, POST/DELETE /api/lock,
 //         GET/POST /api/snapshots, POST /api/snapshots/restore,
-//         DELETE /api/snapshots/:id, GET/PUT /api/bases, POST /api/ifl-sync,
+//         DELETE /api/snapshots/:id, GET/PUT /api/bases, GET/PUT /api/settings, POST /api/ifl-sync,
 //         GET /api/ifl-sync-log,
 //         GET /api/drive-time, GET /api/geocode, GET /api/reverse-geocode,
 //         GET /api/directions, GET /api/elevation, GET /api/find-base-towns
@@ -74,6 +74,21 @@ async function bumpBasesRev(env) {
   const rev = (await getBasesRev(env)) + 1;
   await env.HH_KV.put('bases-rev', String(rev));
   return rev;
+}
+
+const APP_SETTINGS_KEY = 'app-settings';
+
+async function getAppSettings(env) {
+  try {
+    const raw = await env.HH_KV.get(APP_SETTINGS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+async function saveAppSettings(env, settings) {
+  await env.HH_KV.put(APP_SETTINGS_KEY, JSON.stringify(settings || {}));
 }
 
 const PROP_HISTORY_MAX = 100;
@@ -391,6 +406,26 @@ export async function onRequest(context) {
     await env.HH_KV.put('bases', JSON.stringify(bases));
     const rev = await bumpBasesRev(env);
     return json({ ok: true, rev, bases });
+  }
+
+  if (path === 'settings' && request.method === 'GET') {
+    return json(await getAppSettings(env));
+  }
+
+  if (path === 'settings' && request.method === 'PUT') {
+    let patch;
+    try { patch = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+    if (!patch || typeof patch !== 'object' || Array.isArray(patch)) {
+      return json({ error: 'Invalid payload' }, 400);
+    }
+    const current = await getAppSettings(env);
+    const settings = { ...current, ...patch };
+    if (settings.lastMsgTemplateIndex != null) {
+      const idx = parseInt(settings.lastMsgTemplateIndex, 10);
+      settings.lastMsgTemplateIndex = Number.isFinite(idx) ? Math.max(0, Math.min(2, idx)) : 0;
+    }
+    await saveAppSettings(env, settings);
+    return json({ ok: true, settings });
   }
 
   if (path === 'geocode' && request.method === 'GET') {
