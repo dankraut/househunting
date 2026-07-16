@@ -11,7 +11,7 @@ on:
         required: false
 
 env:
-  AUTOMERGE_SETTLE_MINUTES: '8'
+  AUTOMERGE_SETTLE_MINUTES: '4'
 
 permissions:
   contents: write

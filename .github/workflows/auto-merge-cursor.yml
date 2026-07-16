@@ -20,7 +20,7 @@ on:
 
 env:
   # Wait this long after the latest push before merging — gives agents time for follow-up commits.
-  AUTOMERGE_SETTLE_MINUTES: '8'
+  AUTOMERGE_SETTLE_MINUTES: '4'
 
 permissions:
   contents: write
