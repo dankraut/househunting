@@ -47,6 +47,13 @@ export function createApiClient(getToken) {
     driveTime(fromLat, fromLng, toLat, toLng) {
       return request(`/drive-time?fromLat=${fromLat}&fromLng=${fromLng}&toLat=${toLat}&toLng=${toLng}`);
     },
+    findBaseTowns({ south, west, north, east, minPop }) {
+      const q = new URLSearchParams({
+        south: String(south), west: String(west), north: String(north), east: String(east),
+      });
+      if (minPop != null) q.set('minPop', String(minPop));
+      return request(`/find-base-towns?${q}`);
+    },
 
     acquireLock(payload) { return request('/lock', { method: 'POST', body: payload }); },
     releaseLock(payload) { return request('/lock', { method: 'DELETE', body: payload }); },

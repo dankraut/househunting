@@ -4,7 +4,7 @@
 //         DELETE /api/snapshots/:id, GET/PUT /api/bases, POST /api/ifl-sync,
 //         GET /api/ifl-sync-log,
 //         GET /api/drive-time, GET /api/geocode, GET /api/reverse-geocode,
-//         GET /api/directions, GET /api/elevation
+//         GET /api/directions, GET /api/elevation, GET /api/find-base-towns
 
 const TOKEN = 'jmjk05DK';
 const MAX_SNAPSHOTS = 20;
@@ -530,6 +530,145 @@ export async function onRequest(context) {
     } catch (e) {
       return json({ minutes: null, source: 'error', error: e.message });
     }
+  }
+
+  // Eligible Find Base towns: population >= minPop only.
+  // Sources: Wikidata (Italian comuni + population), Overpass (OSM places with population tag).
+  if (path === 'find-base-towns' && request.method === 'GET') {
+    const south = parseFloat(url.searchParams.get('south'));
+    const west = parseFloat(url.searchParams.get('west'));
+    const north = parseFloat(url.searchParams.get('north'));
+    const east = parseFloat(url.searchParams.get('east'));
+    const minPop = Math.max(0, parseInt(url.searchParams.get('minPop') || '5000', 10) || 5000);
+    if (![south, west, north, east].every(Number.isFinite) || south >= north || west >= east) {
+      return json({ error: 'Invalid bbox (south,west,north,east)' }, 400);
+    }
+    if ((north - south) > 1.6 || (east - west) > 1.6) {
+      return json({ error: 'BBox too large' }, 400);
+    }
+
+    const byKey = new Map();
+    const upsert = (t) => {
+      if (!t?.name || t.lat == null || t.lng == null) return;
+      const pop = t.population;
+      if (pop == null || pop < minPop) return;
+      const key = `${String(t.name).toLowerCase()}|${Number(t.lat).toFixed(3)}|${Number(t.lng).toFixed(3)}`;
+      const prev = byKey.get(key);
+      if (!prev) { byKey.set(key, { ...t, population: pop }); return; }
+      if (pop > (prev.population || 0)) prev.population = pop;
+      if (!prev.place && t.place) prev.place = t.place;
+    };
+
+    const sources = [];
+
+    // 1) Wikidata Italian comuni with coordinates and population
+    try {
+      const sparql = `
+SELECT ?itemLabel ?lat ?lon ?pop WHERE {
+  SERVICE wikibase:box {
+    ?item wdt:P625 ?location .
+    bd:serviceParam wikibase:cornerWest "Point(${west} ${south})"^^geo:wktLiteral .
+    bd:serviceParam wikibase:cornerEast "Point(${east} ${north})"^^geo:wktLiteral .
+  }
+  ?item wdt:P31/wdt:P279* wd:Q747074 .
+  ?item p:P625/psv:P625 ?cnode .
+  ?cnode wikibase:geoLatitude ?lat .
+  ?cnode wikibase:geoLongitude ?lon .
+  ?item wdt:P1082 ?pop .
+  FILTER(?pop >= ${minPop})
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
+}
+LIMIT 120`.trim();
+      const wr = await fetch('https://query.wikidata.org/sparql?' + new URLSearchParams({
+        format: 'json',
+        query: sparql,
+      }), { headers: { Accept: 'application/sparql-results+json', 'User-Agent': 'HouseHunt/1.0' } });
+      if (wr.ok) {
+        const wd = await wr.json();
+        const rows = wd?.results?.bindings || [];
+        for (const row of rows) {
+          const lat = parseFloat(row.lat?.value);
+          const lng = parseFloat(row.lon?.value);
+          const pop = row.pop?.value != null ? parseInt(String(row.pop.value).replace(/[^\d]/g, ''), 10) : null;
+          if (!Number.isFinite(pop) || pop < minPop) continue;
+          upsert({
+            name: row.itemLabel?.value,
+            place: 'town',
+            lat, lng,
+            population: pop,
+          });
+        }
+        sources.push('wikidata');
+      }
+    } catch (e) { /* continue */ }
+
+    // 2) Overpass places with population tag (supplement Wikidata gaps)
+    try {
+      const query = `
+[out:json][timeout:22];
+(
+  node["place"~"^(city|town|village)$"]["population"](${south},${west},${north},${east});
+  way["place"~"^(city|town|village)$"]["population"](${south},${west},${north},${east});
+  relation["place"~"^(city|town|village)$"]["population"](${south},${west},${north},${east});
+);
+out center tags;
+`.trim();
+      const mirrors = [
+        'https://overpass-api.de/api/interpreter',
+        'https://lz4.overpass-api.de/api/interpreter',
+        'https://overpass.kumi.systems/api/interpreter',
+      ];
+      let d = null;
+      for (const mirror of mirrors) {
+        try {
+          const r = await fetch(mirror, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+            body: 'data=' + encodeURIComponent(query),
+          });
+          if (!r.ok) continue;
+          const ct = r.headers.get('content-type') || '';
+          if (!ct.includes('json')) continue;
+          d = await r.json();
+          if (d) break;
+        } catch (e) { /* try next */ }
+      }
+      if (d) {
+        const elements = Array.isArray(d.elements) ? d.elements : [];
+        for (const el of elements) {
+          const lat = el.lat ?? el.center?.lat;
+          const lng = el.lon ?? el.center?.lon;
+          if (lat == null || lng == null) continue;
+          const tags = el.tags || {};
+          if (!tags.place || !tags.name) continue;
+          const population = parseInt(String(tags.population).replace(/[^\d]/g, ''), 10);
+          if (!Number.isFinite(population) || population < minPop) continue;
+          upsert({
+            name: tags.name,
+            place: tags.place,
+            lat, lng,
+            population,
+          });
+        }
+        sources.push('overpass');
+      }
+    } catch (e) { /* continue */ }
+
+    const towns = [...byKey.values()]
+      .map(t => ({
+        name: t.name,
+        place: t.place || 'town',
+        lat: t.lat,
+        lng: t.lng,
+        population: t.population,
+      }))
+      .sort((a, b) => (b.population || 0) - (a.population || 0));
+    return json({
+      towns,
+      source: sources.join('+') || 'none',
+      minPop,
+      placeCount: byKey.size,
+    });
   }
 
   if (path === 'ifl-sync-log' && request.method === 'GET') {
