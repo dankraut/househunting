@@ -718,26 +718,13 @@ out center tags;
   if (path === 'ifl-sync' && request.method === 'POST') {
     const { baseGrp, baseName, iflToken, properties } = await request.json();
     if (!iflToken) return json({ error: 'Missing iflToken' }, 400);
+    if (!baseGrp) return json({ error: 'Missing baseGrp' }, 400);
+    if (!Array.isArray(properties)) return json({ error: 'Missing properties array' }, 400);
     const iflIds = new Set(properties.map(p => String(p.id)));
     const propMap = Object.fromEntries(properties.map(p => [String(p.id), p]));
     const ELIM_STATUSES = new Set(['Under Agreement/Sold', 'Unresponsive', 'Rejected', 'Unable To See', 'Duplicate', 'Deleted', 'Deleted-Idealista']);
     const dataRaw = await env.HH_KV.get('data');
-    if (!dataRaw) {
-      const toAddEmpty = properties.filter(p => !p.discarded);
-      await appendIflSyncLog(env, {
-        baseGrp: baseGrp || '',
-        baseName: baseName || baseGrp || '',
-        iflToken,
-        total: properties.length,
-        active: properties.filter(p => !p.discarded).length,
-        added: toAddEmpty.length,
-        updated: 0,
-        markedDeleted: 0,
-        discarded: properties.filter(p => p.discarded).length,
-      });
-      return json({ ok: true, toAdd: toAddEmpty, updated: [], markedDeleted: [] });
-    }
-    const props = parseProps(dataRaw);
+    const props = dataRaw ? parseProps(dataRaw) : [];
     const bases = JSON.parse((await env.HH_KV.get('bases')) || '[]');
     function normalizePropGrp(sp) {
       if (typeof sp.grp === 'number' && sp.grp > 0 && bases[sp.grp - 1]?.abbr) {

@@ -257,6 +257,19 @@
   }
 
   // ── Toast ────────────
+  function showToast(msg, bg = '#2E7D32', ms = 4000) {
+    const el = document.createElement('div');
+    el.textContent = msg;
+    el.style.cssText = [
+      'position:fixed', 'bottom:24px', 'left:50%', 'transform:translateX(-50%)', 'z-index:2147483647',
+      `background:${bg}`, 'color:#fff', 'padding:10px 16px', 'border-radius:8px',
+      'font:500 13px system-ui,sans-serif', 'box-shadow:0 4px 14px rgba(0,0,0,.25)',
+      'max-width:90vw', 'text-align:center', 'pointer-events:none'
+    ].join(';');
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), ms);
+  }
+
 // ── Auto-discard: check pending queue on page load ──────────────────────────
 (function checkPendingDiscard() {
   const idMatch = location.pathname.match(/\/immobile\/(\d+)/);
