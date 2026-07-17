@@ -53,3 +53,4 @@ index.html|updateMapRouteModeState|Route mode select stays enabled with multi-da
 index.html|formatDurMin|Duration minutes always abbreviated as min
 index.html|buildPropCalendarIcs|Calendar export with address and GEO for mobile
 index.html|buildGoogleCalendarUrl|Desktop Google Calendar fallback for +Cal
+index.html|getPropCalendarLocationParts|Calendar location prefers GPS over generic addresses
