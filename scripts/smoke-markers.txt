@@ -51,3 +51,4 @@ index.html|getPropScheduleKind|Proposed/Scheduled stop name styling
 index.html|updateMapRouteModeState|Route mode select stays enabled with multi-day selection
 .github/workflows/auto-merge-cursor.yml|waitForSettlePeriod|Auto-merge settle period before production merge
 index.html|formatDurMin|Duration minutes always abbreviated as min
+index.html|buildPropCalendarIcs|Calendar export with address and GEO for mobile
