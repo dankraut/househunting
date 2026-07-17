@@ -6,10 +6,21 @@ import { createPropSyncConflict } from './property-sync-conflict.js';
 import { createPropertyHistoryModule } from './property-history.js';
 
 function getApiToken() {
+  const ver = localStorage.getItem('hh_api_key_ver');
+  if (ver !== config.API_TOKEN_VER) {
+    try {
+      localStorage.setItem('hh_api_key', config.API_TOKEN);
+      localStorage.setItem('hh_api_key_ver', config.API_TOKEN_VER);
+    } catch (e) {}
+    return config.API_TOKEN;
+  }
   let t = localStorage.getItem('hh_api_key');
   if (!t && config.API_TOKEN) {
     t = config.API_TOKEN;
-    try { localStorage.setItem('hh_api_key', t); } catch (e) {}
+    try {
+      localStorage.setItem('hh_api_key', t);
+      localStorage.setItem('hh_api_key_ver', config.API_TOKEN_VER);
+    } catch (e) {}
   }
   return t || '';
 }

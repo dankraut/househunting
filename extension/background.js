@@ -47,7 +47,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     chrome.scripting.executeScript({
       target: { tabId: spaTab.id },
       world: 'MAIN',
-      func: (payload) => { window.postMessage({ type: 'HOUSEHUNT_BROKER', ...payload }, '*'); },
+      func: (payload) => { window.postMessage({ type: 'HOUSEHUNT_BROKER', ...payload }, window.location.origin); },
       args: [data],
     }).then(() => sendResponse({ ok: true }))
       .catch((err) => sendResponse({ ok: false, reason: err.message }));
@@ -87,7 +87,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       chrome.scripting.executeScript({
         target: { tabId: spaTab.id },
         world: 'MAIN',
-        func: (payload) => { window.postMessage({ type: 'HOUSEHUNT_BROKER', ...payload }, '*'); },
+        func: (payload) => { window.postMessage({ type: 'HOUSEHUNT_BROKER', ...payload }, window.location.origin); },
         args: [pendingData],
       }).then(() => { chrome.storage.local.remove('pendingData'); sendResponse({ ok: true }); })
         .catch(e => sendResponse({ ok: false, reason: e.message }));

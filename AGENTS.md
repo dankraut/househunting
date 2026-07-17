@@ -16,7 +16,7 @@ npx wrangler pages dev . --kv HH_KV --port 8788 --ip 127.0.0.1
 - Serving the repo with a plain static server (e.g. `python -m http.server`) will load the SPA but the `/api/*` calls will 404/500 — use `wrangler pages dev` so the Functions + KV binding are available.
 
 ### Auth
-All `/api/*` calls require `Authorization: Bearer jmjk05DK` (or `?tk=jmjk05DK`). The SPA supplies this token automatically (`js/config.js` → `API_TOKEN`), so no manual key entry is needed for local dev.
+All `/api/*` calls require `Authorization: Bearer 5c237b666d2c79d58f0152e5` (or `?tk=…`). The SPA supplies this token automatically (`js/config.js` → `API_TOKEN`), so no manual key entry is needed for local dev.
 
 ### Non-obvious gotchas
 - **Google Maps needs a key.** Forward geocoding (typing a *Town* to resolve GPS) requires `env.GMAPS_KEY`, which is unset in local dev, so adding a property by town alone fails ("Could not find coordinates for that town"). Reverse-geocode, drive-time, and elevation endpoints return offline fallback estimates, so entering **GPS coordinates directly** in the add/edit forms works and still populates location + drive times. Set `GMAPS_KEY` (Wrangler env / Cloudflare) for real geocoding.

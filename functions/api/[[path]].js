@@ -6,7 +6,7 @@
 //         GET /api/drive-time, GET /api/geocode, GET /api/reverse-geocode,
 //         GET /api/directions, GET /api/elevation, GET /api/find-base-towns
 
-const TOKEN = 'jmjk05DK';
+const TOKEN = '5c237b666d2c79d58f0152e5';
 const MAX_SNAPSHOTS = 20;
 const LOCK_TTL_SEC = 120;
 
@@ -726,6 +726,11 @@ out center tags;
     const dataRaw = await env.HH_KV.get('data');
     const props = dataRaw ? parseProps(dataRaw) : [];
     const bases = JSON.parse((await env.HH_KV.get('bases')) || '[]');
+    function iflDeletionSafe(scrapedActive, existingActive) {
+      if (existingActive <= 0) return true;
+      if (scrapedActive <= 0) return false;
+      return scrapedActive >= Math.max(3, Math.ceil(existingActive * 0.5));
+    }
     function normalizePropGrp(sp) {
       if (typeof sp.grp === 'number' && sp.grp > 0 && bases[sp.grp - 1]?.abbr) {
         sp.grp = bases[sp.grp - 1].abbr;
@@ -852,6 +857,12 @@ out center tags;
     }
 
     // Properties on this base but no longer in the scraped IFL
+    const existingActiveOnBase = props.filter(sp =>
+      propOnBaseGrp(sp, baseGrp) && sp.status !== 'Deleted-Idealista' && !ELIM_STATUSES.has(sp.status)
+    ).length;
+    const scrapedActive = properties.filter(p => !p.discarded).length;
+    const skipDeletion = !iflDeletionSafe(scrapedActive, existingActiveOnBase);
+    if (!skipDeletion) {
     for (const sp of props) {
       const sid = String(sp.id);
       if (baseGrp && !propOnBaseGrp(sp, baseGrp)) continue;
@@ -862,6 +873,7 @@ out center tags;
       touchField(sp, 'status');
       sp._v = now;
       dirty = true;
+    }
     }
 
     if (dirty || toAdd.length) await saveDataProps(env, props);
@@ -876,7 +888,7 @@ out center tags;
       markedDeleted: markedDeleted.length,
       discarded: properties.filter(p => p.discarded).length,
     });
-    return json({ ok: true, toAdd, updated, markedDeleted });
+    return json({ ok: true, toAdd, updated, markedDeleted, skippedDeletion: skipDeletion });
   }
 
   return json({ error: 'Not found: ' + path }, 404);

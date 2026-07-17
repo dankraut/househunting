@@ -35,7 +35,7 @@ Production updates **only when a PR merges to `main`**. Cloudflare Pages then de
 
 - **SPA + API**: merge to `main` → Cloudflare Pages deploys `index.html`, `js/`, and `functions/api/[[path]].js`
 - **KV**: Cloudflare KV namespace `HH_KV` stores all data (keys: `data`, `bases`, `snapshots-index`, `snapshot:{id}`)
-- **Auth**: Bearer token `jmjk05DK` required on all API calls
+- **Auth**: Bearer token required on all API calls (see `js/config.js` → `API_TOKEN`). The SPA and extension store it locally after first load.
 - **Extension**: not deployed by Cloudflare — after merge, pull `main` locally and **Reload** the unpacked extension in Chrome when `extension/` changed
 
 ### Ship command (Desktop — same path as Cursor Cloud)

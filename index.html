@@ -425,6 +425,7 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
       <option value="planned">Planned only</option>
     </select>
     <label><input type="checkbox" id="sched-show-old" onchange="renderSchedule()"> Show past days</label>
+    <button type="button" class="io-btn" onclick="printSchedulePdf()" title="Print schedule for A4 / Save as PDF">PDF</button>
   </div>
   <div id="days-container" class="days-container"></div>
 </div>
@@ -929,7 +930,7 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
 
 <script type="module" src="js/bootstrap.js"></script>
 <script>
-// ═══ SPA v2.43 — app core (config/api/location in js/) ═══════════════════════════
+// ═══ SPA v2.44 — app core (config/api/location in js/) ═══════════════════════════
 
 const PROPS_RAW=[{"id":30278342,"name":"Tuscania Villa","town":"Tuscania","prov":"VT","price":780,"rooms":10,"size":300,"grp":1,"fco":72,"cdp":80,"caf":140,"spo":105,"man":45,"url":"https://www.idealista.it/immobile/30278342/","lat":42.418,"lng":11.875,"plannedDate":"2026-07-09","plannedTime":"10:30 AM"},{"id":34998463,"name":"Vetralla Villa","town":"Vetralla","prov":"VT","price":670,"rooms":12,"size":509,"grp":1,"fco":75,"cdp":95,"caf":155,"spo":95,"man":70,"url":"https://www.idealista.it/immobile/34998463/","lat":42.32,"lng":12.05,"plannedDate":"2026-07-09","plannedTime":"11:30 AM"},{"id":35809714,"name":"Canino Villa","town":"Canino","prov":"VT","price":870,"rooms":7,"size":380,"grp":1,"fco":78,"cdp":80,"caf":130,"spo":115,"man":30,"url":"https://www.idealista.it/immobile/35809714/","lat":42.468,"lng":11.744,"plannedDate":"2026-07-09","plannedTime":"9:30 AM"},{"id":26448701,"name":"Montecastrilli Villa","town":"Montecastrilli","prov":"TR","price":820,"rooms":19,"size":480,"grp":1,"fco":85,"cdp":70,"caf":120,"spo":30,"man":105,"url":"https://www.idealista.it/immobile/26448701/","lat":42.649,"lng":12.487,"plannedDate":"2026-07-06","plannedTime":"11:00 AM"},{"id":21658129,"name":"Manciano SP159","town":"Manciano","prov":"GR","price":850,"rooms":18,"size":379,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":0,"url":"https://www.idealista.it/immobile/21658129/","lat":42.595,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"8:45 AM"},{"id":18085022,"name":"Manciano Scansanese","town":"Manciano","prov":"GR","price":870,"rooms":10,"size":520,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/18085022/","lat":42.605,"lng":11.52,"plannedDate":"2026-07-10","plannedTime":"9:30 AM"},{"id":33646557,"name":"Manciano Montemerano","town":"Manciano","prov":"GR","price":698,"rooms":8,"size":430,"grp":1,"fco":95,"cdp":75,"caf":125,"spo":130,"man":10,"url":"https://www.idealista.it/immobile/33646557/","lat":42.544,"lng":11.57,"plannedDate":"2026-07-10","plannedTime":"10:20 AM"},{"id":32530331,"name":"Manciano Saturnia","town":"Manciano","prov":"GR","price":720,"rooms":10,"size":395,"grp":1,"fco":95,"cdp":80,"caf":125,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/32530331/","lat":42.555,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"11:10 AM"},{"id":27864548,"name":"Baschi Villa","town":"Baschi","prov":"TR","price":780,"rooms":10,"size":580,"grp":1,"fco":99,"cdp":45,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/27864548/","lat":42.675,"lng":12.212,"plannedDate":"2026-06-26","plannedTime":"12:15 PM"},{"id":34980477,"name":"Baschi Civitella","town":"Baschi","prov":"TR","price":990,"rooms":15,"size":450,"grp":1,"fco":99,"cdp":50,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/34980477/","lat":42.67,"lng":12.205,"plannedDate":"2026-06-26","plannedTime":"1:05 PM"},{"id":35860173,"name":"Todi Piagge Casale","town":"Todi","prov":"PG","price":825,"rooms":10,"size":300,"grp":1,"fco":102,"cdp":50,"caf":100,"spo":35,"man":100,"url":"https://www.idealista.it/immobile/35860173/","lat":42.775,"lng":12.412,"plannedDate":"2026-07-07","plannedTime":"9:00 AM"},{"id":35822412,"name":"Todi Collarezzo","town":"Todi","prov":"PG","price":850,"rooms":10,"size":351,"grp":1,"fco":102,"cdp":55,"caf":100,"spo":35,"man":105,"url":"https://www.idealista.it/immobile/35822412/","lat":42.782,"lng":12.43,"plannedDate":"2026-07-07","plannedTime":"10:00 AM"},{"id":34024712,"name":"San Venanzo Civitella","town":"San Venanzo","prov":"TR","price":845,"rooms":18,"size":815,"grp":1,"fco":105,"cdp":30,"caf":80,"spo":55,"man":90,"url":"https://www.idealista.it/immobile/34024712/","lat":42.87,"lng":12.265,"plannedDate":"","plannedTime":""},{"id":33903982,"name":"Scansano Fonte Guerra","town":"Scansano","prov":"GR","price":790,"rooms":12,"size":475,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/33903982/","lat":42.683,"lng":11.34,"plannedDate":"2026-07-10","plannedTime":"12:30 PM"},{"id":35951463,"name":"Scansano Montorgiali","town":"Scansano","prov":"GR","price":960,"rooms":8,"size":390,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35951463/","lat":42.69,"lng":11.332,"plannedDate":"2026-07-09","plannedTime":"3:00 PM"},{"id":35048730,"name":"Scansano Agriturismo","town":"Scansano","prov":"GR","price":630,"rooms":7,"size":390,"grp":1,"fco":105,"cdp":85,"caf":120,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35048730/","lat":42.676,"lng":11.321,"plannedDate":"2026-07-09","plannedTime":"3:50 PM"},{"id":35397327,"name":"Sorano Piancasale","town":"Sorano","prov":"GR","price":700,"rooms":24,"size":480,"grp":1,"fco":108,"cdp":50,"caf":100,"spo":110,"man":25,"url":"https://www.idealista.it/immobile/35397327/","lat":42.685,"lng":11.713,"plannedDate":"","plannedTime":""},{"id":21287742,"name":"Ferentillo Rustico","town":"Ferentillo","prov":"TR","price":645,"rooms":12,"size":650,"grp":1,"fco":110,"cdp":100,"caf":145,"spo":20,"man":140,"url":"https://www.idealista.it/immobile/21287742/","lat":42.623,"lng":12.798,"plannedDate":"2026-07-06","plannedTime":"9:00 AM"},{"id":10679967,"name":"Semproniano Rustico","town":"Semproniano","prov":"GR","price":720,"rooms":11,"size":355,"grp":1,"fco":110,"cdp":70,"caf":115,"spo":130,"man":5,"url":"https://www.idealista.it/immobile/10679967/","lat":42.623,"lng":11.537,"plannedDate":"","plannedTime":""},{"id":34882496,"name":"Spoleto Baiano","town":"Spoleto","prov":"PG","price":980,"rooms":17,"size":451,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":135,"url":"https://www.idealista.it/immobile/34882496/","lat":42.722,"lng":12.718,"plannedDate":"2026-07-05","plannedTime":"8:45 AM"},{"id":30865904,"name":"Spoleto Terzo La Pieve","town":"Spoleto","prov":"PG","price":900,"rooms":11,"size":350,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":130,"url":"https://www.idealista.it/immobile/30865904/","lat":42.715,"lng":12.708,"plannedDate":"2026-07-05","plannedTime":"9:45 AM"},{"id":35103506,"name":"Montefalco Fabbri","town":"Montefalco","prov":"PG","price":910,"rooms":16,"size":450,"grp":1,"fco":121,"cdp":70,"caf":105,"spo":25,"man":130,"url":"https://www.idealista.it/immobile/35103506/","lat":42.89,"lng":12.652,"plannedDate":"2026-07-04","plannedTime":"12:30 PM"},{"id":35432103,"name":"Deruta Tiberina","town":"Deruta","prov":"PG","price":790,"rooms":12,"size":320,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/35432103/","lat":42.982,"lng":12.419,"plannedDate":"2026-07-04","plannedTime":"10:00 AM"},{"id":33533240,"name":"Deruta Tiberina 203","town":"Deruta","prov":"PG","price":685,"rooms":22,"size":611,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/33533240/","lat":42.981,"lng":12.421,"plannedDate":"2026-07-04","plannedTime":"10:50 AM"},{"id":27988041,"name":"Deruta Centro Casale","town":"Deruta","prov":"PG","price":650,"rooms":12,"size":400,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/27988041/","lat":42.982,"lng":12.416,"plannedDate":"","plannedTime":""},{"id":29370809,"name":"Deruta Castelleone","town":"Deruta","prov":"PG","price":890,"rooms":12,"size":316,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/29370809/","lat":42.984,"lng":12.413,"plannedDate":"","plannedTime":""},{"id":34783987,"name":"Bettona Villa","town":"Bettona","prov":"PG","price":850,"rooms":20,"size":484,"grp":1,"fco":129,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/34783987/","lat":42.992,"lng":12.43,"plannedDate":"2026-06-27","plannedTime":"11:00 AM"},{"id":34843857,"name":"Santa Fiora Monte Amiata","town":"Santa Fiora","prov":"GR","price":978,"rooms":12,"size":520,"grp":1,"fco":130,"cdp":50,"caf":85,"spo":125,"man":40,"url":"https://www.idealista.it/immobile/34843857/","lat":42.834,"lng":11.587,"plannedDate":"","plannedTime":""},{"id":34979131,"name":"Corciano Migiana","town":"Corciano","prov":"PG","price":830,"rooms":13,"size":700,"grp":1,"fco":133,"cdp":40,"caf":55,"spo":75,"man":115,"url":"https://www.idealista.it/immobile/34979131/","lat":43.11,"lng":12.289,"plannedDate":"","plannedTime":""},{"id":35300665,"name":"Perugia Olmo","town":"Perugia","prov":"PG","price":675,"rooms":5,"size":425,"grp":2,"fco":138,"cdp":50,"caf":70,"spo":60,"man":125,"url":"https://www.idealista.it/immobile/35300665/","lat":43.085,"lng":12.442,"plannedDate":"2026-06-25","plannedTime":"12:30 PM"},{"id":35456752,"name":"Perugia Eugubina","town":"Perugia","prov":"PG","price":650,"rooms":21,"size":953,"grp":2,"fco":138,"cdp":50,"caf":60,"spo":70,"man":125,"url":"https://www.idealista.it/immobile/35456752/","lat":43.138,"lng":12.408,"plannedDate":"2026-06-25","plannedTime":"1:15 PM"},{"id":32456550,"name":"Perugia Colli Albani","town":"Perugia","prov":"PG","price":650,"rooms":10,"size":530,"grp":2,"fco":138,"cdp":50,"caf":65,"spo":65,"man":125,"url":"https://www.idealista.it/immobile/32456550/","lat":43.093,"lng":12.415,"plannedDate":"2026-06-25","plannedTime":"2:15 PM"},{"id":16393910,"name":"Perugia Solfagnano","town":"Perugia","prov":"PG","price":1100,"rooms":16,"size":725,"grp":2,"fco":138,"cdp":45,"caf":50,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/16393910/","lat":43.155,"lng":12.33,"plannedDate":"2026-06-26","plannedTime":"2:30 PM"},{"id":34105542,"name":"Perugia Monte Tezio","town":"Perugia","prov":"PG","price":890,"rooms":10,"size":500,"grp":2,"fco":138,"cdp":45,"caf":55,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/34105542/","lat":43.148,"lng":12.34,"plannedDate":"2026-06-26","plannedTime":"3:15 PM"},{"id":33928859,"name":"Assisi Porziano","town":"Assisi","prov":"PG","price":580,"rooms":12,"size":485,"grp":2,"fco":148,"cdp":70,"caf":85,"spo":50,"man":140,"url":"https://www.idealista.it/immobile/33928859/","lat":43.07,"lng":12.612,"plannedDate":"2026-07-03","plannedTime":"11:30 AM"},{"id":35247592,"name":"Lisciano Niccone Villa","town":"Lisciano Niccone","prov":"PG","price":1050,"rooms":12,"size":520,"grp":2,"fco":148,"cdp":50,"caf":25,"spo":105,"man":120,"url":"https://www.idealista.it/immobile/35247592/","lat":43.265,"lng":12.125,"plannedDate":"2026-06-27","plannedTime":"9:30 AM"},{"id":35456269,"name":"Umbertide Casale","town":"Umbertide","prov":"PG","price":1150,"rooms":15,"size":700,"grp":2,"fco":148,"cdp":60,"caf":45,"spo":95,"man":140,"url":"https://www.idealista.it/immobile/35456269/","lat":43.297,"lng":12.332,"plannedDate":"2026-07-03","plannedTime":"8:45 AM"},{"id":34939305,"name":"Umbertide Preggio","town":"Umbertide","prov":"PG","price":895,"rooms":16,"size":320,"grp":2,"fco":148,"cdp":60,"caf":40,"spo":100,"man":135,"url":"https://www.idealista.it/immobile/34939305/","lat":43.312,"lng":12.29,"plannedDate":"2026-07-03","plannedTime":"9:30 AM"},{"id":23044407,"name":"Foiano della Chiana","town":"Foiano","prov":"AR","price":750,"rooms":12,"size":500,"grp":2,"fco":150,"cdp":50,"caf":20,"spo":125,"man":105,"url":"https://www.idealista.it/immobile/23044407/","lat":43.251,"lng":11.819,"plannedDate":"2026-06-30","plannedTime":"11:30 AM"},{"id":33291507,"name":"Cortona Fratticciola","town":"Cortona","prov":"AR","price":870,"rooms":10,"size":311,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":110,"man":115,"url":"https://www.idealista.it/immobile/33291507/","lat":43.264,"lng":12.002,"plannedDate":"2026-06-28","plannedTime":"11:00 AM"},{"id":33311877,"name":"Cortona Cegliolo Villa","town":"Cortona","prov":"AR","price":980,"rooms":11,"size":400,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/33311877/","lat":43.27,"lng":12.0,"plannedDate":"2026-06-30","plannedTime":"10:30 AM"},{"id":35710302,"name":"Cortona Cegliolo Casale","town":"Cortona","prov":"AR","price":590,"rooms":7,"size":460,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/35710302/","lat":43.272,"lng":11.992,"plannedDate":"","plannedTime":""},{"id":24846822,"name":"CaF Val di Chio","town":"Castiglion Fiorentino","prov":"AR","price":1000,"rooms":12,"size":760,"grp":2,"fco":155,"cdp":55,"caf":0,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/24846822/","lat":43.335,"lng":11.942,"plannedDate":"2026-06-28","plannedTime":"8:45 AM"},{"id":34980495,"name":"CaF Santa Cristina","town":"Castiglion Fiorentino","prov":"AR","price":900,"rooms":12,"size":800,"grp":2,"fco":155,"cdp":55,"caf":5,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/34980495/","lat":43.325,"lng":11.938,"plannedDate":"2026-06-28","plannedTime":"9:30 AM"},{"id":31961655,"name":"Monteroni d'Arbia","town":"Monteroni d'Arbia","prov":"SI","price":980,"rooms":12,"size":480,"grp":2,"fco":155,"cdp":75,"caf":60,"spo":160,"man":95,"url":"https://www.idealista.it/immobile/31961655/","lat":43.227,"lng":11.415,"plannedDate":"2026-07-01","plannedTime":"12:00 PM"},{"id":26833080,"name":"Capolona Pieve SG","town":"Capolona","prov":"AR","price":890,"rooms":9,"size":420,"grp":2,"fco":158,"cdp":90,"caf":35,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/26833080/","lat":43.559,"lng":11.86,"plannedDate":"2026-07-01","plannedTime":"9:45 AM"},{"id":35651252,"name":"Capolona Caliano","town":"Capolona","prov":"AR","price":595,"rooms":10,"size":350,"grp":2,"fco":158,"cdp":90,"caf":30,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/35651252/","lat":43.554,"lng":11.856,"plannedDate":"2026-07-01","plannedTime":"9:00 AM"}];
 const _propsRawById = new Map(PROPS_RAW.map(p => [p.id, p]));
@@ -2198,9 +2199,9 @@ function _refreshDetailModalFields() {
   if (!p || _dmDirty) return;
   document.getElementById('detail-modal-title').textContent = p.name || 'Property Details';
   const stSel = document.getElementById('dm-status');
-  if (stSel) stSel.innerHTML = STATUS_OPTS.map(s => `<option${s === p.status ? ' selected' : ''}>${s}</option>`).join('');
+  if (stSel) stSel.innerHTML = STATUS_OPTS.map(s => `<option${s === p.status ? ' selected' : ''}>${escHtml(s)}</option>`).join('');
   const grpSel = document.getElementById('dm-grp');
-  if (grpSel) grpSel.innerHTML = getAssignableBases(p.grp).map(b => `<option value="${b.abbr}"${b.abbr === p.grp ? ' selected' : ''}>${b.name}${b.active === false ? ' (paused)' : ''}</option>`).join('');
+  if (grpSel) grpSel.innerHTML = getAssignableBases(p.grp).map(b => `<option value="${escAttr(b.abbr)}"${b.abbr === p.grp ? ' selected' : ''}>${escHtml(b.name)}${b.active === false ? ' (paused)' : ''}</option>`).join('');
   _dv('dm-name', p.name);
   _dv('dm-visit-date', getPropVisitDate(p));
   _dv('dm-visit-time', formatTimeDisplay(getPropVisitTime(p)));
@@ -3399,7 +3400,7 @@ function refreshBaseFilters() {
     const isGrp = (id === 'add-grp' || id === 'dm-grp');
     const cur = el.value;
     el.innerHTML = (isGrp ? '' : '<option value="">All</option>') +
-      active.map(b => `<option value="${b.abbr}">${b.name} (${b.abbr})</option>`).join('');
+      active.map(b => `<option value="${escAttr(b.abbr)}">${escHtml(b.name)} (${escHtml(b.abbr)})</option>`).join('');
     if (cur && activeAbbrs.has(cur)) el.value = cur;
     else if (cur) el.value = isGrp ? (active[0]?.abbr || '') : '';
   });
@@ -3572,7 +3573,7 @@ function renderTile(p) {
     <div style="font-size:11px;color:var(--text2);margin-top:1px">${specs}</div>
     <div class="tile-status-row">
       <select class="status-sel" onclick="event.stopPropagation()" onchange="quickStatus(${p.id},this.value)" title="Status">
-        ${STATUS_OPTS.map(s=>`<option${s===p.status?' selected':''}>${s}</option>`).join('')}
+        ${STATUS_OPTS.map(s=>`<option${s===p.status?' selected':''}>${escHtml(s)}</option>`).join('')}
       </select>
       ${chips}
     </div>
@@ -3595,6 +3596,23 @@ function onTileClick(e, id) {
 
 function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) { return escHtml(s).replace(/'/g, '&#39;'); }
+function escUrl(url) {
+  if (!url) return '#';
+  try {
+    const u = new URL(url, location.origin);
+    if (!/^https?:$/i.test(u.protocol)) return '#';
+    return escAttr(u.href);
+  } catch { return '#'; }
+}
+function escJsStr(s) { return JSON.stringify(String(s ?? '')); }
+function iflDeletionSafe(scrapedActive, existingActive) {
+  if (existingActive <= 0) return true;
+  if (scrapedActive <= 0) return false;
+  const minRatio = (typeof IFL_DELETION_MIN_RATIO === 'number') ? IFL_DELETION_MIN_RATIO : 0.5;
+  const minCount = (typeof IFL_DELETION_MIN_COUNT === 'number') ? IFL_DELETION_MIN_COUNT : 3;
+  return scrapedActive >= Math.max(minCount, Math.ceil(existingActive * minRatio));
 }
 
 function isUnableToSeeStatus(status) {
@@ -3749,9 +3767,9 @@ function openDetailModal(id) {
   _dv('dm-notes', p.notes);
 
   const stSel = document.getElementById('dm-status');
-  stSel.innerHTML = STATUS_OPTS.map(s=>`<option${s===p.status?' selected':''}>${s}</option>`).join('');
+  stSel.innerHTML = STATUS_OPTS.map(s=>`<option${s===p.status?' selected':''}>${escHtml(s)}</option>`).join('');
   const grpSel = document.getElementById('dm-grp');
-  grpSel.innerHTML = getAssignableBases(p.grp).map(b=>`<option value="${b.abbr}"${b.abbr===p.grp?' selected':''}>${b.name}${b.active===false?' (paused)':''}</option>`).join('');
+  grpSel.innerHTML = getAssignableBases(p.grp).map(b=>`<option value="${escAttr(b.abbr)}"${b.abbr===p.grp?' selected':''}>${escHtml(b.name)}${b.active===false?' (paused)':''}</option>`).join('');
 
   renderDmDriveTimes(p);
   renderDmElevation(p);
@@ -3825,7 +3843,7 @@ function renderDmDriveTimes(p) {
     const label = apt ? `✈ ${k}` : (base ? `📍 ${k}` : k);
     const cls = mins > DRIVE_CAP ? 'drive-hot' : '';
     const dist = formatDurMin(mins);
-    return `<span class="${cls}" style="margin-right:12px">${label}: ${dist}</span>`;
+    return `<span class="${cls}" style="margin-right:12px">${escHtml(label)}: ${escHtml(dist)}</span>`;
   }).filter(Boolean).join('');
   el.innerHTML = pairs;
 }
@@ -4197,7 +4215,7 @@ document.addEventListener('keydown', e => {
 function openAddModal(prefill = {}) {
   _addIdealistaGps = '';
   const grpSel = document.getElementById('add-grp');
-  if (grpSel) grpSel.innerHTML = getAssignableBases().map(b=>`<option value="${b.abbr}">${b.name}</option>`).join('');
+  if (grpSel) grpSel.innerHTML = getAssignableBases().map(b=>`<option value="${escAttr(b.abbr)}">${escHtml(b.name)}</option>`).join('');
   ['add-url','add-name','add-address','add-gps','add-price','add-rooms',
    'add-size','add-broker','add-phone','add-firm-name','add-firm-phone',
    'add-realtorUrl','add-notes'].forEach(id => {
@@ -4256,7 +4274,7 @@ function onAddUrlChange() {
   }
   if (statusEl) {
     statusEl.style.display='block'; statusEl.className='fetch-status fetch-ok';
-    statusEl.innerHTML = `ID <strong>${pid}</strong> detected. <a href="${url}" target="_blank" style="color:var(--adriat);font-weight:600">Open listing ↗</a> — fill fields below, or use the 🏡 extension on that page to auto-fill.`;
+    statusEl.innerHTML = `ID <strong>${escHtml(pid)}</strong> detected. <a href="${escUrl(url)}" target="_blank" rel="noopener" style="color:var(--adriat);font-weight:600">Open listing ↗</a> — fill fields below, or use the 🏡 extension on that page to auto-fill.`;
   }
   if (noteEl) noteEl.textContent = 'Open the listing in Chrome, click "🏡 Vedi il telefono" for phone, then click the 🏡 extension icon → Extract → Send to pre-fill broker, phone, and GPS here.';
 }
@@ -6848,7 +6866,7 @@ async function renderDayPlan(forceRecalc = false, resetOrder = false, syncMapTab
     const base = plan.base;
     const ep = plan.endpoints;
     const typeLbl = isTransitBase(base) ? 'Transit' : 'Stay';
-    summary.innerHTML = `<h3>${plan.day.label} · ${escHtml(base?.name || '')} (${base?.abbr || ''}) · ${typeLbl}</h3>
+    summary.innerHTML = `<h3>${escHtml(plan.day.label)} · ${escHtml(base?.name || '')} (${escHtml(base?.abbr || '')}) · ${escHtml(typeLbl)}</h3>
     <div>${ep ? `${escHtml(ep.startLabel)} → ${plan.stops.length ? plan.stops.length + ' viewings' : 'no viewings'} → ${escHtml(ep.endLabel)}` : 'Base location not resolved'}</div>
     <div style="margin-top:4px;color:var(--text3)">Day window ${formatMinToTime(DAY_START_MIN)}–${formatMinToTime(DAY_END_MIN)} · ${formatDurMin(VIEWING_MIN)} per property</div>
     ${formatPlanDriveSummary(plan) ? `<div style="margin-top:4px;color:var(--text3)">${formatPlanDriveSummary(plan)}</div>` : ''}
@@ -7097,8 +7115,8 @@ function renderSchedule() {
     html += `<div class="day-card ${conflictCls}" id="day-${day.date}">
   <div class="day-header" onclick="this.closest('.day-card').classList.toggle('collapsed')">
     <div style="display:flex;align-items:center;gap:6px">
-      <span class="day-label">${day.label}</span>
-      <span class="day-base" style="color:${bColor}">${base?.name || day.base}</span>
+      <span class="day-label">${escHtml(day.label)}</span>
+      <span class="day-base" style="color:${bColor}">${escHtml(base?.name || day.base)}</span>
       ${day.isPast ? '<span style="font-size:9px;color:var(--text3);font-style:italic">past</span>' : ''}
     </div>
     <div class="day-meta">
@@ -7129,9 +7147,8 @@ function renderSchedule() {
       const driveClass = dt == null ? '' : dt > DRIVE_CAP ? 'drive-chip-over' : dt > DRIVE_CAP * 0.75 ? 'drive-chip-warn' : '';
       const mapUrl = getGoogleMapsDirectionsUrl(p);
       html += `<div class="stop-row${isLocked?' sched-locked':''}" data-pid="${p.id}">
-    <span class="drag-handle">⠿</span>
-    <span class="stop-time">${time||'—'}</span>
-    <span class="stop-name" title="${escHtml(p.name)}">${escHtml(p.name)}</span>
+    <span class="stop-time">${escHtml(time||'—')}</span>
+    <span class="stop-name" title="${escAttr(p.name)}">${escHtml(p.name)}</span>
     ${isLocked ? '<span class="sched-badge">✓</span>' : ''}
     ${dt != null ? `<span class="drive-chip ${driveClass}">${formatDurMin(dt)}</span>` : ''}
     ${mapUrl ? `<a href="${mapUrl}" target="_blank" rel="noopener" class="mapit-btn">🗺</a>` : '<span class="mapit-btn disabled">🗺</span>'}
@@ -7150,9 +7167,8 @@ function renderSchedule() {
   </div>
   <div class="zone-drop" id="drop-unscheduled" data-date="" data-base="">
     ${unscheduled.map(p => `<div class="zone-row" data-pid="${p.id}">
-      <span class="drag-handle">⠿</span>
       <span class="stop-name">${escHtml(p.name)}</span>
-      <span style="font-size:10px;color:var(--text3)">${p.grp}</span>
+      <span style="font-size:10px;color:var(--text3)">${escHtml(p.grp)}</span>
       <button class="t-btn t-btn-blue" style="font-size:9px;padding:1px 5px" onclick="openDetailModal(${p.id})">✏</button>
     </div>`).join('')}
   </div>
@@ -7169,7 +7185,7 @@ function renderSchedule() {
   <div class="zone-drop" style="pointer-events:none">
     ${elim.map(p => `<div class="zone-row" data-pid="${p.id}">
       <span class="stop-name" style="opacity:.6">${escHtml(p.name)}</span>
-      <span style="font-size:10px;color:var(--red)">${p.status}</span>
+      <span style="font-size:10px;color:var(--red)">${escHtml(p.status)}</span>
       <button class="t-btn t-btn-restore" style="font-size:9px;padding:1px 5px" onclick="quickStatus(${p.id},'New')">↩</button>
     </div>`).join('')}
   </div>
@@ -7177,59 +7193,138 @@ function renderSchedule() {
   }
 
   container.innerHTML = html;
-  _initSchedDnd();
 }
 
-function _initSchedDnd() {
-  document.querySelectorAll('.drop-zone').forEach(zone => {
-    const date = zone.dataset.date;
-    const base = zone.dataset.base;
-    if (_schedSortables[zone.id]) { _schedSortables[zone.id].destroy(); }
-    _schedSortables[zone.id] = new Sortable(zone, {
-      group: 'schedule',
-      animation: 150,
-      handle: '.drag-handle',
-      onEnd: evt => {
-        const pid = evt.item.dataset.pid;
-        const toDate = evt.to.dataset.date;
-        const p = getProp(pid);
-        if (!p) return;
-        if (isPropLockedScheduled(p)) return; // locked
-        if (toDate) {
-          const err = validatePropProposedDate(p, toDate);
-          if (err) { alert(err); renderSchedule(); return; }
-        }
-        const histBefore = HHPropHistory.snapshotPropDetails(p);
-        setPropVisit(p, toDate || '', '');
-        touchPropFields(p, ['visitDate', 'visitTime', 'proposedDate', 'proposedTime', 'schedDate', 'schedTime']);
-        HHPropHistory.recordPropDetailChanges(p, histBefore, 'Schedule');
-        if (toDate) {
-          delete _dayPlanCache[toDate];
-          delete _dayPlanCache[toDate + '_as_scheduled'];
-          delete _dayPlanCache[toDate + '_suggested'];
-          delete _dayPlanCache[toDate + '_suggested_anchored'];
-        }
-        saveToStorage();
-      }
-    });
-  });
-  const unzone = document.getElementById('drop-unscheduled');
-  if (unzone && !_schedSortables['drop-unscheduled']) {
-    _schedSortables['drop-unscheduled'] = new Sortable(unzone, {
-      group: 'schedule', animation: 150, handle: '.drag-handle',
-      onEnd: evt => {
-        const pid = evt.item.dataset.pid;
-        const p = getProp(pid);
-        if (p && !isPropLockedScheduled(p)) {
-          const histBefore = HHPropHistory.snapshotPropDetails(p);
-          setPropVisit(p, '', '');
-          touchPropFields(p, ['visitDate', 'visitTime', 'proposedDate', 'proposedTime', 'schedDate', 'schedTime']);
-          HHPropHistory.recordPropDetailChanges(p, histBefore, 'Schedule');
-          saveToStorage();
-        }
-      }
-    });
+function getScheduleTierLabel(p, dayDate) {
+  const tier = getPropScheduleDayTier(p, dayDate);
+  return ['Scheduled', 'Proposed', 'Base day', 'Other'][tier] || 'Other';
+}
+
+function _buildSchedulePrintRows() {
+  const view = document.getElementById('sched-view')?.value || 'all';
+  const showOld = document.getElementById('sched-show-old')?.checked || false;
+  const days = getTripDays();
+  const routeByDate = {};
+  for (const p of state.props) {
+    if (ELIM_STATUSES.has(p.status)) continue;
+    if (isUnassignedProp(p)) continue;
+    if (!isPropOnActiveBase(p)) continue;
+    const rd = getPropRouteDate(p) || getBaseLastDate(p.grp);
+    if (!rd) continue;
+    if (!routeByDate[rd]) routeByDate[rd] = [];
+    routeByDate[rd].push(p);
   }
+  const sections = [];
+  for (const day of days) {
+    if (day.isPast && !showOld) continue;
+    const dayItems = routeByDate[day.date] || [];
+    const sched = dayItems.filter(p => getPropRouteSchedule(p).source === 'scheduled' && getPropRouteDate(p));
+    const planned = dayItems.filter(p => getPropRouteSchedule(p).source === 'proposed' && getPropRouteDate(p));
+    const baseFallback = dayItems.filter(p => !getPropRouteDate(p));
+    const combined = view === 'scheduled' ? sched : view === 'planned' ? planned : [...sched, ...planned, ...baseFallback];
+    if (!combined.length && view !== 'all') continue;
+    const sortedItems = [...dayItems].sort((a, b) => {
+      const tierA = getPropScheduleDayTier(a, day.date);
+      const tierB = getPropScheduleDayTier(b, day.date);
+      if (tierA !== tierB) return tierA - tierB;
+      const at = parseTimeToMinutes(getPropDayTime(a, day.date));
+      const bt = parseTimeToMinutes(getPropDayTime(b, day.date));
+      const aHas = at != null, bHas = bt != null;
+      if (aHas !== bHas) return aHas ? -1 : 1;
+      if (aHas && bHas && at !== bt) return at - bt;
+      return String(a.name).localeCompare(String(b.name));
+    });
+    const base = day.baseObj || getBase(day.base);
+    sections.push({ day, base, items: sortedItems });
+  }
+  return sections;
+}
+
+function printSchedulePdf() {
+  const sections = _buildSchedulePrintRows();
+  if (!sections.length) {
+    alert('No schedule days to print. Add bases with visit dates in Settings.');
+    return;
+  }
+  const generated = new Date().toLocaleString();
+  let body = '';
+  for (const { day, base, items } of sections) {
+    body += `<section class="day-section"><h2>${escHtml(day.label)} · ${escHtml(base?.name || day.base)} (${escHtml(day.base)})</h2>`;
+    if (!items.length) {
+      body += '<p class="empty">No properties planned</p>';
+    } else {
+      body += `<table><thead><tr>
+        <th>Time</th><th>Priority</th><th>Status</th><th>Property</th><th>Price</th><th>Rooms</th><th>Size</th>
+        <th>Location</th><th>Drive</th><th>Airport</th><th>Broker</th><th>Notes</th>
+      </tr></thead><tbody>`;
+      for (const p of items) {
+        const time = formatTimeDisplay(getPropDayTime(p, day.date)) || '—';
+        const tier = getScheduleTierLabel(p, day.date);
+        const dt = getPropDriveToBase(p, day.base);
+        const apt = getPropReferenceAirportDrive(p) || getClosestAirportDrive(p);
+        const loc = formatPropTownDisplay(p) || getPropAddress(p).replace(/, Italy$/i, '');
+        const notes = (p.notes || '').trim();
+        body += `<tr>
+          <td>${escHtml(time)}</td>
+          <td>${escHtml(tier)}</td>
+          <td>${escHtml(p.status)}</td>
+          <td><strong>${escHtml(p.name)}</strong><div class="sub">#${escHtml(p.id)}</div></td>
+          <td>${escHtml(formatPrice(p.price))}</td>
+          <td>${p.rooms ? escHtml(String(p.rooms)) : '—'}</td>
+          <td>${p.size ? escHtml(p.size + ' m²') : '—'}</td>
+          <td>${escHtml(loc)}</td>
+          <td>${dt != null ? escHtml(formatDurMin(dt) + ' to ' + day.base) : '—'}</td>
+          <td>${apt ? escHtml(apt.abbr + ' ' + formatDurMin(apt.mins)) : '—'}</td>
+          <td>${escHtml([p.broker, p.brokerPhone].filter(Boolean).join(' · ') || '—')}</td>
+          <td>${escHtml(notes.length > 120 ? notes.slice(0, 117) + '…' : notes || '—')}</td>
+        </tr>`;
+      }
+      body += '</tbody></table>';
+    }
+    body += '</section>';
+  }
+  const unscheduled = state.props.filter(p => !ELIM_STATUSES.has(p.status) && isPropOnActiveBase(p) && !getPropRouteDate(p) && !getBaseLastDate(p.grp));
+  if (unscheduled.length) {
+    body += `<section class="day-section"><h2>Unscheduled (${unscheduled.length})</h2><table><thead><tr>
+      <th>Status</th><th>Property</th><th>Base</th><th>Price</th><th>Drive / Airport</th>
+    </tr></thead><tbody>`;
+    for (const p of unscheduled.sort((a, b) => String(a.name).localeCompare(String(b.name)))) {
+      body += `<tr>
+        <td>${escHtml(p.status)}</td>
+        <td><strong>${escHtml(p.name)}</strong></td>
+        <td>${escHtml(p.grp)}</td>
+        <td>${escHtml(formatPrice(p.price))}</td>
+        <td>${escHtml(formatPropDriveTimes(p))}</td>
+      </tr>`;
+    }
+    body += '</tbody></table></section>';
+  }
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>House Hunt Schedule</title>
+<style>
+@page { size: A4 portrait; margin: 12mm 10mm; }
+body { font: 9pt/1.35 system-ui, sans-serif; color: #222; margin: 0; }
+h1 { font-size: 14pt; margin: 0 0 4px; }
+.meta { font-size: 8pt; color: #666; margin-bottom: 14px; }
+h2 { font-size: 11pt; margin: 14px 0 6px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 8pt; }
+th, td { border: 1px solid #ddd; padding: 3px 4px; vertical-align: top; text-align: left; }
+th { background: #f4f4f4; font-weight: 600; }
+.sub { font-size: 7pt; color: #666; }
+.empty { color: #888; font-style: italic; }
+.day-section { break-inside: avoid-page; }
+tr { break-inside: avoid; }
+</style></head><body>
+<h1>Italy House Hunt — Schedule</h1>
+<div class="meta">Generated ${escHtml(generated)} · ${escHtml(SPA_VERSION || '')}</div>
+${body}
+</body></html>`;
+  const w = window.open('', '_blank');
+  if (!w) { alert('Pop-up blocked — allow pop-ups to print the schedule.'); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { w.print(); }, 350);
 }
 
 // ─── Map ─────────────────────────────────────────────────────────────────────
@@ -7336,14 +7431,14 @@ function populateMapBaseDropdown() {
     const selBase = sel ? getBase(sel) : null;
     btn.textContent = selBase ? `${selBase.name} (${selBase.abbr})` : 'Select base…';
     dd.innerHTML = bases.map(b =>
-      `<label class="map-day-opt"><input type="radio" name="map-base-radio" value="${b.abbr}" ${ _mapSelectedBases.has(b.abbr) ? 'checked' : '' } onchange="onMapBaseCheckChange()"> ${escHtml(b.name)} (${b.abbr})</label>`
+      `<label class="map-day-opt"><input type="radio" name="map-base-radio" value="${escAttr(b.abbr)}" ${ _mapSelectedBases.has(b.abbr) ? 'checked' : '' } onchange="onMapBaseCheckChange()"> ${escHtml(b.name)} (${escHtml(b.abbr)})</label>`
     ).join('') || '<div style="padding:6px 8px;font-size:11px;color:var(--text3)">No stay bases</div>';
   } else {
     btn.textContent = _mapSelectedBases.size
       ? `${_mapSelectedBases.size} base(s) selected`
       : 'Select bases…';
     dd.innerHTML = bases.map(b =>
-      `<label class="map-day-opt"><input type="checkbox" value="${b.abbr}" ${ _mapSelectedBases.has(b.abbr) ? 'checked' : '' } onchange="onMapBaseCheckChange()"> ${escHtml(b.name)} (${b.abbr})</label>`
+      `<label class="map-day-opt"><input type="checkbox" value="${escAttr(b.abbr)}" ${ _mapSelectedBases.has(b.abbr) ? 'checked' : '' } onchange="onMapBaseCheckChange()"> ${escHtml(b.name)} (${escHtml(b.abbr)})</label>`
     ).join('');
   }
 }
@@ -8107,16 +8202,16 @@ function makeMapPropPopupHtml(p, { seq, extra = '', scheduleKind } = {}) {
   const routeDate = getPropRouteDate(p) || '';
   const locked = isPropLockedScheduled(p);
   const baseOpts = getAssignableBases(p.grp).map(b =>
-    `<option value="${b.abbr}"${b.abbr === p.grp ? ' selected' : ''}>${escHtml(b.name)}</option>`
+    `<option value="${escAttr(b.abbr)}"${b.abbr === p.grp ? ' selected' : ''}>${escHtml(b.name)}</option>`
   ).join('');
   const editBlock =
     `<div style="margin:5px 0 3px;font-size:11px;line-height:1.6">` +
     `Base <select onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="mapPopupSaveBase(${p.id},this.value)" style="font-size:10px;max-width:118px;vertical-align:middle">${baseOpts}</select><br>` +
-    `Date <input type="date" value="${routeDate}" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="mapPopupSaveDate(${p.id},this.value)" style="font-size:10px;vertical-align:middle"${locked ? ' title="Scheduled date (locked)"' : ''}>` +
-    ` Time <input type="time" class="hh-time-input" value="${formatTimeDisplay(rs.time)}" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="mapPopupSaveTime(${p.id},this.value)" style="font-size:10px;vertical-align:middle"${!routeDate ? ' disabled title="Set date first"' : ''}>` +
+    `Date <input type="date" value="${escAttr(routeDate)}" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="mapPopupSaveDate(${p.id},this.value)" style="font-size:10px;vertical-align:middle"${locked ? ' title="Scheduled date (locked)"' : ''}>` +
+    ` Time <input type="time" class="hh-time-input" value="${escAttr(formatTimeDisplay(rs.time))}" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="mapPopupSaveTime(${p.id},this.value)" style="font-size:10px;vertical-align:middle"${!routeDate ? ' disabled title="Set date first"' : ''}>` +
     `</div>`;
   const links = [
-    p.url ? `<a href="${escHtml(p.url)}" target="_blank" rel="noopener">Idealista</a>` : '',
+    p.url ? `<a href="${escUrl(p.url)}" target="_blank" rel="noopener">Idealista</a>` : '',
     `<a href="#" onclick="openDetailModal(${p.id});return false">Details</a>`,
   ].filter(Boolean).join(' · ');
   const aptLine = refApt
@@ -8128,7 +8223,7 @@ function makeMapPropPopupHtml(p, { seq, extra = '', scheduleKind } = {}) {
     `<br>${escHtml(getPropAddress(p))}<br>${formatPrice(p.price)} · ${p.rooms}rm<br>` +
     timeLine +
     aptLine +
-    `${baseDrive != null ? `📍 ${p.grp}: ${formatDurMin(baseDrive)}<br>` : ''}` +
+    `${baseDrive != null ? `📍 ${escHtml(p.grp)}: ${escHtml(formatDurMin(baseDrive))}<br>` : ''}` +
     editBlock + extra + (links ? `<br>${links}` : '');
 }
 
@@ -9075,10 +9170,10 @@ async function loadSnapshots() {
     const items = Array.isArray(list) ? list : [];
     if (!items.length) { el.textContent='No snapshots yet.'; return; }
     el.innerHTML = items.map(s => `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
-      <div><div style="font-size:12px;font-weight:500">${s.label||s.id}</div><div style="font-size:10px;color:var(--text3)">${s.ts||''}</div></div>
+      <div><div style="font-size:12px;font-weight:500">${escHtml(s.label||s.id)}</div><div style="font-size:10px;color:var(--text3)">${escHtml(s.ts||'')}</div></div>
       <div style="display:flex;gap:6px">
-        <button class="io-btn" style="font-size:10px" onclick="restoreSnapshot('${s.id}')">Restore</button>
-        <button class="io-btn danger" style="font-size:10px" onclick="deleteSnapshot('${s.id}')">✕</button>
+        <button class="io-btn" style="font-size:10px" onclick="restoreSnapshot(${escJsStr(s.id)})">Restore</button>
+        <button class="io-btn danger" style="font-size:10px" onclick="deleteSnapshot(${escJsStr(s.id)})">✕</button>
       </div>
     </div>`).join('');
   } catch(e) { el.textContent='Error: '+e.message; }
@@ -9154,7 +9249,7 @@ function _populateAirportSelect(selId, selectedAbbr) {
   const sel = document.getElementById(selId);
   if (!sel) return;
   sel.innerHTML = '<option value="">— nearest —</option>' +
-    state_airports.map(a => `<option value="${a.abbr}"${a.abbr === selectedAbbr ? ' selected' : ''}>${a.abbr} — ${a.name}</option>`).join('');
+    state_airports.map(a => `<option value="${escAttr(a.abbr)}"${a.abbr === selectedAbbr ? ' selected' : ''}>${escHtml(a.abbr)} — ${escHtml(a.name)}</option>`).join('');
 }
 
 function renderBasesList() {
@@ -9167,14 +9262,14 @@ function renderBasesList() {
     return `<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
       <div style="width:4px;height:40px;background:${color};border-radius:2px;flex-shrink:0;margin-top:2px"></div>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:12px;color:var(--text1)">${b.name} <span style="color:var(--text3);font-weight:400">(${b.abbr} · ✈${b.airport || 'near'} · ${b.baseType==='transit'?'Transit':'Stay'} · ${propCount} props)</span></div>
+        <div style="font-weight:600;font-size:12px;color:var(--text1)">${escHtml(b.name)} <span style="color:var(--text3);font-weight:400">(${escHtml(b.abbr)} · ✈${escHtml(b.airport || 'near')} · ${b.baseType==='transit'?'Transit':'Stay'} · ${propCount} props)</span></div>
         <div style="font-size:10px;color:var(--adriat);margin-top:1px">${dateRange}${b.baseType==='stay'&&b.address?` · ${escHtml(b.address)}`:''}${b.baseType==='transit'&&b.fromBase?` · ${escHtml(getBase(b.fromBase)?.name||b.fromBase)} → ${escHtml(getBase(b.toBase)?.name||b.toBase||'?')}`:''}</div>
-        ${b.iflToken?`<div style="font-size:10px;color:var(--text3)">IFL: <code>${b.iflToken}</code></div>`:''}
+        ${b.iflToken?`<div style="font-size:10px;color:var(--text3)">IFL: <code>${escHtml(b.iflToken)}</code></div>`:''}
         ${b.desc?`<div style="font-size:10px;color:var(--text3)">${escHtml(b.desc)}</div>`:''}
       </div>
-      <button class="io-btn" onclick="editBase('${b.abbr}')" style="font-size:10px">Edit</button>
-      <button class="io-btn" onclick="toggleBaseActive('${b.abbr}')" style="font-size:10px;${b.active===false?'color:var(--terra)':''}">${b.active===false?'▶ Activate':'⏸ Pause'}</button>
-      <button class="io-btn danger" onclick="deleteBase('${b.abbr}')" style="font-size:10px">✕</button>
+      <button class="io-btn" onclick="editBase(${escJsStr(b.abbr)})" style="font-size:10px">Edit</button>
+      <button class="io-btn" onclick="toggleBaseActive(${escJsStr(b.abbr)})" style="font-size:10px;${b.active===false?'color:var(--terra)':''}">${b.active===false?'▶ Activate':'⏸ Pause'}</button>
+      <button class="io-btn danger" onclick="deleteBase(${escJsStr(b.abbr)})" style="font-size:10px">✕</button>
     </div>`;
   }).join('');
 }
@@ -9185,7 +9280,7 @@ function _populateBaseRefSelect(selId, selectedAbbr, excludeAbbr) {
   // Include paused stay bases — they may still be transit origin/destination.
   const stayBases = state_bases.filter(b => b.abbr !== excludeAbbr && b.baseType !== 'transit');
   sel.innerHTML = '<option value="">— select base —</option>' +
-    stayBases.map(b => `<option value="${b.abbr}"${b.abbr === selectedAbbr ? ' selected' : ''}>${b.name} (${b.abbr})${b.active === false ? ' · paused' : ''}</option>`).join('');
+    stayBases.map(b => `<option value="${escAttr(b.abbr)}"${b.abbr === selectedAbbr ? ' selected' : ''}>${escHtml(b.name)} (${escHtml(b.abbr)})${b.active === false ? ' · paused' : ''}</option>`).join('');
 }
 
 function onTransitBaseRefsChange() {
@@ -9451,10 +9546,10 @@ async function toggleBaseActive(abbr) {
 function renderAirportsList() {
   const el=document.getElementById('airports-list'); if(!el) return;
   el.innerHTML=state_airports.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px">
-    <code style="font-size:12px;font-weight:600;color:var(--adriat);width:40px">${a.abbr}</code>
-    <span style="flex:1">${a.name}${a.address?` · <span style="color:var(--text3)">${escHtml(a.address)}</span>`:''}</span>
-    <span style="color:var(--text3);font-family:monospace">${a.lat?a.lat.toFixed(4)+', '+a.lng.toFixed(4):'—'}</span>
-    ${state_airports.length>2?`<button class="io-btn" onclick="deleteAirport('${a.abbr}')" style="font-size:10px">✕</button>`:''}
+    <code style="font-size:12px;font-weight:600;color:var(--adriat);width:40px">${escHtml(a.abbr)}</code>
+    <span style="flex:1">${escHtml(a.name)}${a.address?` · <span style="color:var(--text3)">${escHtml(a.address)}</span>`:''}</span>
+    <span style="color:var(--text3);font-family:monospace">${a.lat?escHtml(a.lat.toFixed(4)+', '+a.lng.toFixed(4)):'—'}</span>
+    ${state_airports.length>2?`<button class="io-btn" onclick="deleteAirport(${escJsStr(a.abbr)})" style="font-size:10px">✕</button>`:''}
   </div>`).join('');
 }
 
@@ -9531,8 +9626,14 @@ function stripD(s) {
   try { return s.normalize('NFD').replace(/[̀-ͯ]/g,''); } catch(e) { return s; }
 }
 
-function markPropsRemovedFromIfl(iflIds, baseGrp) {
+function markPropsRemovedFromIfl(iflIds, baseGrp, opts = {}) {
   if (!baseGrp) return 0;
+  if (opts.skipDeletion) return 0;
+  const scrapedActive = opts.scrapedActive ?? iflIds.size;
+  const existingActive = opts.existingActive ?? state.props.filter(p =>
+    propOnBaseGrp(p, baseGrp) && p.status !== 'Deleted-Idealista' && !ELIM_STATUSES.has(p.status)
+  ).length;
+  if (!iflDeletionSafe(scrapedActive, existingActive)) return 0;
   let markedDeleted = 0;
   state.props.forEach(p => {
     if (!propOnBaseGrp(p, baseGrp)) return;
@@ -9545,7 +9646,7 @@ function markPropsRemovedFromIfl(iflIds, baseGrp) {
   return markedDeleted;
 }
 
-async function handleIflSyncMessage({ props, baseGrp, baseName, iflToken, discardedCount, serverResult }) {
+async function handleIflSyncMessage({ props, baseGrp, baseName, iflToken, discardedCount, serverResult, skipDeletion }) {
   if (!Array.isArray(props) || !baseGrp) return;
   const iflLocTouch = new Set(['commune', 'town', 'prov', 'address', 'grp']);
   let added = 0, updated = 0, priceFixed = 0, reactivated = 0, baseMoved = 0;
@@ -9598,7 +9699,12 @@ async function handleIflSyncMessage({ props, baseGrp, baseName, iflToken, discar
     }
   }
   const iflIds = new Set(props.map(p => String(p.id)));
-  const markedDeleted = markPropsRemovedFromIfl(iflIds, baseGrp);
+  const scrapedActive = props.filter(p => !p.discarded).length;
+  const existingActive = state.props.filter(p =>
+    propOnBaseGrp(p, baseGrp) && p.status !== 'Deleted-Idealista' && !ELIM_STATUSES.has(p.status)
+  ).length;
+  const skipDel = skipDeletion ?? serverResult?.skippedDeletion ?? !iflDeletionSafe(scrapedActive, existingActive);
+  const markedDeleted = markPropsRemovedFromIfl(iflIds, baseGrp, { skipDeletion: skipDel, scrapedActive, existingActive });
   try { await saveToStorage(); } catch (e) { console.warn('IFL sync save failed:', e); }
   renderProps();
   updateHeader();
@@ -9614,6 +9720,7 @@ async function handleIflSyncMessage({ props, baseGrp, baseName, iflToken, discar
     baseMoved,
     discarded: discardedCount || props.filter(p => p.discarded).length,
     markedDeleted,
+    skippedDeletion: skipDel,
     serverUpdated: (serverResult?.updated || []).length
   });
   loadSyncLog();
@@ -9644,17 +9751,26 @@ async function handleIflSyncMessage({ props, baseGrp, baseName, iflToken, discar
 
 window.addEventListener('message', async evt => {
   if (!evt.data) return;
-  if (evt.data.type==='HOUSEHUNT_RELOAD') { pollServerSync(); return; }
-  if (evt.data.type==='HOUSEHUNT_IFL_ADD') {
-    handleIflSyncMessage(evt.data).catch(e => {
+  if (!isAllowedHouseHuntOrigin(evt.origin)) return;
+  _handleHouseHuntExtensionMessage(evt.data);
+});
+document.documentElement.addEventListener('househunt-extension-relay', evt => {
+  _handleHouseHuntExtensionMessage(evt.detail);
+});
+
+function _handleHouseHuntExtensionMessage(data) {
+  if (!data) return;
+  if (data.type==='HOUSEHUNT_RELOAD') { pollServerSync(); return; }
+  if (data.type==='HOUSEHUNT_IFL_ADD') {
+    handleIflSyncMessage(data).catch(e => {
       console.error('IFL sync failed:', e);
       showExtToast('IFL sync failed: ' + (e.message || 'unknown error'), 'err');
     });
     return;
   }
-  if (evt.data.type !== 'HOUSEHUNT_BROKER') return;
+  if (data.type !== 'HOUSEHUNT_BROKER') return;
   (async () => {
-  let {idealistaId,broker,phone,location,gps,price,rooms,size,town,prov,title,realtorUrl,commune,firmName,firmPhone} = evt.data;
+  let {idealistaId,broker,phone,location,gps,price,rooms,size,town,prov,title,realtorUrl,commune,firmName,firmPhone} = data;
   const gpsVal = (gps || location || '').trim();
   if (!idealistaId) return;
   broker=stripD(broker); town=stripD(town); prov=(prov||'').toUpperCase();
@@ -9664,7 +9780,7 @@ window.addEventListener('message', async evt => {
   if (!p) {
     showExtToast(`Property ${pid} not in list. Use + Add to add it.`,'warn');
     openAddModal({id:pid,url:`https://www.idealista.it/immobile/${pid}/`,
-      title,commune,town,prov,price,rooms,size,broker,phone,gps:gpsVal,realtorUrl,grp:evt.data.grp||''});
+      title,commune,town,prov,price,rooms,size,broker,phone,gps:gpsVal,realtorUrl,grp:data.grp||''});
     return;
   }
   const updated=[];
@@ -9721,9 +9837,9 @@ window.addEventListener('message', async evt => {
     showExtToast(`${p.name}: no new data extracted.`,'warn');
   }
   })();
-});
+}
 
-function showIflSyncModal({ baseName, baseAbbr, total, added, updated, priceFixed, reactivated, baseMoved, discarded, markedDeleted, serverUpdated }) {
+function showIflSyncModal({ baseName, baseAbbr, total, added, updated, priceFixed, reactivated, baseMoved, discarded, markedDeleted, skippedDeletion, serverUpdated }) {
   const body = document.getElementById('ifl-sync-modal-body');
   const modal = document.getElementById('ifl-sync-modal');
   if (!body || !modal) return;
@@ -9736,6 +9852,7 @@ function showIflSyncModal({ baseName, baseAbbr, total, added, updated, priceFixe
     baseMoved ? `Moved to this base: ${baseMoved}` : null,
     priceFixed ? `Prices refreshed: ${priceFixed}` : null,
     markedDeleted ? `Marked Deleted-Idealista: ${markedDeleted}` : null,
+    skippedDeletion ? 'Deletions skipped (IFL scrape may be incomplete)' : null,
     discarded ? `Discarded on Idealista: ${discarded}` : null,
     serverUpdated ? `Server-side updates: ${serverUpdated}` : null,
   ].filter(Boolean).join('\n');
