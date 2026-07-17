@@ -550,14 +550,14 @@ export async function onRequest(context) {
       return json({ minutes: null, source: 'none', note: 'Set GMAPS_KEY in Cloudflare env' });
     try {
       const r = await fetch(
-        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${fromLat},${fromLng}&destinations=${toLat},${toLng}&mode=driving&key=${gmapsKey}`
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&mode=driving&key=${gmapsKey}`
       );
       const d = await r.json();
-      if (d.status === 'OK' && d.rows?.[0]?.elements?.[0]?.status === 'OK') {
-        const el = d.rows[0].elements[0];
+      if (d.status === 'OK' && d.routes?.[0]?.legs?.[0]) {
+        const leg = d.routes[0].legs[0];
         return json({
-          minutes: Math.round(el.duration.value / 60),
-          miles: Math.round(el.distance.value / 1609.344),
+          minutes: Math.round(leg.duration.value / 60),
+          miles: Math.round(leg.distance.value / 1609.344),
           source: 'gmaps',
         });
       }
