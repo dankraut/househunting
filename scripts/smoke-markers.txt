@@ -52,3 +52,4 @@ index.html|updateMapRouteModeState|Route mode select stays enabled with multi-da
 .github/workflows/auto-merge-cursor.yml|waitForSettlePeriod|Auto-merge settle period before production merge
 index.html|formatDurMin|Duration minutes always abbreviated as min
 index.html|buildPropCalendarIcs|Calendar export with address and GEO for mobile
+index.html|buildGoogleCalendarUrl|Desktop Google Calendar fallback for +Cal
