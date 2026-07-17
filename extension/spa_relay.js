@@ -1,12 +1,9 @@
 // spa_relay.js — relays extension messages into the SPA page context
 (function () {
+  const RELAY_EVENT = 'househunt-extension-relay';
+
   function relayPostMessage(payload) {
-    const detail = { type: payload.type, ...payload };
-    // Inject into page context so inline SPA listeners receive the event reliably.
-    const script = document.createElement('script');
-    script.textContent = `window.postMessage(${JSON.stringify(detail)}, '*');`;
-    (document.head || document.documentElement).appendChild(script);
-    script.remove();
+    document.documentElement.dispatchEvent(new CustomEvent(RELAY_EVENT, { detail: payload }));
   }
 
   window.addEventListener('message', (evt) => {

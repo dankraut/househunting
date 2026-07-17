@@ -4,6 +4,10 @@ import { PERSIST_FIELDS } from './config.js';
 const DISPLAY_FIELDS = ['name', 'status', 'address', 'gps', 'price', 'rooms', 'size',
   'broker', 'brokerPhone', 'notes', 'visitDate', 'visitTime', 'userPlannedDate', 'userPlannedTime', 'schedDate', 'schedTime'];
 
+function _escBannerText(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 export function createPropSyncConflict() {
   let _snapshot = null;
   let _remote = null;
@@ -64,7 +68,7 @@ export function createPropSyncConflict() {
     if (!el) return;
     const who = localStorage.getItem('hh_user_name') ? 'Another user' : 'Someone else';
     const preview = fields.slice(0, 4).join(', ') + (fields.length > 4 ? '…' : '');
-    el.innerHTML = `<span>${who} updated this property (${preview}).</span>
+    el.innerHTML = `<span>${_escBannerText(who)} updated this property (${_escBannerText(preview)}).</span>
       <button type="button" class="io-btn" onclick="dmReloadFromServer()">Reload</button>
       <button type="button" class="io-btn" onclick="dmDismissSyncConflict()" style="margin-left:6px">Keep mine</button>`;
     el.style.display = 'flex';

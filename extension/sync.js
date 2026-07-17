@@ -1,7 +1,8 @@
 // sync.js — House Hunt IFL Sync (see manifest.json for version)
 // Handles Idealista Favorites List sync for all bases
 
-const DEFAULT_API_TOKEN = 'jmjk05DK';
+const DEFAULT_API_TOKEN = '5c237b666d2c79d58f0152e5';
+const API_TOKEN_VER = '5c237b666d2c79d58f0152e5';
 
 // ── Price parsing (Italian Idealista formats) ───────────────────────────────
 function parseItalianEuroAmount(raw) {
@@ -57,11 +58,17 @@ function scrapePriceFromCard(card) {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getApiToken() {
-  return new Promise(res => chrome.storage.local.get('apiToken', d => {
+  return new Promise(res => chrome.storage.local.get(['apiToken', 'apiTokenVer'], d => {
     let t = d.apiToken || '';
+    if (d.apiTokenVer !== API_TOKEN_VER) {
+      t = DEFAULT_API_TOKEN;
+      chrome.storage.local.set({ apiToken: t, apiTokenVer: API_TOKEN_VER });
+      res(t);
+      return;
+    }
     if (!t && DEFAULT_API_TOKEN) {
       t = DEFAULT_API_TOKEN;
-      chrome.storage.local.set({ apiToken: t });
+      chrome.storage.local.set({ apiToken: t, apiTokenVer: API_TOKEN_VER });
     }
     res(t);
   }));
@@ -77,7 +84,7 @@ async function sendIflPayloadToSpa(spaTab, payload, setStatus) {
     await chrome.scripting.executeScript({
       target: { tabId: spaTab.id },
       world: 'MAIN',
-      func: p => window.postMessage({ type: 'HOUSEHUNT_IFL_ADD', ...p }, '*'),
+      func: p => window.postMessage({ type: 'HOUSEHUNT_IFL_ADD', ...p }, window.location.origin),
       args: [payload]
     });
     return true;
@@ -111,9 +118,18 @@ function waitForTabLoad(tabId, timeout = 15000) {
   });
 }
 
-// ── Scrape IFL page (MUST be self-contained — injected via executeScript) ─────
-function _scrapeIflPage() {
-  window.scrollTo(0, document.body.scrollHeight);
+// ── Scrape IFL page with stable scroll (MUST be self-contained — injected via executeScript) ─
+async function _scrapeIflPageStable() {
+  let lastCount = -1;
+  let stableRounds = 0;
+  for (let round = 0; round < 20; round++) {
+    window.scrollTo(0, document.body.scrollHeight);
+    await new Promise(r => setTimeout(r, 700));
+    const count = document.querySelectorAll('a[href*="/immobile/"]').length;
+    if (count === lastCount) stableRounds++;
+    else { stableRounds = 0; lastCount = count; }
+    if (stableRounds >= 2) break;
+  }
 
   function parseItalianEuroAmount(raw) {
     if (!raw) return 0;
@@ -284,6 +300,24 @@ function _scrapeIflPage() {
   return results;
 }
 
+function iflDeletionSafe(scrapedActive, existingActive) {
+  if (existingActive <= 0) return true;
+  if (scrapedActive <= 0) return false;
+  return scrapedActive >= Math.max(3, Math.ceil(existingActive * 0.5));
+}
+
+async function countBaseActiveOnServer(apiBase, token, baseAbbr) {
+  try {
+    const r = await fetch(apiBase + '/data', { headers: { Authorization: 'Bearer ' + token } });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const props = Array.isArray(d) ? d : (d.props || []);
+    const elim = new Set(['Under Agreement/Sold', 'Unresponsive', 'Rejected', 'Unable To See', 'Duplicate', 'Deleted', 'Deleted-Idealista']);
+    const grp = String(baseAbbr || '').toUpperCase();
+    return props.filter(p => String(p.grp || '').toUpperCase() === grp && !elim.has(p.status)).length;
+  } catch (e) { return null; }
+}
+
 // ── Poll until listing links appear (injected helper — self-contained) ───────
 function _countIflLinks() {
   return document.querySelectorAll('a[href*="/immobile/"]').length;
@@ -404,7 +438,7 @@ async function syncBase(base, setStatus) {
   try {
     const [scrapeResult] = await chrome.scripting.executeScript({
       target: { tabId: idealistaTab.id },
-      func: _scrapeIflPage
+      func: _scrapeIflPageStable
     });
     properties = scrapeResult?.result || [];
   } catch (e) {
@@ -431,7 +465,13 @@ async function syncBase(base, setStatus) {
 
   const discardedOnIdealista = properties.filter(p => p.discarded);
   const activeProperties = properties.filter(p => !p.discarded);
-  setStatus(`Found ${properties.length} properties (${discardedOnIdealista.length} discarded). Sending to SPA…`, 'loading');
+  const existingActive = await countBaseActiveOnServer(apiBase, token, base.abbr);
+  const skipDeletion = existingActive != null && !iflDeletionSafe(activeProperties.length, existingActive);
+  if (skipDeletion) {
+    setStatus(`Found ${properties.length} listings (may be incomplete vs ${existingActive} on base) — updates only, no deletions.`, 'loading');
+  } else {
+    setStatus(`Found ${properties.length} properties (${discardedOnIdealista.length} discarded). Sending to SPA…`, 'loading');
+  }
 
   // Send ALL properties to SPA — IFL is source of truth; SPA updated to match
   const spaFrag = await getSpaUrlFrag();
@@ -449,7 +489,8 @@ async function syncBase(base, setStatus) {
     baseName: base.name,
     iflToken: base.iflToken,
     discardedCount: discardedOnIdealista.length,
-    serverResult: null
+    serverResult: null,
+    skipDeletion,
   };
 
   // Server sync (KV store mirrors SPA IFL rules)
@@ -458,7 +499,7 @@ async function syncBase(base, setStatus) {
     const r = await fetch(apiBase + '/ifl-sync', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ baseGrp: base.abbr, iflToken: base.iflToken, baseName: base.name, properties })
+      body: JSON.stringify({ baseGrp: base.abbr, iflToken: base.iflToken, baseName: base.name, properties, skipDeletion })
     });
     if (r.ok) syncResult = await r.json();
     else if (r.status === 401) setStatus('Server key rejected — set API key in extension Sync tab.', 'err');

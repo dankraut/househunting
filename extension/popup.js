@@ -175,7 +175,7 @@ async function doSend() {
       await chrome.scripting.executeScript({
         target: { tabId: spaTab.id },
         world: 'MAIN',
-        func: p => { window.postMessage({ type: 'HOUSEHUNT_BROKER', ...p }, '*'); },
+        func: p => { window.postMessage({ type: 'HOUSEHUNT_BROKER', ...p }, window.location.origin); },
         args: [payload],
       });
     }

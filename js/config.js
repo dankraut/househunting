@@ -1,9 +1,27 @@
 /** @module config — shared SPA constants */
-export const SPA_VERSION = 'v2.43';
+export const SPA_VERSION = 'v2.44';
 export const FIND_BASE_MAX_PROPS = 15;
 export const FIND_BASE_MIN_POPULATION = 5000;
 export const FIND_BASE_TOWN_SEARCH_KM = 40;
-export const API_TOKEN = 'jmjk05DK';
+export const API_TOKEN = '5c237b666d2c79d58f0152e5';
+export const API_TOKEN_VER = '5c237b666d2c79d58f0152e5';
+/** Origins allowed to postMessage into the SPA (extension relays use the page origin). */
+export const HH_MSG_ORIGINS = [
+  'https://househunt.pages.dev',
+  'http://127.0.0.1:8788',
+  'http://localhost:8788',
+];
+export function isAllowedHouseHuntOrigin(origin) {
+  if (!origin) return false;
+  if (HH_MSG_ORIGINS.includes(origin)) return true;
+  try {
+    const u = new URL(origin);
+    return u.protocol === 'https:' && u.hostname.endsWith('.pages.dev');
+  } catch { return false; }
+}
+/** Minimum scraped IFL count vs existing base props before marking deletions. */
+export const IFL_DELETION_MIN_RATIO = 0.5;
+export const IFL_DELETION_MIN_COUNT = 3;
 export const UNASSIGNED_GRP = 'UNA';
 export const DAY_ROUTE_COLORS = ['#2C5F7A', '#7B1FA2', '#C0603A', '#5B7232', '#0891B2', '#DC2626', '#8B5CF6', '#059669'];
 export const API_BASE = '/api';
