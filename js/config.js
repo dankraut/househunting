@@ -1,6 +1,7 @@
 /** @module config — shared SPA constants */
-export const SPA_VERSION = 'v2.55';
+export const SPA_VERSION = 'v2.56';
 export const FIND_BASE_MAX_PROPS = 15;
+export const FIND_BASE_MAX_TOWN_CANDIDATES = 12;
 export const FIND_BASE_MIN_POPULATION = 5000;
 export const FIND_BASE_TOWN_SEARCH_KM = 40;
 export const API_TOKEN = '5c237b666d2c79d58f0152e5';

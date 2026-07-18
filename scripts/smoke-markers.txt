@@ -43,7 +43,9 @@ index.html|propMatchesFindBase|Find Base excludes props on other bases
 index.html|FIND_BASE_MAX_PROPS|Find Base property cap (15)
 index.html|FIND_BASE_MIN_POPULATION|Find Base town population floor
 index.html|_pickTownNearestToIdeal|Find Base snaps to town nearest optimum
-index.html|extraDriveMin|Find Base extra drive vs current base
+index.html|_rankFindBaseTownCandidates|Find Base evaluates multiple town candidates
+index.html|FIND_BASE_MAX_TOWN_CANDIDATES|Find Base town candidate cap
+index.html|driveDeltaMin|Find Base drive delta vs current base
 functions/api/[[path]].js|find-base-towns|Find Base towns API (population floor)
 index.html|annotateMapRouteStops|Map route implied timing and feasibility
 index.html|formatStopTimeMeta|Stop list shows implied times when appointments ignored
