@@ -210,6 +210,39 @@ input.field-hint-date:not(:focus):invalid{color:var(--text3)}
 .mapit-btn.disabled{opacity:.4;cursor:not-allowed;pointer-events:none;background:var(--bg3);color:var(--text3);border-color:var(--border)}
 .return-row{display:flex;align-items:center;gap:6px;padding:4px 10px 5px;background:var(--bg2);border-top:1px dashed var(--border);font-size:11px;color:var(--text3)}
 .empty-day{padding:8px 12px;font-size:11px;color:var(--text3);font-style:italic}
+/* Schedule calendar day view */
+.sched-cal{display:flex;flex-direction:column;gap:0;min-height:360px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;overflow:hidden;touch-action:pan-y}
+.sched-cal-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.sched-cal-nav-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:20px;line-height:1;cursor:pointer;color:var(--text2);flex-shrink:0}
+.sched-cal-nav-btn:disabled{opacity:.35;cursor:not-allowed}
+.sched-cal-nav-center{flex:1;text-align:center;min-width:0}
+.sched-cal-day-label{font-weight:700;font-size:14px}
+.sched-cal-day-base{font-size:11px;color:var(--text3);margin-top:2px}
+.sched-cal-body{display:flex;flex-direction:column;flex:1;min-height:0}
+.sched-cal-allday{border-bottom:1px solid var(--border);padding:6px 8px;background:#fff;display:none}
+.sched-cal-allday.has-items{display:block}
+.sched-cal-allday-label{font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
+.sched-cal-allday-chips{display:flex;flex-wrap:wrap;gap:4px}
+.sched-cal-allday-chip{font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid var(--border);background:#fff;cursor:pointer}
+.sched-cal-allday-chip.sched-chip-locked{background:var(--green-bg);border-color:var(--green-bdr);color:var(--green)}
+.sched-cal-allday-chip.sched-chip-proposed{background:#fff;border-color:var(--green-bdr);color:var(--text2);font-style:italic}
+.sched-cal-scroll{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.sched-cal-grid{display:grid;grid-template-columns:44px 1fr;position:relative}
+.sched-cal-axis{position:relative;background:#fff;border-right:1px solid var(--border)}
+.sched-cal-hour-label{position:absolute;right:6px;font-size:10px;color:var(--text3);font-family:monospace;transform:translateY(-50%);line-height:1}
+.sched-cal-lane{position:relative;background:repeating-linear-gradient(to bottom,#fff 0,#fff calc(52px - 1px),var(--border) calc(52px - 1px),var(--border) 52px)}
+.sched-cal-block{position:absolute;left:4px;right:4px;border-radius:4px;padding:3px 6px;font-size:11px;line-height:1.25;overflow:hidden;cursor:pointer;border:1px solid transparent;box-sizing:border-box;z-index:1}
+.sched-cal-block.sched-cal-travel{background:#e8e8e4;border-color:#c8c8c4;color:#666;cursor:default;font-size:10px;z-index:0;min-height:16px;display:flex;align-items:center}
+.sched-cal-block.sched-cal-appt.sched-chip-locked{background:var(--green-bg);border-color:var(--green-bdr);color:#1a3d1a;z-index:2}
+.sched-cal-block.sched-cal-appt.sched-chip-proposed{background:#fff;border-color:var(--green-bdr);color:var(--text);font-style:italic;z-index:2;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.sched-cal-block.sched-cal-appt.row-conflict{border-color:var(--red-bdr);box-shadow:inset 0 0 0 1px var(--red-bdr)}
+.sched-cal-block-time{font-size:9px;font-weight:600;opacity:.85;display:block}
+.sched-cal-block-title{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sched-cal-status{font-size:11px;color:var(--adriat);padding:20px;text-align:center}
+.sched-cal-unsched{margin-top:8px;border:1px dashed var(--border2);border-radius:var(--radius);padding:8px 10px;background:var(--bg2)}
+.sched-cal-unsched-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
+.sched-cal-unsched-row{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;cursor:pointer;border-bottom:1px solid rgba(0,0,0,.04)}
+.sched-cal-unsched-row:last-child{border-bottom:none}
 .conflict-msg{font-size:10px;padding:3px 8px;background:var(--red-bg);border-top:1px solid var(--red-bdr);color:var(--red)}
 .warning-msg{font-size:10px;padding:3px 8px;background:var(--amber-bg);border-top:1px solid var(--amber-bdr);color:#C07000}
 .zone-card{border-radius:var(--radius);border:2px dashed var(--border2);overflow:hidden;margin-top:4px}
@@ -422,10 +455,9 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
 <!-- SCHEDULE TAB -->
 <div id="tab-schedule" class="tab-panel">
   <div class="top-legend">
-    <div class="legend-item"><div class="legend-dot" style="background:var(--olive-bg);border:1px solid var(--olive)"></div>OK</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--amber-bg);border:1px solid var(--amber-bdr)"></div>Warning</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--red-bg);border:1px solid var(--red-bdr)"></div>Conflict</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--green-bg);border:1px solid var(--green-bdr)"></div>Scheduled (locked)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green-bg);border:1px solid var(--green-bdr)"></div>Scheduled</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fff;border:1px solid var(--green-bdr)"></div>Proposed</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--bg3);border:1px solid var(--border)"></div>Travel</div>
   </div>
   <div class="sched-filter">
     <label style="font-size:11px;font-weight:500;color:var(--text2)">Show:</label>
@@ -940,7 +972,7 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
 
 <script type="module" src="js/bootstrap.js"></script>
 <script>
-// ═══ SPA v2.50 — app core (config/api/location in js/) ═══════════════════════════
+// ═══ SPA v2.51 — app core (config/api/location in js/) ═══════════════════════════
 
 const PROPS_RAW=[{"id":30278342,"name":"Tuscania Villa","town":"Tuscania","prov":"VT","price":780,"rooms":10,"size":300,"grp":1,"fco":72,"cdp":80,"caf":140,"spo":105,"man":45,"url":"https://www.idealista.it/immobile/30278342/","lat":42.418,"lng":11.875,"plannedDate":"2026-07-09","plannedTime":"10:30 AM"},{"id":34998463,"name":"Vetralla Villa","town":"Vetralla","prov":"VT","price":670,"rooms":12,"size":509,"grp":1,"fco":75,"cdp":95,"caf":155,"spo":95,"man":70,"url":"https://www.idealista.it/immobile/34998463/","lat":42.32,"lng":12.05,"plannedDate":"2026-07-09","plannedTime":"11:30 AM"},{"id":35809714,"name":"Canino Villa","town":"Canino","prov":"VT","price":870,"rooms":7,"size":380,"grp":1,"fco":78,"cdp":80,"caf":130,"spo":115,"man":30,"url":"https://www.idealista.it/immobile/35809714/","lat":42.468,"lng":11.744,"plannedDate":"2026-07-09","plannedTime":"9:30 AM"},{"id":26448701,"name":"Montecastrilli Villa","town":"Montecastrilli","prov":"TR","price":820,"rooms":19,"size":480,"grp":1,"fco":85,"cdp":70,"caf":120,"spo":30,"man":105,"url":"https://www.idealista.it/immobile/26448701/","lat":42.649,"lng":12.487,"plannedDate":"2026-07-06","plannedTime":"11:00 AM"},{"id":21658129,"name":"Manciano SP159","town":"Manciano","prov":"GR","price":850,"rooms":18,"size":379,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":0,"url":"https://www.idealista.it/immobile/21658129/","lat":42.595,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"8:45 AM"},{"id":18085022,"name":"Manciano Scansanese","town":"Manciano","prov":"GR","price":870,"rooms":10,"size":520,"grp":1,"fco":95,"cdp":75,"caf":120,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/18085022/","lat":42.605,"lng":11.52,"plannedDate":"2026-07-10","plannedTime":"9:30 AM"},{"id":33646557,"name":"Manciano Montemerano","town":"Manciano","prov":"GR","price":698,"rooms":8,"size":430,"grp":1,"fco":95,"cdp":75,"caf":125,"spo":130,"man":10,"url":"https://www.idealista.it/immobile/33646557/","lat":42.544,"lng":11.57,"plannedDate":"2026-07-10","plannedTime":"10:20 AM"},{"id":32530331,"name":"Manciano Saturnia","town":"Manciano","prov":"GR","price":720,"rooms":10,"size":395,"grp":1,"fco":95,"cdp":80,"caf":125,"spo":135,"man":5,"url":"https://www.idealista.it/immobile/32530331/","lat":42.555,"lng":11.508,"plannedDate":"2026-07-10","plannedTime":"11:10 AM"},{"id":27864548,"name":"Baschi Villa","town":"Baschi","prov":"TR","price":780,"rooms":10,"size":580,"grp":1,"fco":99,"cdp":45,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/27864548/","lat":42.675,"lng":12.212,"plannedDate":"2026-06-26","plannedTime":"12:15 PM"},{"id":34980477,"name":"Baschi Civitella","town":"Baschi","prov":"TR","price":990,"rooms":15,"size":450,"grp":1,"fco":99,"cdp":50,"caf":105,"spo":60,"man":75,"url":"https://www.idealista.it/immobile/34980477/","lat":42.67,"lng":12.205,"plannedDate":"2026-06-26","plannedTime":"1:05 PM"},{"id":35860173,"name":"Todi Piagge Casale","town":"Todi","prov":"PG","price":825,"rooms":10,"size":300,"grp":1,"fco":102,"cdp":50,"caf":100,"spo":35,"man":100,"url":"https://www.idealista.it/immobile/35860173/","lat":42.775,"lng":12.412,"plannedDate":"2026-07-07","plannedTime":"9:00 AM"},{"id":35822412,"name":"Todi Collarezzo","town":"Todi","prov":"PG","price":850,"rooms":10,"size":351,"grp":1,"fco":102,"cdp":55,"caf":100,"spo":35,"man":105,"url":"https://www.idealista.it/immobile/35822412/","lat":42.782,"lng":12.43,"plannedDate":"2026-07-07","plannedTime":"10:00 AM"},{"id":34024712,"name":"San Venanzo Civitella","town":"San Venanzo","prov":"TR","price":845,"rooms":18,"size":815,"grp":1,"fco":105,"cdp":30,"caf":80,"spo":55,"man":90,"url":"https://www.idealista.it/immobile/34024712/","lat":42.87,"lng":12.265,"plannedDate":"","plannedTime":""},{"id":33903982,"name":"Scansano Fonte Guerra","town":"Scansano","prov":"GR","price":790,"rooms":12,"size":475,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/33903982/","lat":42.683,"lng":11.34,"plannedDate":"2026-07-10","plannedTime":"12:30 PM"},{"id":35951463,"name":"Scansano Montorgiali","town":"Scansano","prov":"GR","price":960,"rooms":8,"size":390,"grp":1,"fco":105,"cdp":85,"caf":115,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35951463/","lat":42.69,"lng":11.332,"plannedDate":"2026-07-09","plannedTime":"3:00 PM"},{"id":35048730,"name":"Scansano Agriturismo","town":"Scansano","prov":"GR","price":630,"rooms":7,"size":390,"grp":1,"fco":105,"cdp":85,"caf":120,"spo":155,"man":25,"url":"https://www.idealista.it/immobile/35048730/","lat":42.676,"lng":11.321,"plannedDate":"2026-07-09","plannedTime":"3:50 PM"},{"id":35397327,"name":"Sorano Piancasale","town":"Sorano","prov":"GR","price":700,"rooms":24,"size":480,"grp":1,"fco":108,"cdp":50,"caf":100,"spo":110,"man":25,"url":"https://www.idealista.it/immobile/35397327/","lat":42.685,"lng":11.713,"plannedDate":"","plannedTime":""},{"id":21287742,"name":"Ferentillo Rustico","town":"Ferentillo","prov":"TR","price":645,"rooms":12,"size":650,"grp":1,"fco":110,"cdp":100,"caf":145,"spo":20,"man":140,"url":"https://www.idealista.it/immobile/21287742/","lat":42.623,"lng":12.798,"plannedDate":"2026-07-06","plannedTime":"9:00 AM"},{"id":10679967,"name":"Semproniano Rustico","town":"Semproniano","prov":"GR","price":720,"rooms":11,"size":355,"grp":1,"fco":110,"cdp":70,"caf":115,"spo":130,"man":5,"url":"https://www.idealista.it/immobile/10679967/","lat":42.623,"lng":11.537,"plannedDate":"","plannedTime":""},{"id":34882496,"name":"Spoleto Baiano","town":"Spoleto","prov":"PG","price":980,"rooms":17,"size":451,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":135,"url":"https://www.idealista.it/immobile/34882496/","lat":42.722,"lng":12.718,"plannedDate":"2026-07-05","plannedTime":"8:45 AM"},{"id":30865904,"name":"Spoleto Terzo La Pieve","town":"Spoleto","prov":"PG","price":900,"rooms":11,"size":350,"grp":1,"fco":118,"cdp":85,"caf":125,"spo":5,"man":130,"url":"https://www.idealista.it/immobile/30865904/","lat":42.715,"lng":12.708,"plannedDate":"2026-07-05","plannedTime":"9:45 AM"},{"id":35103506,"name":"Montefalco Fabbri","town":"Montefalco","prov":"PG","price":910,"rooms":16,"size":450,"grp":1,"fco":121,"cdp":70,"caf":105,"spo":25,"man":130,"url":"https://www.idealista.it/immobile/35103506/","lat":42.89,"lng":12.652,"plannedDate":"2026-07-04","plannedTime":"12:30 PM"},{"id":35432103,"name":"Deruta Tiberina","town":"Deruta","prov":"PG","price":790,"rooms":12,"size":320,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/35432103/","lat":42.982,"lng":12.419,"plannedDate":"2026-07-04","plannedTime":"10:00 AM"},{"id":33533240,"name":"Deruta Tiberina 203","town":"Deruta","prov":"PG","price":685,"rooms":22,"size":611,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/33533240/","lat":42.981,"lng":12.421,"plannedDate":"2026-07-04","plannedTime":"10:50 AM"},{"id":27988041,"name":"Deruta Centro Casale","town":"Deruta","prov":"PG","price":650,"rooms":12,"size":400,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/27988041/","lat":42.982,"lng":12.416,"plannedDate":"","plannedTime":""},{"id":29370809,"name":"Deruta Castelleone","town":"Deruta","prov":"PG","price":890,"rooms":12,"size":316,"grp":1,"fco":128,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/29370809/","lat":42.984,"lng":12.413,"plannedDate":"","plannedTime":""},{"id":34783987,"name":"Bettona Villa","town":"Bettona","prov":"PG","price":850,"rooms":20,"size":484,"grp":1,"fco":129,"cdp":45,"caf":75,"spo":50,"man":115,"url":"https://www.idealista.it/immobile/34783987/","lat":42.992,"lng":12.43,"plannedDate":"2026-06-27","plannedTime":"11:00 AM"},{"id":34843857,"name":"Santa Fiora Monte Amiata","town":"Santa Fiora","prov":"GR","price":978,"rooms":12,"size":520,"grp":1,"fco":130,"cdp":50,"caf":85,"spo":125,"man":40,"url":"https://www.idealista.it/immobile/34843857/","lat":42.834,"lng":11.587,"plannedDate":"","plannedTime":""},{"id":34979131,"name":"Corciano Migiana","town":"Corciano","prov":"PG","price":830,"rooms":13,"size":700,"grp":1,"fco":133,"cdp":40,"caf":55,"spo":75,"man":115,"url":"https://www.idealista.it/immobile/34979131/","lat":43.11,"lng":12.289,"plannedDate":"","plannedTime":""},{"id":35300665,"name":"Perugia Olmo","town":"Perugia","prov":"PG","price":675,"rooms":5,"size":425,"grp":2,"fco":138,"cdp":50,"caf":70,"spo":60,"man":125,"url":"https://www.idealista.it/immobile/35300665/","lat":43.085,"lng":12.442,"plannedDate":"2026-06-25","plannedTime":"12:30 PM"},{"id":35456752,"name":"Perugia Eugubina","town":"Perugia","prov":"PG","price":650,"rooms":21,"size":953,"grp":2,"fco":138,"cdp":50,"caf":60,"spo":70,"man":125,"url":"https://www.idealista.it/immobile/35456752/","lat":43.138,"lng":12.408,"plannedDate":"2026-06-25","plannedTime":"1:15 PM"},{"id":32456550,"name":"Perugia Colli Albani","town":"Perugia","prov":"PG","price":650,"rooms":10,"size":530,"grp":2,"fco":138,"cdp":50,"caf":65,"spo":65,"man":125,"url":"https://www.idealista.it/immobile/32456550/","lat":43.093,"lng":12.415,"plannedDate":"2026-06-25","plannedTime":"2:15 PM"},{"id":16393910,"name":"Perugia Solfagnano","town":"Perugia","prov":"PG","price":1100,"rooms":16,"size":725,"grp":2,"fco":138,"cdp":45,"caf":50,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/16393910/","lat":43.155,"lng":12.33,"plannedDate":"2026-06-26","plannedTime":"2:30 PM"},{"id":34105542,"name":"Perugia Monte Tezio","town":"Perugia","prov":"PG","price":890,"rooms":10,"size":500,"grp":2,"fco":138,"cdp":45,"caf":55,"spo":75,"man":125,"url":"https://www.idealista.it/immobile/34105542/","lat":43.148,"lng":12.34,"plannedDate":"2026-06-26","plannedTime":"3:15 PM"},{"id":33928859,"name":"Assisi Porziano","town":"Assisi","prov":"PG","price":580,"rooms":12,"size":485,"grp":2,"fco":148,"cdp":70,"caf":85,"spo":50,"man":140,"url":"https://www.idealista.it/immobile/33928859/","lat":43.07,"lng":12.612,"plannedDate":"2026-07-03","plannedTime":"11:30 AM"},{"id":35247592,"name":"Lisciano Niccone Villa","town":"Lisciano Niccone","prov":"PG","price":1050,"rooms":12,"size":520,"grp":2,"fco":148,"cdp":50,"caf":25,"spo":105,"man":120,"url":"https://www.idealista.it/immobile/35247592/","lat":43.265,"lng":12.125,"plannedDate":"2026-06-27","plannedTime":"9:30 AM"},{"id":35456269,"name":"Umbertide Casale","town":"Umbertide","prov":"PG","price":1150,"rooms":15,"size":700,"grp":2,"fco":148,"cdp":60,"caf":45,"spo":95,"man":140,"url":"https://www.idealista.it/immobile/35456269/","lat":43.297,"lng":12.332,"plannedDate":"2026-07-03","plannedTime":"8:45 AM"},{"id":34939305,"name":"Umbertide Preggio","town":"Umbertide","prov":"PG","price":895,"rooms":16,"size":320,"grp":2,"fco":148,"cdp":60,"caf":40,"spo":100,"man":135,"url":"https://www.idealista.it/immobile/34939305/","lat":43.312,"lng":12.29,"plannedDate":"2026-07-03","plannedTime":"9:30 AM"},{"id":23044407,"name":"Foiano della Chiana","town":"Foiano","prov":"AR","price":750,"rooms":12,"size":500,"grp":2,"fco":150,"cdp":50,"caf":20,"spo":125,"man":105,"url":"https://www.idealista.it/immobile/23044407/","lat":43.251,"lng":11.819,"plannedDate":"2026-06-30","plannedTime":"11:30 AM"},{"id":33291507,"name":"Cortona Fratticciola","town":"Cortona","prov":"AR","price":870,"rooms":10,"size":311,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":110,"man":115,"url":"https://www.idealista.it/immobile/33291507/","lat":43.264,"lng":12.002,"plannedDate":"2026-06-28","plannedTime":"11:00 AM"},{"id":33311877,"name":"Cortona Cegliolo Villa","town":"Cortona","prov":"AR","price":980,"rooms":11,"size":400,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/33311877/","lat":43.27,"lng":12.0,"plannedDate":"2026-06-30","plannedTime":"10:30 AM"},{"id":35710302,"name":"Cortona Cegliolo Casale","town":"Cortona","prov":"AR","price":590,"rooms":7,"size":460,"grp":2,"fco":153,"cdp":45,"caf":15,"spo":115,"man":115,"url":"https://www.idealista.it/immobile/35710302/","lat":43.272,"lng":11.992,"plannedDate":"","plannedTime":""},{"id":24846822,"name":"CaF Val di Chio","town":"Castiglion Fiorentino","prov":"AR","price":1000,"rooms":12,"size":760,"grp":2,"fco":155,"cdp":55,"caf":0,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/24846822/","lat":43.335,"lng":11.942,"plannedDate":"2026-06-28","plannedTime":"8:45 AM"},{"id":34980495,"name":"CaF Santa Cristina","town":"Castiglion Fiorentino","prov":"AR","price":900,"rooms":12,"size":800,"grp":2,"fco":155,"cdp":55,"caf":5,"spo":125,"man":120,"url":"https://www.idealista.it/immobile/34980495/","lat":43.325,"lng":11.938,"plannedDate":"2026-06-28","plannedTime":"9:30 AM"},{"id":31961655,"name":"Monteroni d'Arbia","town":"Monteroni d'Arbia","prov":"SI","price":980,"rooms":12,"size":480,"grp":2,"fco":155,"cdp":75,"caf":60,"spo":160,"man":95,"url":"https://www.idealista.it/immobile/31961655/","lat":43.227,"lng":11.415,"plannedDate":"2026-07-01","plannedTime":"12:00 PM"},{"id":26833080,"name":"Capolona Pieve SG","town":"Capolona","prov":"AR","price":890,"rooms":9,"size":420,"grp":2,"fco":158,"cdp":90,"caf":35,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/26833080/","lat":43.559,"lng":11.86,"plannedDate":"2026-07-01","plannedTime":"9:45 AM"},{"id":35651252,"name":"Capolona Caliano","town":"Capolona","prov":"AR","price":595,"rooms":10,"size":350,"grp":2,"fco":158,"cdp":90,"caf":30,"spo":155,"man":150,"url":"https://www.idealista.it/immobile/35651252/","lat":43.554,"lng":11.856,"plannedDate":"2026-07-01","plannedTime":"9:00 AM"}];
 const _propsRawById = new Map(PROPS_RAW.map(p => [p.id, p]));
@@ -1015,6 +1047,12 @@ let _dpMapMarkers = {};
 let _dpManualOrder = {};
 let _dpExcluded = {};
 let _schedSortables = {};
+let _schedCalDayDate = null;
+let _schedCalDays = [];
+let _schedCalSwipe = { startX: 0, startY: 0 };
+const SCHED_CAL_DEFAULT_START = 10 * 60;
+const SCHED_CAL_DEFAULT_END = 16 * 60;
+const SCHED_CAL_HOUR_PX = 52;
 let _driveLegCache = new Map();
 let _dayPlanCache = {};
 let _serverRev = 0;
@@ -7421,19 +7459,10 @@ function dpExcludeFromPlan(pid) {
   renderDayPlan(true, false);
 }
 
-function renderSchedule() {
-  const container = document.getElementById('days-container');
-  if (!container) return;
+function _getScheduleFilteredDays() {
   const view = document.getElementById('sched-view')?.value || 'all';
   const showOld = document.getElementById('sched-show-old')?.checked || false;
   const days = getTripDays();
-
-  if (!days.length) {
-    container.innerHTML = '<p style="font-size:12px;color:var(--text3);padding:20px 0">No trip days configured. Add bases with Visit From dates in Settings.</p>';
-    return;
-  }
-
-  // Build per-day property lists (combined route date + base last-day fallback)
   const routeByDate = {};
   for (const p of state.props) {
     if (ELIM_STATUSES.has(p.status)) continue;
@@ -7444,110 +7473,249 @@ function renderSchedule() {
     if (!routeByDate[rd]) routeByDate[rd] = [];
     routeByDate[rd].push(p);
   }
-
-  let html = '';
-  for (const day of days) {
-    if (day.isPast && !showOld) continue;
-    const sched = (routeByDate[day.date] || []).filter(p => getPropRouteSchedule(p).source === 'scheduled' && getPropRouteDate(p));
-    const planned = (routeByDate[day.date] || []).filter(p => getPropRouteSchedule(p).source === 'proposed' && getPropRouteDate(p));
-    const baseFallback = (routeByDate[day.date] || []).filter(p => !getPropRouteDate(p));
-    const combined = view === 'scheduled' ? sched : view === 'planned' ? planned : [...sched, ...planned, ...baseFallback];
-    if (!combined.length && view !== 'all') continue;
-
-    const base = day.baseObj || getBase(day.base);
-    const bColor = baseColor(day.base);
-    // Calculate total drive time for day (rough estimate)
-    let totalDrive = day.startH * 60;
+  return days.filter(day => {
+    if (day.isPast && !showOld) return false;
     const dayItems = routeByDate[day.date] || [];
-    let hasConflict = false, hasWarning = false;
-    for (const p of dayItems) {
-      const dt = getPropDriveToBase(p, day.base);
-      if (dt && dt > DRIVE_CAP) hasConflict = true;
-      else if (dt && dt > DRIVE_CAP * 0.85) hasWarning = true;
-    }
+    const sched = dayItems.filter(p => getPropRouteSchedule(p).source === 'scheduled' && getPropRouteDate(p));
+    const planned = dayItems.filter(p => getPropRouteSchedule(p).source === 'proposed' && getPropRouteDate(p));
+    const baseFallback = dayItems.filter(p => !getPropRouteDate(p));
+    const combined = view === 'scheduled' ? sched : view === 'planned' ? planned : [...sched, ...planned, ...baseFallback];
+    return combined.length > 0 || view === 'all';
+  });
+}
 
-    const conflictCls = hasConflict ? 'has-conflict' : hasWarning ? 'has-warning' : '';
-    html += `<div class="day-card ${conflictCls}" id="day-${day.date}">
-  <div class="day-header" onclick="this.closest('.day-card').classList.toggle('collapsed')">
-    <div style="display:flex;align-items:center;gap:6px">
-      <span class="day-label">${escHtml(day.label)}</span>
-      <span class="day-base" style="color:${bColor}">${escHtml(base?.name || day.base)}</span>
-      ${day.isPast ? '<span style="font-size:9px;color:var(--text3);font-style:italic">past</span>' : ''}
-    </div>
-    <div class="day-meta">
-      <span style="font-size:11px;color:var(--text3)">${dayItems.length} props</span>
-    </div>
-  </div>
-  <div class="drop-zone" id="drop-${day.date}" data-date="${day.date}" data-base="${day.base}">`;
-    if (!dayItems.length) {
-      html += `<div class="empty-day">No properties planned</div>`;
-    }
-    // Sort by time
-    const sortedItems = [...dayItems].sort((a, b) => {
-      const tierA = getPropScheduleDayTier(a, day.date);
-      const tierB = getPropScheduleDayTier(b, day.date);
-      if (tierA !== tierB) return tierA - tierB;
-      const at = parseTimeToMinutes(getPropDayTime(a, day.date));
-      const bt = parseTimeToMinutes(getPropDayTime(b, day.date));
-      const aHas = at != null, bHas = bt != null;
-      if (aHas !== bHas) return aHas ? -1 : 1;
-      if (aHas && bHas && at !== bt) return at - bt;
-      return String(a.name).localeCompare(String(b.name));
-    });
-    for (const p of sortedItems) {
+function _resolveSchedCalDay(days) {
+  _schedCalDays = days;
+  if (!days.length) {
+    _schedCalDayDate = null;
+    return null;
+  }
+  if (_schedCalDayDate && days.some(d => d.date === _schedCalDayDate)) return days.find(d => d.date === _schedCalDayDate);
+  const today = new Date().toISOString().slice(0, 10);
+  const future = days.find(d => d.date >= today);
+  _schedCalDayDate = (future || days[days.length - 1]).date;
+  return days.find(d => d.date === _schedCalDayDate);
+}
+
+function schedCalNav(delta) {
+  const days = _schedCalDays.length ? _schedCalDays : _getScheduleFilteredDays();
+  const idx = days.findIndex(d => d.date === _schedCalDayDate);
+  const newIdx = idx + delta;
+  if (newIdx < 0 || newIdx >= days.length) return;
+  _schedCalDayDate = days[newIdx].date;
+  renderSchedule();
+}
+
+function _buildScheduleCalBlocks(plan, date) {
+  const blocks = [];
+  const untimed = [];
+  if (plan?.stops?.length) {
+    let prevDepart = plan.departBaseMin ?? null;
+    for (let i = 0; i < plan.stops.length; i++) {
+      const s = plan.stops[i];
+      const p = s.p;
       const rs = getPropRouteSchedule(p);
-      const isLocked = rs.locked && rs.date === day.date;
-      const time = formatTimeDisplay(getPropDayTime(p, day.date));
-      const dt = getPropDriveToBase(p, day.base);
-      const driveClass = dt == null ? '' : dt > DRIVE_CAP ? 'drive-chip-over' : dt > DRIVE_CAP * 0.75 ? 'drive-chip-warn' : '';
-      const mapUrl = getGoogleMapsDirectionsUrl(p);
-      html += `<div class="stop-row${isLocked?' sched-locked':''}" data-pid="${p.id}">
-    <span class="stop-time">${escHtml(time||'—')}</span>
-    <span class="stop-name" title="${escAttr(p.name)}">${escHtml(p.name)}</span>
-    ${isLocked ? '<span class="sched-badge">✓</span>' : ''}
-    ${dt != null ? `<span class="drive-chip ${driveClass}">${formatDurMin(dt)}</span>` : ''}
-    ${mapUrl ? `<a href="${mapUrl}" target="_blank" rel="noopener" class="mapit-btn">🗺</a>` : '<span class="mapit-btn disabled">🗺</span>'}
-    <button class="t-btn t-btn-blue" style="font-size:9px;padding:1px 5px" onclick="openDetailModal(${p.id})">✏</button>
-  </div>`;
+      const locked = rs.locked && rs.date === date;
+      const proposed = !locked && rs.source === 'proposed';
+      const startMin = s.startViewMin ?? s.plannedMin ?? s.arriveMin;
+      const endMin = s.departMin ?? (startMin != null ? startMin + VIEWING_MIN : null);
+
+      if (startMin != null && endMin != null) {
+        const travelStart = prevDepart != null ? prevDepart : (s.arriveMin != null && s.drive != null ? s.arriveMin - s.drive : null);
+        const travelEnd = s.arriveMin ?? startMin;
+        if (travelStart != null && travelEnd != null && travelEnd > travelStart) {
+          blocks.push({
+            type: 'travel',
+            startMin: travelStart,
+            endMin: travelEnd,
+            label: `Drive · ${formatDurMin(travelEnd - travelStart)}`,
+          });
+        }
+        blocks.push({
+          type: 'appt',
+          startMin,
+          endMin,
+          pid: p.id,
+          label: p.name,
+          locked,
+          proposed,
+          conflict: stopHasViolation(s, plan),
+          time: formatMinToTime(startMin),
+        });
+        prevDepart = endMin;
+      } else {
+        untimed.push({ p, locked, proposed });
+        prevDepart = s.departMin ?? prevDepart;
+      }
     }
-    html += `</div></div>`;
+    if (plan.returnArrive != null && prevDepart != null && plan.returnArrive > prevDepart) {
+      blocks.push({
+        type: 'travel',
+        startMin: prevDepart,
+        endMin: plan.returnArrive,
+        label: `Return · ${formatDurMin(plan.returnDrive ?? (plan.returnArrive - prevDepart))}`,
+      });
+    }
+  }
+  return { blocks, untimed };
+}
+
+function _schedCalVisibleRange(blocks) {
+  let rangeStart = SCHED_CAL_DEFAULT_START;
+  let rangeEnd = SCHED_CAL_DEFAULT_END;
+  let minEvent = Infinity;
+  let maxEvent = -Infinity;
+  for (const b of blocks) {
+    if (b.startMin == null || b.endMin == null) continue;
+    minEvent = Math.min(minEvent, b.startMin);
+    maxEvent = Math.max(maxEvent, b.endMin);
+  }
+  if (minEvent < SCHED_CAL_DEFAULT_START) rangeStart = Math.floor(minEvent / 60) * 60;
+  if (maxEvent > SCHED_CAL_DEFAULT_END) rangeEnd = Math.ceil(maxEvent / 60) * 60;
+  if (!isFinite(minEvent)) {
+    rangeStart = SCHED_CAL_DEFAULT_START;
+    rangeEnd = SCHED_CAL_DEFAULT_END;
+  }
+  return { rangeStart, rangeEnd };
+}
+
+function _renderScheduleCalHtml(day, plan, dayItems, blocks, untimed, unscheduled) {
+  const base = day.baseObj || getBase(day.base);
+  const bColor = baseColor(day.base);
+  const idx = _schedCalDays.findIndex(d => d.date === day.date);
+  const hasPrev = idx > 0;
+  const hasNext = idx >= 0 && idx < _schedCalDays.length - 1;
+  const { rangeStart, rangeEnd } = _schedCalVisibleRange(blocks);
+  const totalMin = rangeEnd - rangeStart;
+  const gridHeight = (totalMin / 60) * SCHED_CAL_HOUR_PX;
+
+  let axisHtml = '';
+  for (let m = rangeStart; m <= rangeEnd; m += 60) {
+    const top = ((m - rangeStart) / 60) * SCHED_CAL_HOUR_PX;
+    axisHtml += `<div class="sched-cal-hour-label" style="top:${top}px">${formatMinToTime(m)}</div>`;
   }
 
-  // Unscheduled zone
-  const unscheduled = state.props.filter(p => !ELIM_STATUSES.has(p.status) && isPropOnActiveBase(p) && !getPropRouteDate(p) && !getBaseLastDate(p.grp));
+  let laneHtml = '';
+  for (const b of blocks) {
+    const top = ((b.startMin - rangeStart) / 60) * SCHED_CAL_HOUR_PX;
+    const rawHeight = ((b.endMin - b.startMin) / 60) * SCHED_CAL_HOUR_PX;
+    const height = Math.max(b.type === 'travel' ? 16 : 18, rawHeight);
+    if (b.type === 'travel') {
+      laneHtml += `<div class="sched-cal-block sched-cal-travel" style="top:${top}px;height:${height}px" title="${escAttr(b.label)}"><span class="sched-cal-block-title">${escHtml(b.label)}</span></div>`;
+    } else {
+      const cls = b.locked ? 'sched-chip-locked' : 'sched-chip-proposed';
+      const conflict = b.conflict ? ' row-conflict' : '';
+      laneHtml += `<div class="sched-cal-block sched-cal-appt ${cls}${conflict}" style="top:${top}px;height:${height}px" onclick="openDetailModal(${b.pid})" title="${escAttr(b.label)}"><span class="sched-cal-block-time">${escHtml(b.time)}</span><span class="sched-cal-block-title">${escHtml(b.label)}</span></div>`;
+    }
+  }
+
+  const allUntimed = [...untimed];
+  for (const p of dayItems) {
+    if (blocks.some(b => b.pid === p.id)) continue;
+    if (allUntimed.some(u => u.p?.id === p.id)) continue;
+    const rs = getPropRouteSchedule(p);
+    allUntimed.push({
+      p,
+      locked: rs.locked && rs.date === day.date,
+      proposed: rs.source === 'proposed',
+    });
+  }
+
+  let alldayHtml = '';
+  if (allUntimed.length) {
+    alldayHtml = `<div class="sched-cal-allday has-items"><div class="sched-cal-allday-label">No time</div><div class="sched-cal-allday-chips">`;
+    for (const u of allUntimed) {
+      const cls = u.locked ? 'sched-chip-locked' : 'sched-chip-proposed';
+      alldayHtml += `<button type="button" class="sched-cal-allday-chip ${cls}" onclick="openDetailModal(${u.p.id})">${escHtml(u.p.name)}</button>`;
+    }
+    alldayHtml += '</div></div>';
+  }
+
+  let unschedHtml = '';
   if (unscheduled.length) {
-    html += `<div class="zone-card" id="zone-unsched">
-  <div class="zone-header" onclick="this.closest('.zone-card').classList.toggle('collapsed')">
-    <span class="zone-label">Unscheduled (${unscheduled.length})</span><span>▸</span>
-  </div>
-  <div class="zone-drop" id="drop-unscheduled" data-date="" data-base="">
-    ${unscheduled.map(p => `<div class="zone-row" data-pid="${p.id}">
-      <span class="stop-name">${escHtml(p.name)}</span>
-      <span style="font-size:10px;color:var(--text3)">${escHtml(p.grp)}</span>
-      <button class="t-btn t-btn-blue" style="font-size:9px;padding:1px 5px" onclick="openDetailModal(${p.id})">✏</button>
-    </div>`).join('')}
-  </div>
-</div>`;
+    unschedHtml = `<div class="sched-cal-unsched"><div class="sched-cal-unsched-title">Unscheduled (${unscheduled.length})</div>`;
+    for (const p of unscheduled) {
+      unschedHtml += `<div class="sched-cal-unsched-row" onclick="openDetailModal(${p.id})"><span style="flex:1">${escHtml(p.name)}</span><span style="font-size:10px;color:var(--text3)">${escHtml(p.grp)}</span></div>`;
+    }
+    unschedHtml += '</div>';
   }
 
-  // Eliminated zone
-  const elim = state.props.filter(p => ELIM_STATUSES.has(p.status) && isPropOnActiveBase(p));
-  if (elim.length) {
-    html += `<div class="zone-card elim-zone" id="zone-elim">
-  <div class="zone-header" onclick="this.closest('.zone-card').classList.toggle('collapsed')">
-    <span class="zone-label" style="color:var(--red)">Eliminated (${elim.length})</span><span>▸</span>
+  return `<div class="sched-cal" id="sched-cal">
+  <div class="sched-cal-nav">
+    <button type="button" class="sched-cal-nav-btn" onclick="schedCalNav(-1)" ${hasPrev ? '' : 'disabled'} aria-label="Previous day">‹</button>
+    <div class="sched-cal-nav-center">
+      <div class="sched-cal-day-label">${escHtml(day.label)}${day.isPast ? ' <span style="font-size:10px;color:var(--text3);font-weight:400">(past)</span>' : ''}</div>
+      <div class="sched-cal-day-base" style="color:${bColor}">${escHtml(base?.name || day.base)} · ${dayItems.length} propert${dayItems.length === 1 ? 'y' : 'ies'}</div>
+    </div>
+    <button type="button" class="sched-cal-nav-btn" onclick="schedCalNav(1)" ${hasNext ? '' : 'disabled'} aria-label="Next day">›</button>
   </div>
-  <div class="zone-drop" style="pointer-events:none">
-    ${elim.map(p => `<div class="zone-row" data-pid="${p.id}">
-      <span class="stop-name" style="opacity:.6">${escHtml(p.name)}</span>
-      <span style="font-size:10px;color:var(--red)">${escHtml(p.status)}</span>
-      <button class="t-btn t-btn-restore" style="font-size:9px;padding:1px 5px" onclick="quickStatus(${p.id},'New')">↩</button>
-    </div>`).join('')}
+  <div class="sched-cal-body">
+    ${alldayHtml}
+    <div class="sched-cal-scroll">
+      <div class="sched-cal-grid" style="height:${gridHeight}px">
+        <div class="sched-cal-axis" style="height:${gridHeight}px">${axisHtml}</div>
+        <div class="sched-cal-lane" style="height:${gridHeight}px">${laneHtml || '<div class="empty-day" style="padding:12px">No timed appointments</div>'}</div>
+      </div>
+    </div>
   </div>
-</div>`;
+</div>${unschedHtml}`;
+}
+
+function _bindSchedCalSwipe(el) {
+  if (!el || el.dataset.swipeBound) return;
+  el.dataset.swipeBound = '1';
+  el.addEventListener('touchstart', e => {
+    _schedCalSwipe.startX = e.touches[0].clientX;
+    _schedCalSwipe.startY = e.touches[0].clientY;
+  }, { passive: true });
+  el.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - _schedCalSwipe.startX;
+    const dy = e.changedTouches[0].clientY - _schedCalSwipe.startY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.2) schedCalNav(dx < 0 ? 1 : -1);
+  }, { passive: true });
+}
+
+async function renderSchedule() {
+  const container = document.getElementById('days-container');
+  if (!container) return;
+  const days = _getScheduleFilteredDays();
+
+  if (!days.length) {
+    _schedCalDayDate = null;
+    _schedCalDays = [];
+    container.innerHTML = '<p style="font-size:12px;color:var(--text3);padding:20px 0">No trip days configured. Add bases with Visit From dates in Settings.</p>';
+    return;
   }
 
-  container.innerHTML = html;
+  const day = _resolveSchedCalDay(days);
+  if (!day) return;
+
+  container.innerHTML = '<div class="sched-cal-status">Loading schedule…</div>';
+
+  const routeByDate = {};
+  for (const p of state.props) {
+    if (ELIM_STATUSES.has(p.status)) continue;
+    if (isUnassignedProp(p)) continue;
+    if (!isPropOnActiveBase(p)) continue;
+    const rd = getPropRouteDate(p) || getBaseLastDate(p.grp);
+    if (!rd) continue;
+    if (!routeByDate[rd]) routeByDate[rd] = [];
+    routeByDate[rd].push(p);
+  }
+  const dayItems = routeByDate[day.date] || [];
+
+  let plan = null;
+  try {
+    plan = await computeDayPlan(day.date, true);
+  } catch (e) {
+    console.warn('Schedule calendar plan:', e);
+  }
+
+  const { blocks, untimed } = _buildScheduleCalBlocks(plan, day.date);
+  const unscheduled = state.props.filter(p => !ELIM_STATUSES.has(p.status) && isPropOnActiveBase(p) && !getPropRouteDate(p) && !getBaseLastDate(p.grp));
+
+  container.innerHTML = _renderScheduleCalHtml(day, plan, dayItems, blocks, untimed, unscheduled);
+  _bindSchedCalSwipe(document.getElementById('sched-cal'));
 }
 
 function getScheduleTierLabel(p, dayDate) {
