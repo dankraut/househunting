@@ -62,4 +62,7 @@ index.html|buildGoogleCalendarUrl|Desktop Google Calendar fallback for +Cal
 index.html|mapRouteAnnotateOpts|Opt-scheduled and Find Base lock only Scheduled times
 index.html|buildOptScheduledDayPlan|Shared opt-scheduled day plan for map and Find Base
 index.html|onStayBaseLocationChanged|Base GPS change recalcs drives and refreshes map
+index.html|applySelectedBasesChange|Unified base filter refresh across tabs
+index.html|propMatchesSelectedBases|Global base filter property match
+index.html|populateScheduleBaseDropdown|Schedule tab base filter dropdown
 index.html|recalcPropsForBaseLocationChange|Base move updates drive times for all props
