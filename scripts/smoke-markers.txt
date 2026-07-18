@@ -57,4 +57,5 @@ index.html|schedCalNav|Schedule calendar day navigation
 index.html|_buildScheduleCalBlocks|Schedule calendar timed blocks
 index.html|buildPropCalendarIcs|Calendar export with address and GEO for mobile
 index.html|buildGoogleCalendarUrl|Desktop Google Calendar fallback for +Cal
-index.html|getPropCalendarLocationParts|Calendar location prefers GPS over generic addresses
+index.html|mapRouteAnnotateOpts|Opt-scheduled and Find Base lock only Scheduled times
+index.html|SCHED_CAL_AXIS_PAD|Schedule calendar hour label padding
