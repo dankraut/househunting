@@ -61,3 +61,5 @@ index.html|buildPropCalendarIcs|Calendar export with address and GEO for mobile
 index.html|buildGoogleCalendarUrl|Desktop Google Calendar fallback for +Cal
 index.html|mapRouteAnnotateOpts|Opt-scheduled and Find Base lock only Scheduled times
 index.html|buildOptScheduledDayPlan|Shared opt-scheduled day plan for map and Find Base
+index.html|onStayBaseLocationChanged|Base GPS change recalcs drives and refreshes map
+index.html|recalcPropsForBaseLocationChange|Base move updates drive times for all props
