@@ -65,4 +65,5 @@ index.html|onStayBaseLocationChanged|Base GPS change recalcs drives and refreshe
 index.html|applySelectedBasesChange|Unified base filter refresh across tabs
 index.html|propMatchesSelectedBases|Global base filter property match
 index.html|populateScheduleBaseDropdown|Schedule tab base filter dropdown
+index.html|props-base-dropdown-float|Properties base menu fixed above tiles
 index.html|recalcPropsForBaseLocationChange|Base move updates drive times for all props
