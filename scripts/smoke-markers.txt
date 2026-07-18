@@ -50,6 +50,8 @@ index.html|formatStopTimeMeta|Stop list shows implied times when appointments ig
 index.html|getPropScheduleKind|Proposed/Scheduled stop name styling
 index.html|updateMapRouteModeState|Route mode select stays enabled with multi-day selection
 .github/workflows/auto-merge-cursor.yml|waitForSettlePeriod|Auto-merge settle period before production merge
+index.html|onMapDowntimeToggle|Map Stops downtime toggle
+index.html|_mapDowntimeBetweenStops|Map Stops idle gap detection
 index.html|printSchedulePdf|Schedule tab A4 PDF print
 index.html|buildPropCalendarIcs|Calendar export with address and GEO for mobile
 index.html|buildGoogleCalendarUrl|Desktop Google Calendar fallback for +Cal
