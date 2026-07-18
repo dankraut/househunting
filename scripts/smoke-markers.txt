@@ -60,6 +60,8 @@ index.html|_buildScheduleCalBlocks|Schedule calendar timed blocks
 index.html|buildPropCalendarIcs|Calendar export with address and GEO for mobile
 index.html|buildGoogleCalendarUrl|Desktop Google Calendar fallback for +Cal
 index.html|mapRouteAnnotateOpts|Find Base locks only Scheduled times
+index.html|prepareStatusChange|Confirm and clear visit when moving to eliminated status
+index.html|propHasVisitAppointment|Detect scheduled visit before elimination
 index.html|buildWhatIfRoutePlan|What-if sandbox route planning with date/time overrides
 index.html|getWhatIfEffectiveDate|What-if effective visit date helper
 index.html|buildOptScheduledDayPlan|Shared opt-scheduled day plan for map and Find Base
