@@ -57,8 +57,9 @@ index.html|_mapDowntimeBetweenStops|Map Stops idle gap detection
 index.html|printSchedulePdf|Schedule tab A4 PDF print
 index.html|schedCalNav|Schedule calendar day navigation
 index.html|_buildScheduleCalBlocks|Schedule calendar timed blocks
+index.html|getPropCalendarExportParts|Calendar export location separate from map routing
+index.html|preferAndroidCalendarExport|Android Google Calendar +Cal path
 index.html|foldIcsLine|ICS line folding for mobile calendar parsers
-index.html|romeLocalToUtcDate|Rome local time to UTC for ICS export
 index.html|buildPropCalendarIcs|Calendar export with address and GEO for mobile
 index.html|buildGoogleCalendarUrl|Desktop Google Calendar fallback for +Cal
 index.html|mapRouteAnnotateOpts|Find Base locks only Scheduled times
