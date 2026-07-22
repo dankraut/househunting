@@ -105,6 +105,123 @@ export function createLocationModule(api) {
     return '';
   }
 
+  function isGenericTownOnlyAddress(addr) {
+    if (!addr) return true;
+    const a = String(addr).trim();
+    if (!a) return true;
+    if (/^\d+,\s*\d+,\s*Italy$/i.test(a)) return true;
+    if (/^[^,\d]+,\s*[A-Z]{2},\s*Italy$/i.test(a)) return true;
+    return false;
+  }
+
+  function looksLikeGoogleMapsUrl(text) {
+    if (!text || typeof text !== 'string') return false;
+    const s = text.trim();
+    return /^(https?:\/\/)?(www\.)?(google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(s);
+  }
+
+  /** Street + number + town — not town-only or coordinate pair. */
+  function isCompleteStreetAddress(addr) {
+    if (!addr || isGenericTownOnlyAddress(addr)) return false;
+    const a = String(addr).trim();
+    if (looksLikeGoogleMapsUrl(a) || looksLikeCoordinateAttempt(a)) return false;
+    const sansItaly = a.replace(/,?\s*Italy\s*$/i, '').trim();
+    const parts = sansItaly.split(',').map(s => s.trim()).filter(Boolean);
+    if (parts.length < 2) return false;
+    return /\d/.test(parts[0]);
+  }
+
+  function getPropMeetingAddress(p) {
+    return (p?.meetingAddress && String(p.meetingAddress).trim()) ? String(p.meetingAddress).trim() : '';
+  }
+
+  function hasPropMeetingAddress(p) {
+    return !!getPropMeetingAddress(p);
+  }
+
+  function getPropPropertyAddressLine(p) {
+    if (!p) return '';
+    const propAddr = (p.propertyAddress && String(p.propertyAddress).trim()) ? String(p.propertyAddress).trim() : '';
+    if (propAddr) return propAddr;
+    const gps = getPropGps(p);
+    if (gps && !isCoordinateGps(gps) && !looksLikeGoogleMapsUrl(gps)) return gps;
+    const stored = (p.address || '').trim();
+    if (stored && !isGenericTownOnlyAddress(stored)) return stored;
+    return '';
+  }
+
+  function getPropUserEnteredCoords(p) {
+    if (!p) return null;
+    const gps = getPropGps(p);
+    if (p.gpsPinExact && gps && isCoordinateGps(gps)) {
+      const [lat, lng] = parseGPS(gps);
+      if (lat != null && lng != null) return { lat, lng };
+    }
+    if (p.gpsPinExact && p.lat != null && p.lng != null) {
+      return { lat: p.lat, lng: p.lng };
+    }
+    return null;
+  }
+
+  function resolveLocationForMapsUrl(text) {
+    const t = (text || '').trim();
+    if (!t) return '';
+    if (looksLikeGoogleMapsUrl(t)) return t;
+    if (isCompleteStreetAddress(t)) return t;
+    if (!isCoordinateGps(t) && !looksLikeCoordinateAttempt(t)) return t;
+    const [lat, lng] = parseGPS(t);
+    if (lat != null && lng != null) return `${lat},${lng}`;
+    return t;
+  }
+
+  function getPropPropertyMapsNavQuery(p) {
+    if (!p) return '';
+    const propLine = getPropPropertyAddressLine(p);
+    if (propLine) {
+      if (isCompleteStreetAddress(propLine) || looksLikeGoogleMapsUrl(propLine) || !isCoordinateGps(propLine)) {
+        return resolveLocationForMapsUrl(propLine);
+      }
+    }
+    const coords = getPropUserEnteredCoords(p);
+    if (coords) return `${coords.lat},${coords.lng}`;
+    const town = formatPropTownDisplay(p) || getPropAddress(p);
+    return town ? resolveLocationForMapsUrl(town) : '';
+  }
+
+  function getPropMapsNavQuery(p, role = 'arrive') {
+    if (!p) return '';
+    const meeting = getPropMeetingAddress(p);
+    if (role === 'arrive' && meeting) return resolveLocationForMapsUrl(meeting);
+    return getPropPropertyMapsNavQuery(p);
+  }
+
+  function getPropDisplayLocation(p) {
+    if (!p) return '—';
+    const propLine = getPropPropertyAddressLine(p);
+    if (propLine && (isCompleteStreetAddress(propLine) || !isGenericTownOnlyAddress(propLine))) return propLine;
+    const coords = getPropUserEnteredCoords(p);
+    if (coords) return `${coords.lat}, ${coords.lng}`;
+    const town = formatPropTownDisplay(p) || getPropAddress(p);
+    return town || '—';
+  }
+
+  function expandDayTripWaypoints(stops) {
+    const out = [];
+    for (const s of stops || []) {
+      const p = s?.p;
+      if (!p) continue;
+      const arrive = getPropMapsNavQuery(p, 'arrive');
+      const depart = getPropMapsNavQuery(p, 'depart');
+      if (hasPropMeetingAddress(p)) {
+        if (arrive) out.push(arrive);
+        if (depart && depart !== arrive) out.push(depart);
+      } else if (arrive) {
+        out.push(arrive);
+      }
+    }
+    return out;
+  }
+
   function applyTownTextToProp(p, raw) {
     if (!p || !raw || !String(raw).trim()) return;
     const sansItaly = String(raw).trim().replace(/,?\s*Italy\s*$/i, '').trim();
@@ -679,6 +796,18 @@ export function createLocationModule(api) {
     clearPropCalcGps,
     getPropTownQuery,
     formatPropTownDisplay,
+    isGenericTownOnlyAddress,
+    looksLikeGoogleMapsUrl,
+    isCompleteStreetAddress,
+    getPropMeetingAddress,
+    hasPropMeetingAddress,
+    getPropPropertyAddressLine,
+    getPropUserEnteredCoords,
+    resolveLocationForMapsUrl,
+    getPropPropertyMapsNavQuery,
+    getPropMapsNavQuery,
+    getPropDisplayLocation,
+    expandDayTripWaypoints,
     applyTownTextToProp,
     syncCalcGpsFromTown,
     getBaseGps,

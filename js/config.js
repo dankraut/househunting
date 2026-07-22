@@ -1,5 +1,5 @@
 /** @module config — shared SPA constants */
-export const SPA_VERSION = 'v2.63';
+export const SPA_VERSION = 'v2.64';
 export const FIND_BASE_MAX_PROPS = 15;
 export const FIND_BASE_MAX_TOWN_CANDIDATES = 12;
 export const FIND_BASE_MIN_POPULATION = 5000;
@@ -77,5 +77,5 @@ export const SYNC_POLL_MS = 3000;
 
 export const PERSIST_FIELDS = ['status','visitDate','visitTime','schedDate','schedTime','proposedDate','proposedTime','lastContacted',
   'firmName','firmPhone','broker','brokerPhone','brokerEmail',
-  'address','gps','gpsPinExact','calcGps','idealistaGps','userPlannedDate','userPlannedTime','notes','realtorUrl','sourceIfl','grp',
+  'address','propertyAddress','meetingAddress','gps','gpsPinExact','calcGps','idealistaGps','userPlannedDate','userPlannedTime','notes','realtorUrl','sourceIfl','grp',
   'commune','town','prov','driveTimes','driveMiles','refAirport','driveTimesCoordsKey','name','price','rooms','size','lat','lng','elevation','elevationCoordsKey'];

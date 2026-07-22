@@ -44,7 +44,11 @@ window.getApiToken = getApiToken;
 const locNames = [
   'parseGPS', 'isCoordinateGps', 'buildAddressFromParts', 'getPropAddress', 'getPropGps', 'getPropCalcGps',
   'clearPropCalcGps', 'getPropTownQuery',
-  'formatPropTownDisplay', 'applyTownTextToProp', 'syncCalcGpsFromTown', 'getBaseGps',
+  'formatPropTownDisplay', 'isGenericTownOnlyAddress', 'looksLikeGoogleMapsUrl', 'isCompleteStreetAddress',
+  'getPropMeetingAddress', 'hasPropMeetingAddress', 'getPropPropertyAddressLine', 'getPropUserEnteredCoords',
+  'resolveLocationForMapsUrl', 'getPropPropertyMapsNavQuery', 'getPropMapsNavQuery', 'getPropDisplayLocation',
+  'expandDayTripWaypoints',
+  'applyTownTextToProp', 'syncCalcGpsFromTown', 'getBaseGps',
   'clearEntityCoords', 'normalizeGpsString', 'formatItalianLocation', 'applyGpsToEntity',
   'geocodeAddress', 'reverseGeocode', 'syncEntityLocation', 'resolveLocSyncMode', 'resolvePropCoords',
   'resolveStayBaseCoords', 'migratePropLocation',

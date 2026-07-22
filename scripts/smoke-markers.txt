@@ -65,6 +65,9 @@ index.html|propHasVisitAppointment|Detect scheduled visit before elimination
 index.html|buildWhatIfRoutePlan|What-if sandbox route planning with date/time overrides
 index.html|getWhatIfEffectiveDate|What-if effective visit date helper
 index.html|buildOptScheduledDayPlan|Shared opt-scheduled day plan for map and Find Base
+index.html|getPropMapsNavQuery|Property/meeting address routing for directions
+index.html|expandDayTripWaypoints|Map the Day meeting/property stop expansion
+js/location.js|getPropDisplayLocation|Property display location text or coords
 index.html|openScheduleDayMap|Schedule tab Map the Day Google Maps trip
 index.html|buildGoogleMapsDayTripUrl|Multi-stop Google Maps day trip URL builder
 index.html|onStayBaseLocationChanged|Base GPS change recalcs drives and refreshes map
