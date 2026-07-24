@@ -263,6 +263,38 @@ export function createLocationModule(api) {
     return (b && b.gps && String(b.gps).trim()) ? String(b.gps).trim() : '';
   }
 
+  function getBaseCalcGps(b) {
+    return (b?.calcGps && String(b.calcGps).trim()) ? String(b.calcGps).trim() : '';
+  }
+
+  function clearBaseCalcGps(b) {
+    if (!b) return;
+    b.calcGps = '';
+  }
+
+  function getBaseTownQuery(b) {
+    const addr = (b?.address || '').trim();
+    if (!addr) return '';
+    return /italy/i.test(addr) ? addr : `${addr}, Italy`;
+  }
+
+  async function syncCalcGpsFromTownBase(b) {
+    const q = getBaseTownQuery(b);
+    if (!q) {
+      clearBaseCalcGps(b);
+      if (!getBaseGps(b)) clearEntityCoords(b);
+      return { ok: true, source: 'cleared' };
+    }
+    const geo = await geocodeAddress(q);
+    if (!geo) return { ok: false, error: 'Could not find coordinates for that town' };
+    b.calcGps = normalizeGpsString(`${geo.lat},${geo.lng}`);
+    b.lat = geo.lat;
+    b.lng = geo.lng;
+    const label = formatItalianLocation(geo);
+    if (label) b.address = label;
+    return { ok: true, source: geo.townFallback ? 'geocode-town-fallback' : 'calc-gps' };
+  }
+
   function clearEntityCoords(e) {
     if (!e) return;
     e.lat = null;
@@ -301,6 +333,12 @@ export function createLocationModule(api) {
   function extractTownQuery(raw) {
     if (!raw || !raw.trim()) return null;
     const s = raw.trim().replace(/,?\s*Italy\s*$/i, '').trim();
+    // Unstructured Italian address ending with city + CAP, e.g. "... Duomo Milano 20123"
+    const capCity = s.match(/\b([A-Za-zÀ-ÿ][\wÀ-ÿ'-]+)\s+(\d{5})\s*$/);
+    if (capCity) {
+      const city = capCity[1].trim();
+      if (city.length >= 2) return `${city}, Italy`;
+    }
     const parts = s.split(',').map(p => p.trim()).filter(Boolean);
     if (!parts.length) return null;
     const last = parts[parts.length - 1];
@@ -418,28 +456,23 @@ export function createLocationModule(api) {
 
     const applyForward = async () => {
       if (!isBase) applyTownTextToProp(entity, addrIn);
-      const q = isBase ? (addrIn && !/italy/i.test(addrIn) ? addrIn + ', Italy' : addrIn) : getPropTownQuery(entity);
+      const q = isBase ? getBaseTownQuery({ ...entity, address: addrIn || entity.address }) : getPropTownQuery(entity);
       if (!q) {
         if (!isBase) {
           clearPropCalcGps(entity);
           if (!getPropGps(entity)) clearEntityCoords(entity);
         } else {
-          entity.gps = '';
-          clearEntityCoords(entity);
+          clearBaseCalcGps(entity);
+          if (!getBaseGps(entity)) {
+            entity.gps = '';
+            clearEntityCoords(entity);
+          }
         }
         return { ok: true, source: 'cleared' };
       }
       if (isBase) {
-        if (!/italy/i.test(addrIn)) addrIn += ', Italy';
-        entity.address = addrIn;
-        const geo = await geocodeAddress(addrIn);
-        if (!geo) return { ok: false, error: 'Could not find coordinates for that town' };
-        entity.lat = geo.lat;
-        entity.lng = geo.lng;
-        entity.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
-        const label = formatItalianLocation(geo);
-        if (label) entity.address = label;
-        return { ok: true, source: geo.townFallback ? 'geocode-town-fallback' : 'geocode' };
+        if (addrIn) applyAddressText(entity, addrIn, true);
+        return syncCalcGpsFromTownBase(entity);
       }
       return syncCalcGpsFromTown(entity);
     };
@@ -454,8 +487,10 @@ export function createLocationModule(api) {
       entity.lat = geo.lat;
       entity.lng = geo.lng;
       entity.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
-      clearPropCalcGps(entity);
+      if (isBase) clearBaseCalcGps(entity);
+      else clearPropCalcGps(entity);
       if (!isBase) entity.gpsPinExact = true;
+      else entity.gpsPinExact = true;
       const label = formatItalianLocation(geo);
       if (label) entity.address = label;
       if (!isBase) {
@@ -474,9 +509,13 @@ export function createLocationModule(api) {
         if (!isBase) {
           clearPropCalcGps(entity);
           entity.gpsPinExact = true;
+        } else {
+          clearBaseCalcGps(entity);
+          entity.gpsPinExact = true;
         }
-        if (addrIn && !overwriteTown && !isBase) {
-          applyTownTextToProp(entity, addrIn);
+        if (addrIn && !overwriteTown) {
+          if (isBase) applyAddressText(entity, addrIn, true);
+          else applyTownTextToProp(entity, addrIn);
           return { ok: true, source: 'gps' };
         }
         const rev = await reverseGeocode(entity.lat, entity.lng);
@@ -507,15 +546,18 @@ export function createLocationModule(api) {
     };
 
     if (mode === 'address') {
-      if (!isBase && gpsIn) return applyAddressOnly();
+      if (gpsIn) return applyAddressOnly();
       if (addrIn) return applyForward();
       if (!isBase) {
         clearPropCalcGps(entity);
         if (!getPropGps(entity)) clearEntityCoords(entity);
         return { ok: true, source: 'cleared' };
       }
-      entity.gps = '';
-      clearEntityCoords(entity);
+      clearBaseCalcGps(entity);
+      if (!getBaseGps(entity)) {
+        entity.gps = '';
+        clearEntityCoords(entity);
+      }
       return { ok: true, source: 'cleared' };
     }
 
@@ -527,8 +569,8 @@ export function createLocationModule(api) {
         return syncCalcGpsFromTown(entity);
       }
       entity.gps = '';
-      clearEntityCoords(entity);
-      return { ok: true, source: 'cleared' };
+      entity.gpsPinExact = false;
+      return syncCalcGpsFromTownBase(entity);
     }
 
     if (gpsIn) return applyReverse();
@@ -540,7 +582,9 @@ export function createLocationModule(api) {
       clearEntityCoords(entity);
       return { ok: true, source: 'cleared' };
     }
+    clearBaseCalcGps(entity);
     entity.gps = '';
+    entity.gpsPinExact = false;
     clearEntityCoords(entity);
     return { ok: true, source: 'cleared' };
   }
@@ -603,21 +647,32 @@ export function createLocationModule(api) {
         base.lat = geo.lat;
         base.lng = geo.lng;
         base.gps = normalizeGpsString(`${geo.lat},${geo.lng}`);
+        clearBaseCalcGps(base);
         return { lat: geo.lat, lng: geo.lng };
+      }
+    }
+    const calc = getBaseCalcGps(base);
+    if (calc) {
+      const [lat, lng] = parseGPS(calc);
+      if (lat != null && lng != null) {
+        base.lat = lat;
+        base.lng = lng;
+        return { lat, lng };
       }
     }
     const addr = (base.address || '').trim();
     if (!addr) {
-      if (!gps) clearEntityCoords(base);
+      if (!gps && !calc) clearEntityCoords(base);
       return null;
     }
     const geo = await geocodeAddress(addr);
     if (geo) {
       base.lat = geo.lat;
       base.lng = geo.lng;
+      base.calcGps = normalizeGpsString(`${geo.lat},${geo.lng}`);
       return { lat: geo.lat, lng: geo.lng };
     }
-    if (!gps) clearEntityCoords(base);
+    if (!gps && !calc) clearEntityCoords(base);
     return null;
   }
 
@@ -653,11 +708,23 @@ export function createLocationModule(api) {
 
   function migrateBaseLocation(b) {
     b.baseType = b.baseType || 'stay';
+    if (!b.calcGps) b.calcGps = '';
+    if (b.hidden !== true) b.hidden = false;
     if (b.baseType === 'stay') {
       if (getBaseGps(b)) {
         applyGpsToEntity(b, b.gps);
+        if (b.gpsPinExact !== false) b.gpsPinExact = true;
+      } else if (getBaseCalcGps(b)) {
+        const [lat, lng] = parseGPS(b.calcGps);
+        if (lat != null && lng != null) {
+          b.lat = lat;
+          b.lng = lng;
+        }
+        b.gps = '';
+        b.gpsPinExact = false;
       } else {
         b.gps = '';
+        b.gpsPinExact = false;
         clearEntityCoords(b);
       }
     }
@@ -811,6 +878,10 @@ export function createLocationModule(api) {
     applyTownTextToProp,
     syncCalcGpsFromTown,
     getBaseGps,
+    getBaseCalcGps,
+    clearBaseCalcGps,
+    getBaseTownQuery,
+    syncCalcGpsFromTownBase,
     clearEntityCoords,
     normalizeGpsString,
     formatItalianLocation,

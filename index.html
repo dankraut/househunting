@@ -844,9 +844,21 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
 
     <!-- Bases -->
     <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
         <div style="font-size:12px;font-weight:600;color:var(--text2)">Bases</div>
-        <button class="io-btn" onclick="openAddBaseForm()" style="font-size:11px">+ Add Base</button>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <label style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:4px">
+            Sort
+            <select id="bases-list-sort" onchange="onBasesListSortChange()" style="font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:3px">
+              <option value="date">Date</option>
+              <option value="name">Name</option>
+            </select>
+          </label>
+          <label style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:4px;cursor:pointer">
+            <input type="checkbox" id="bases-show-hidden" onchange="onBasesShowHiddenChange()"> Show hidden
+          </label>
+          <button class="io-btn" onclick="openAddBaseForm()" style="font-size:11px">+ Add Base</button>
+        </div>
       </div>
       <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Each base is a trip location. Set Visit From/To dates to generate schedule days. Link to an Idealista Favorites List to enable sync.</p>
       <div id="bases-list"></div>
@@ -905,16 +917,21 @@ input[type=time].hh-time-input{font-family:monospace;letter-spacing:.5px;min-wid
           </div>
           <div id="base-stay-fields">
             <div class="tile-field">
-              <label>Town / location</label>
-              <input id="base-form-address" type="text" placeholder="e.g. Gubbio, PG" autocomplete="off" oninput="baseFormMarkDirty();clearLocUi('base')" onblur="baseFormSyncLocation('address')">
+              <label>Town</label>
+              <input id="base-form-address" type="text" placeholder="e.g. Gubbio, PG" autocomplete="off" oninput="baseFormMarkDirty();clearLocUi('base');updateBaseLocationUi()" onblur="baseFormSyncLocation('address')">
               <div id="base-address-error" class="field-error" style="display:none"></div>
-              <div class="field-hint">Optional when GPS/location is set. Required if no GPS.</div>
+              <div id="base-town-locked-hint" class="gps-locked-hint" style="display:none">Town is locked while GPS/location is set. Clear GPS to edit.</div>
+              <div class="field-hint">Required if no GPS/location. Use an unambiguous Italian town (include province if needed).</div>
             </div>
             <div class="tile-field">
               <label>GPS or location</label>
-              <input id="base-form-gps" type="text" placeholder="42.9535, 12.0022 — or town/address" autocomplete="off" oninput="baseFormMarkDirty();clearLocUi('base')" onblur="baseFormSyncLocation('gps')">
+              <div class="gps-input-wrap">
+                <input id="base-form-gps" type="text" placeholder="42.9535, 12.0022 — or town/address" autocomplete="off" oninput="baseFormMarkDirty();clearLocUi('base');updateBaseLocationUi()" onblur="baseFormSyncLocation('gps')">
+                <button type="button" class="gps-clear-btn" id="base-gps-clear" onclick="baseClearGpsPrompt()" title="Clear GPS/location" style="display:none" aria-label="Clear GPS">✕</button>
+              </div>
               <div id="base-gps-error" class="field-error" style="display:none"></div>
               <div id="base-loc-status" class="loc-status"></div>
+              <div class="field-hint">Coordinates or address for the exact base location.</div>
             </div>
           </div>
           <div id="base-transit-fields" style="display:none">
@@ -3341,6 +3358,30 @@ async function runCalcGpsMigration() {
   }
 }
 
+function updateBaseLocationUi() {
+  const gpsVal = document.getElementById('base-form-gps')?.value.trim() || '';
+  const townLocked = !!gpsVal;
+  const townEl = document.getElementById('base-form-address');
+  if (townEl) {
+    townEl.disabled = townLocked;
+    townEl.title = townLocked ? 'Clear GPS/location to edit town' : '';
+  }
+  const hint = document.getElementById('base-town-locked-hint');
+  if (hint) hint.style.display = townLocked ? 'block' : 'none';
+  const clearBtn = document.getElementById('base-gps-clear');
+  if (clearBtn) clearBtn.style.display = gpsVal ? '' : 'none';
+}
+
+function baseClearGpsPrompt() {
+  if (!document.getElementById('base-form-gps')?.value.trim()) return;
+  if (!confirm('Clear GPS/location? You can edit the town again; the map will use the town center until GPS is set.')) return;
+  document.getElementById('base-form-gps').value = '';
+  clearLocUi('base');
+  updateBaseLocationUi();
+  baseFormMarkDirty();
+  baseFormSyncLocation('gps');
+}
+
 function dmSyncLocation(fromField) {
   if (_dmReadOnly || isLocSyncing()) return;
   if (fromField === 'address' && document.getElementById('dm-gps')?.value.trim()) return;
@@ -3362,13 +3403,17 @@ function dmSyncLocation(fromField) {
 
 function baseFormSyncLocation(fromField) {
   if (isLocSyncing()) return;
+  if (fromField === 'address' && document.getElementById('base-form-gps')?.value.trim()) return;
   debouncedLocBlur('base', fromField, async (field) => {
     const gps = document.getElementById('base-form-gps')?.value.trim() || '';
     const address = document.getElementById('base-form-address')?.value.trim() || '';
-    const scratch = { address, gps };
+    const scratch = { address, gps, calcGps: '', gpsPinExact: false };
     await runLocSync('base', scratch, {
       gps, address, isBase: true, fromField: field,
-      onSuccess: () => baseFormMarkDirty(),
+      onSuccess: () => {
+        updateBaseLocationUi();
+        baseFormMarkDirty();
+      },
     });
   });
 }
@@ -3409,12 +3454,17 @@ function coordsEqual(a, b) {
 
 function stayBaseCoordsSync(b) {
   if (!b || b.baseType === 'transit') return null;
-  if (b.lat != null && b.lng != null) return coordPair(b.lat, b.lng);
   const gps = getBaseGps(b);
   if (gps) {
     const [lat, lng] = parseGPS(gps);
-    return coordPair(lat, lng);
+    if (lat != null && lng != null) return coordPair(lat, lng);
   }
+  const calc = (b.calcGps && String(b.calcGps).trim()) ? String(b.calcGps).trim() : '';
+  if (calc) {
+    const [lat, lng] = parseGPS(calc);
+    if (lat != null && lng != null) return coordPair(lat, lng);
+  }
+  if (b.lat != null && b.lng != null) return coordPair(b.lat, b.lng);
   return null;
 }
 
@@ -8360,6 +8410,47 @@ function sortBasesByDate(bases) {
   });
 }
 
+function sortBasesByName(bases) {
+  return [...bases].sort((a, b) => {
+    if (a.abbr === UNASSIGNED_GRP) return 1;
+    if (b.abbr === UNASSIGNED_GRP) return -1;
+    const an = (a.name || a.abbr || '').toLowerCase();
+    const bn = (b.name || b.abbr || '').toLowerCase();
+    if (an !== bn) return an.localeCompare(bn);
+    return (a.abbr || '').localeCompare(b.abbr || '');
+  });
+}
+
+function getBasesListSort() {
+  return localStorage.getItem('hh_bases_list_sort') === 'name' ? 'name' : 'date';
+}
+
+function getBasesForSettingsList() {
+  const showHidden = localStorage.getItem('hh_bases_show_hidden') === '1';
+  let list = showHidden ? [...state_bases] : state_bases.filter(b => !b.hidden);
+  list = getBasesListSort() === 'name' ? sortBasesByName(list) : sortBasesByDate(list);
+  return list;
+}
+
+function onBasesListSortChange() {
+  const sel = document.getElementById('bases-list-sort');
+  localStorage.setItem('hh_bases_list_sort', sel?.value === 'name' ? 'name' : 'date');
+  renderBasesList();
+}
+
+function onBasesShowHiddenChange() {
+  const cb = document.getElementById('bases-show-hidden');
+  localStorage.setItem('hh_bases_show_hidden', cb?.checked ? '1' : '0');
+  renderBasesList();
+}
+
+function syncBasesListControls() {
+  const sortSel = document.getElementById('bases-list-sort');
+  if (sortSel) sortSel.value = getBasesListSort();
+  const showCb = document.getElementById('bases-show-hidden');
+  if (showCb) showCb.checked = localStorage.getItem('hh_bases_show_hidden') === '1';
+}
+
 function getActiveBasesSorted() {
   return sortBasesByDate(getActiveBases());
 }
@@ -10422,20 +10513,33 @@ function _populateAirportSelect(selId, selectedAbbr) {
 
 function renderBasesList() {
   const el = document.getElementById('bases-list'); if (!el) return;
+  syncBasesListControls();
+  const bases = getBasesForSettingsList();
+  const hiddenCount = state_bases.filter(b => b.hidden).length;
   if (!state_bases.length) { el.innerHTML='<p style="font-size:11px;color:var(--text3)">No bases yet.</p>'; return; }
-  el.innerHTML = state_bases.map((b,i) => {
-    const color = BASE_COLORS[i % BASE_COLORS.length];
+  if (!bases.length) {
+    el.innerHTML = `<p style="font-size:11px;color:var(--text3)">No visible bases.${hiddenCount ? ` ${hiddenCount} hidden — enable “Show hidden”.` : ''}</p>`;
+    return;
+  }
+  el.innerHTML = bases.map((b) => {
+    const i = state_bases.findIndex(x => x.abbr === b.abbr);
+    const color = BASE_COLORS[(i >= 0 ? i : 0) % BASE_COLORS.length];
     const dateRange = b.visitFrom ? `${b.visitFrom}${b.visitTo&&b.visitTo!==b.visitFrom?' – '+b.visitTo:''}` : 'No dates';
     const propCount = state.props.filter(p=>p.grp===b.abbr&&!ELIM_STATUSES.has(p.status)).length;
-    return `<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+    const statusBits = [
+      b.active === false ? 'paused' : null,
+      b.hidden ? 'hidden' : null,
+    ].filter(Boolean).join(' · ');
+    return `<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)${b.hidden ? ';opacity:.72' : ''}">
       <div style="width:4px;height:40px;background:${color};border-radius:2px;flex-shrink:0;margin-top:2px"></div>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:12px;color:var(--text1)">${escHtml(b.name)} <span style="color:var(--text3);font-weight:400">(${escHtml(b.abbr)} · ✈${escHtml(b.airport || 'near')} · ${b.baseType==='transit'?'Transit':'Stay'} · ${propCount} props)</span></div>
+        <div style="font-weight:600;font-size:12px;color:var(--text1)">${escHtml(b.name)} <span style="color:var(--text3);font-weight:400">(${escHtml(b.abbr)} · ✈${escHtml(b.airport || 'near')} · ${b.baseType==='transit'?'Transit':'Stay'} · ${propCount} props${statusBits ? ' · ' + escHtml(statusBits) : ''})</span></div>
         <div style="font-size:10px;color:var(--adriat);margin-top:1px">${dateRange}${b.baseType==='stay'&&b.address?` · ${escHtml(b.address)}`:''}${b.baseType==='transit'&&b.fromBase?` · ${escHtml(getBase(b.fromBase)?.name||b.fromBase)} → ${escHtml(getBase(b.toBase)?.name||b.toBase||'?')}`:''}</div>
         ${b.iflToken?`<div style="font-size:10px;color:var(--text3)">IFL: <code>${escHtml(b.iflToken)}</code></div>`:''}
         ${b.desc?`<div style="font-size:10px;color:var(--text3)">${escHtml(b.desc)}</div>`:''}
       </div>
       <button class="io-btn" onclick='editBase(${escJsStr(b.abbr)})' style="font-size:10px">Edit</button>
+      <button class="io-btn" onclick='toggleBaseHidden(${escJsStr(b.abbr)})' style="font-size:10px">${b.hidden ? 'Unhide' : 'Hide'}</button>
       <button class="io-btn" onclick='toggleBaseActive(${escJsStr(b.abbr)})' style="font-size:10px;${b.active===false?'color:var(--terra)':''}">${b.active===false?'▶ Activate':'⏸ Pause'}</button>
       <button class="io-btn danger" onclick='deleteBase(${escJsStr(b.abbr)})' style="font-size:10px">✕</button>
     </div>`;
@@ -10519,6 +10623,7 @@ function _resetBaseFormFields() {
   _populateAirportSelect('base-form-airport', '');
   document.getElementById('base-form-type').value = 'stay';
   clearLocUi('base');
+  updateBaseLocationUi();
   onBaseTypeChange();
 }
 
@@ -10569,6 +10674,7 @@ function editBase(abbr) {
     : `https://www.idealista.it/join-favorites-list/${b.iflToken}`;
   document.getElementById('base-form-ifl').value = iflUrl;
   onBaseTypeChange();
+  updateBaseLocationUi();
   openBaseModal('Edit Base');
 }
 
@@ -10624,7 +10730,26 @@ async function saveBaseForm() {
     if (conflict) { alert(`This IFL is already linked to "${conflict.name}" (${conflict.abbr}). Each IFL can only be assigned to one base.`); return; }
   }
 
+  const dupAbbr = state_bases.find(b => b.abbr === abbr && b.abbr !== origAbbr);
+  if (dupAbbr) {
+    alert(`Abbreviation "${abbr}" is already used by "${dupAbbr.name}". Choose a different abbreviation.`);
+    return;
+  }
+
   const existing = state_bases.find(b=>b.abbr===origAbbr);
+  if (origAbbr && origAbbr !== abbr) {
+    for (const p of state.props) {
+      if (p.grp === origAbbr) p.grp = abbr;
+      if (p.driveTimes && p.driveTimes[origAbbr] !== undefined) {
+        p.driveTimes[abbr] = p.driveTimes[origAbbr];
+        delete p.driveTimes[origAbbr];
+      }
+      if (p.driveMiles && p.driveMiles[origAbbr] !== undefined) {
+        p.driveMiles[abbr] = p.driveMiles[origAbbr];
+        delete p.driveMiles[origAbbr];
+      }
+    }
+  }
   const prevAirport = existing?.airport || '';
   const prevCoords = existing && baseType === 'stay' ? stayBaseCoordsSync(existing) : null;
   const payload = {
@@ -10634,39 +10759,36 @@ async function saveBaseForm() {
     gps: baseType === 'stay' ? gps : '',
     fromBase: baseType === 'transit' ? fromBase : '',
     toBase: baseType === 'transit' ? toBase : '',
+    hidden: existing?.hidden || false,
   };
   if (existing) {
     Object.assign(existing, payload, { iflName: existing.iflName || null });
   } else {
-    state_bases.push({ ...payload, iflName: null, active: true, lat: null, lng: null });
+    state_bases.push({ ...payload, iflName: null, active: true, hidden: false, lat: null, lng: null, calcGps: '', gpsPinExact: false });
   }
   const saved = existing || state_bases[state_bases.length - 1];
   migrateBaseLocation(saved);
   if (baseType === 'stay') {
     const oldGps = existing ? getBaseGps(existing) : '';
     let locMode;
-    let overwriteTown = false;
     if (gps && gps !== oldGps) {
       locMode = 'gps';
-      if (address && isCoordinateGps(gps)) {
-        overwriteTown = confirm(
-          'Replace the existing town/location with the name from these GPS coordinates?'
-        );
-      }
     } else if (gps) {
       locMode = 'address';
     } else {
       locMode = 'address';
     }
     const loc = await syncEntityLocation(saved, {
-      gps, address, isBase: true, mode: locMode, overwriteTown,
+      gps, address, isBase: true, mode: locMode, overwriteTown: !!gps,
     });
     if (!loc.ok) {
       setLocError('base', { general: loc.error || 'Could not resolve location.' });
       return;
     }
+    if (!gps) saved.gps = '';
     document.getElementById('base-form-address').value = saved.address || '';
     document.getElementById('base-form-gps').value = saved.gps || '';
+    updateBaseLocationUi();
   } else {
     await resolveTransitEndpoints(saved);
   }
@@ -10710,6 +10832,14 @@ async function toggleBaseActive(abbr) {
   localStorage.setItem(LS_BASES,JSON.stringify(state_bases));
   renderBasesList(); refreshBaseFilters(); renderProps(); renderSchedule();
   if (_mapInited) refreshMap();
+}
+
+async function toggleBaseHidden(abbr) {
+  const b = getBase(abbr); if (!b) return;
+  b.hidden = !b.hidden;
+  try { await HHApi.putBases(state_bases); } catch(e) {}
+  localStorage.setItem(LS_BASES, JSON.stringify(state_bases));
+  renderBasesList();
 }
 
 function renderAirportsList() {
